@@ -98,6 +98,8 @@ Route::middleware(['auth', 'role:admin,staff'])->prefix('admin')->name('admin.')
         Route::put('/{questionVersion}', [AdminQuestionController::class, 'update'])->name('update')->middleware('role:admin');
         Route::delete('/{questionVersion}', [AdminQuestionController::class, 'destroy'])->name('destroy')->middleware('role:admin');
         Route::post('/{questionVersion}/activate', [AdminQuestionController::class, 'activate'])->name('activate')->middleware('role:admin');
+        Route::post('/{questionVersion}/clone', [AdminQuestionController::class, 'clone'])->name('clone')->middleware('role:admin');
+        Route::get('/{questionVersion}/statistics', [AdminQuestionController::class, 'statistics'])->name('statistics');
     });
 
     // ST-30 Questions
@@ -109,6 +111,11 @@ Route::middleware(['auth', 'role:admin,staff'])->prefix('admin')->name('admin.')
         Route::get('/{st30Question}/edit', [ST30QuestionController::class, 'edit'])->name('edit')->middleware('role:admin');
         Route::put('/{st30Question}', [ST30QuestionController::class, 'update'])->name('update')->middleware('role:admin');
         Route::delete('/{st30Question}', [ST30QuestionController::class, 'destroy'])->name('destroy')->middleware('role:admin');
+
+        // Additional ST-30 routes
+        Route::post('/import', [ST30QuestionController::class, 'import'])->name('import')->middleware('role:admin');
+        Route::get('/export', [ST30QuestionController::class, 'export'])->name('export');
+        Route::post('/reorder', [ST30QuestionController::class, 'reorder'])->name('reorder')->middleware('role:admin');
     });
 
     // SJT Questions
@@ -120,6 +127,11 @@ Route::middleware(['auth', 'role:admin,staff'])->prefix('admin')->name('admin.')
         Route::get('/{sjtQuestion}/edit', [SJTQuestionController::class, 'edit'])->name('edit')->middleware('role:admin');
         Route::put('/{sjtQuestion}', [SJTQuestionController::class, 'update'])->name('update')->middleware('role:admin');
         Route::delete('/{sjtQuestion}', [SJTQuestionController::class, 'destroy'])->name('destroy')->middleware('role:admin');
+
+        // Additional SJT routes
+        Route::post('/import', [SJTQuestionController::class, 'import'])->name('import')->middleware('role:admin');
+        Route::get('/export', [SJTQuestionController::class, 'export'])->name('export');
+        Route::post('/reorder', [SJTQuestionController::class, 'reorder'])->name('reorder')->middleware('role:admin');
     });
 
     // Competency Descriptions
