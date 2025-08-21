@@ -77,6 +77,36 @@ class ST30Question extends Model
     }
 
     /**
+     * Get responses where this question was selected
+     */
+    public function selectedInResponses(): HasMany
+    {
+        return $this->hasMany(ST30Response::class, 'question_version_id', 'version_id')
+            ->whereJsonContains('selected_items', $this->number);
+    }
+
+    /**
+     * Get responses where this question was excluded
+     */
+    public function excludedInResponses(): HasMany
+    {
+        return $this->hasMany(ST30Response::class, 'question_version_id', 'version_id')
+            ->whereJsonContains('excluded_items', $this->number);
+    }
+
+    /**
+     * Get all responses that include this question (selected or excluded)
+     */
+    public function allResponses()
+    {
+        return ST30Response::where('question_version_id', $this->version_id)
+            ->where(function($query) {
+                $query->whereJsonContains('selected_items', $this->number)
+                      ->orWhereJsonContains('excluded_items', $this->number);
+            });
+    }
+
+    /**
      * Get typology name
      */
     public function getTypologyNameAttribute(): string
@@ -90,6 +120,54 @@ class ST30Question extends Model
     public function getStatementPreviewAttribute(): string
     {
         return Str::limit($this->statement, 100);
+    }
+
+    /**
+     * Get usage count in responses
+     */
+    public function getUsageCountAttribute(): int
+    {
+        return $this->allResponses()->count();
+    }
+
+    /**
+     * Get count of times this question was selected
+     */
+    public function getSelectedCountAttribute(): int
+    {
+        return ST30Response::where('question_version_id', $this->version_id)
+            ->whereJsonContains('selected_items', $this->number)
+            ->count();
+    }
+
+    /**
+     * Get count of times this question was excluded
+     */
+    public function getExcludedCountAttribute(): int
+    {
+        return ST30Response::where('question_version_id', $this->version_id)
+            ->whereJsonContains('excluded_items', $this->number)
+            ->count();
+    }
+
+    /**
+     * Get selection ratio (selected vs excluded)
+     */
+    public function getSelectionRatioAttribute(): float
+    {
+        $selected = $this->selected_count;
+        $excluded = $this->excluded_count;
+        $total = $selected + $excluded;
+
+        return $total > 0 ? $selected / $total : 0;
+    }
+
+    /**
+     * Check if question is used in any responses
+     */
+    public function hasResponses(): bool
+    {
+        return $this->allResponses()->exists();
     }
 
     /**
@@ -142,33 +220,6 @@ class ST30Question extends Model
     }
 
     /**
-     * Check if question is used in any responses
-     */
-    public function hasResponses(): bool
-    {
-        // Check if this question number appears in any ST30 responses for this version
-        return ST30Response::where('question_version_id', $this->version_id)
-            ->where(function($query) {
-                $query->whereJsonContains('selected_items', $this->number)
-                      ->orWhereJsonContains('excluded_items', $this->number);
-            })
-            ->exists();
-    }
-
-    /**
-     * Get usage count in responses
-     */
-    public function getUsageCountAttribute(): int
-    {
-        return ST30Response::where('question_version_id', $this->version_id)
-            ->where(function($query) {
-                $query->whereJsonContains('selected_items', $this->number)
-                      ->orWhereJsonContains('excluded_items', $this->number);
-            })
-            ->count();
-    }
-
-    /**
      * Validate question number uniqueness within version
      */
     public function validateUniqueNumber(): bool
@@ -179,5 +230,65 @@ class ST30Question extends Model
             ->exists();
 
         return !$exists;
+    }
+
+    /**
+     * Get popularity score based on selection frequency
+     */
+    public function getPopularityScoreAttribute(): float
+    {
+        $totalResponses = ST30Response::where('question_version_id', $this->version_id)->count();
+
+        if ($totalResponses === 0) {
+            return 0;
+        }
+
+        return $this->selected_count / $totalResponses;
+    }
+
+    /**
+     * Check if this question is frequently selected
+     */
+    public function isPopular(float $threshold = 0.5): bool
+    {
+        return $this->popularity_score >= $threshold;
+    }
+
+    /**
+     * Check if this question is rarely selected
+     */
+    public function isUnpopular(float $threshold = 0.2): bool
+    {
+        return $this->popularity_score <= $threshold;
+    }
+
+    /**
+     * Get questions with similar selection patterns
+     */
+    public function getSimilarQuestions(int $limit = 5): \Illuminate\Database\Eloquent\Collection
+    {
+        $currentRatio = $this->selection_ratio;
+
+        return static::where('version_id', $this->version_id)
+            ->where('id', '!=', $this->id)
+            ->get()
+            ->filter(function($question) use ($currentRatio) {
+                return abs($question->selection_ratio - $currentRatio) <= 0.1;
+            })
+            ->take($limit);
+    }
+
+    /**
+     * Get usage statistics for this question
+     */
+    public function getUsageStatistics(): array
+    {
+        return [
+            'total_usage' => $this->usage_count,
+            'selected_count' => $this->selected_count,
+            'excluded_count' => $this->excluded_count,
+            'selection_ratio' => $this->selection_ratio,
+            'popularity_score' => $this->popularity_score,
+        ];
     }
 }

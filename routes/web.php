@@ -100,9 +100,42 @@ Route::middleware(['auth', 'role:admin,staff'])->prefix('admin')->name('admin.')
         Route::post('/{questionVersion}/activate', [AdminQuestionController::class, 'activate'])->name('activate')->middleware('role:admin');
         Route::post('/{questionVersion}/clone', [AdminQuestionController::class, 'clone'])->name('clone')->middleware('role:admin');
         Route::get('/{questionVersion}/statistics', [AdminQuestionController::class, 'statistics'])->name('statistics');
+
+        // ST-30 Questions - FIXED ROUTES
+        Route::prefix('st30')->name('st30.')->group(function () {
+            Route::get('/', [ST30QuestionController::class, 'index'])->name('index');
+            Route::get('/create', [ST30QuestionController::class, 'create'])->name('create')->middleware('role:admin');
+            Route::post('/', [ST30QuestionController::class, 'store'])->name('store')->middleware('role:admin');
+            Route::get('/{st30Question}', [ST30QuestionController::class, 'show'])->name('show');
+            Route::get('/{st30Question}/edit', [ST30QuestionController::class, 'edit'])->name('edit')->middleware('role:admin');
+            Route::put('/{st30Question}', [ST30QuestionController::class, 'update'])->name('update')->middleware('role:admin');
+            Route::delete('/{st30Question}', [ST30QuestionController::class, 'destroy'])->name('destroy')->middleware('role:admin');
+
+            // Additional ST-30 routes
+            Route::post('/import', [ST30QuestionController::class, 'import'])->name('import')->middleware('role:admin');
+            Route::get('/export', [ST30QuestionController::class, 'export'])->name('export');
+            Route::post('/reorder', [ST30QuestionController::class, 'reorder'])->name('reorder')->middleware('role:admin');
+        });
+
+        // SJT Questions - FIXED ROUTES
+        Route::prefix('sjt')->name('sjt.')->group(function () {
+            Route::get('/', [SJTQuestionController::class, 'index'])->name('index');
+            Route::get('/create', [SJTQuestionController::class, 'create'])->name('create')->middleware('role:admin');
+            Route::post('/', [SJTQuestionController::class, 'store'])->name('store')->middleware('role:admin');
+            Route::get('/{sjtQuestion}', [SJTQuestionController::class, 'show'])->name('show');
+            Route::get('/{sjtQuestion}/edit', [SJTQuestionController::class, 'edit'])->name('edit')->middleware('role:admin');
+            Route::put('/{sjtQuestion}', [SJTQuestionController::class, 'update'])->name('update')->middleware('role:admin');
+            Route::delete('/{sjtQuestion}', [SJTQuestionController::class, 'destroy'])->name('destroy')->middleware('role:admin');
+
+            // Additional SJT routes
+            Route::post('/import', [SJTQuestionController::class, 'import'])->name('import')->middleware('role:admin');
+            Route::get('/export', [SJTQuestionController::class, 'export'])->name('export');
+            Route::post('/reorder', [SJTQuestionController::class, 'reorder'])->name('reorder')->middleware('role:admin');
+        });
     });
 
-    // ST-30 Questions
+    // LEGACY ROUTES (untuk backward compatibility)
+    // ST-30 Questions (legacy)
     Route::prefix('st30')->name('st30.')->group(function () {
         Route::get('/', [ST30QuestionController::class, 'index'])->name('index');
         Route::get('/create', [ST30QuestionController::class, 'create'])->name('create')->middleware('role:admin');
@@ -118,7 +151,7 @@ Route::middleware(['auth', 'role:admin,staff'])->prefix('admin')->name('admin.')
         Route::post('/reorder', [ST30QuestionController::class, 'reorder'])->name('reorder')->middleware('role:admin');
     });
 
-    // SJT Questions
+    // SJT Questions (legacy)
     Route::prefix('sjt')->name('sjt.')->group(function () {
         Route::get('/', [SJTQuestionController::class, 'index'])->name('index');
         Route::get('/create', [SJTQuestionController::class, 'create'])->name('create')->middleware('role:admin');

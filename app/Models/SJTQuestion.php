@@ -7,8 +7,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Str;
-
 
 class SJTQuestion extends Model
 {
@@ -25,7 +23,7 @@ class SJTQuestion extends Model
         'version_id',
         'number',
         'question_text',
-        'competency',
+        'competency', // BENAR - ini nama kolom yang ada di database
         'page_number',
         'is_active',
     ];
@@ -54,13 +52,13 @@ class SJTQuestion extends Model
             ->first();
 
         if (!$lastId) {
-            return $this->customIdPrefix . '001';
+            return $this->customIdPrefix . '101';
         }
 
         $lastNumber = (int) substr($lastId->id, strlen($this->customIdPrefix));
         $newNumber = $lastNumber + 1;
 
-        return $this->customIdPrefix . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
+        return $this->customIdPrefix . $newNumber;
     }
 
     /**
@@ -72,7 +70,16 @@ class SJTQuestion extends Model
     }
 
     /**
-     * Answer options for this question
+     * Competency description for this question - PERBAIKAN UTAMA
+     */
+    public function competencyDescription(): BelongsTo
+    {
+        // Kolom 'competency' di sjt_questions join dengan 'competency_code' di competency_descriptions
+        return $this->belongsTo(CompetencyDescription::class, 'competency', 'competency_code');
+    }
+
+    /**
+     * Get all options for this question
      */
     public function options(): HasMany
     {
@@ -80,15 +87,17 @@ class SJTQuestion extends Model
     }
 
     /**
-     * Competency description for this question
+     * Get active options only
      */
-    public function competencyDescription(): BelongsTo
+    public function activeOptions(): HasMany
     {
-        return $this->belongsTo(CompetencyDescription::class, 'competency', 'competency_code');
+        return $this->hasMany(SJTOption::class, 'question_id')
+            ->where('is_active', true)
+            ->orderBy('option_letter');
     }
 
     /**
-     * Responses to this question
+     * Get responses for this question
      */
     public function responses(): HasMany
     {
@@ -96,27 +105,45 @@ class SJTQuestion extends Model
     }
 
     /**
-     * Get competency name
-     */
-    public function getCompetencyNameAttribute(): string
-    {
-        return $this->competencyDescription?->competency_name ?? $this->competency;
-    }
-
-    /**
      * Get question preview (truncated)
      */
     public function getQuestionPreviewAttribute(): string
     {
-        return Str::limit($this->question_text, 100);
+        return strlen($this->question_text) > 100
+            ? substr($this->question_text, 0, 100) . '...'
+            : $this->question_text;
     }
 
     /**
-     * Get page display
+     * Get competency code - ALIAS untuk konsistensi
      */
-    public function getPageDisplayAttribute(): string
+    public function getCompetencyCodeAttribute(): string
     {
-        return "Page {$this->page_number} (Questions " . (($this->page_number - 1) * 10 + 1) . "-" . ($this->page_number * 10) . ")";
+        return $this->competency;
+    }
+
+    /**
+     * Get competency name through relationship - PERBAIKAN
+     */
+    public function getCompetencyNameAttribute(): string
+    {
+        return $this->competencyDescription?->competency_name ?? 'Unknown Competency';
+    }
+
+    /**
+     * Get usage count in responses
+     */
+    public function getUsageCountAttribute(): int
+    {
+        return $this->responses()->count();
+    }
+
+    /**
+     * Check if question has responses
+     */
+    public function hasResponses(): bool
+    {
+        return $this->responses()->exists();
     }
 
     /**
@@ -138,9 +165,9 @@ class SJTQuestion extends Model
     /**
      * Scope for questions by competency
      */
-    public function scopeByCompetency($query, string $competency)
+    public function scopeByCompetency($query, string $competencyCode)
     {
-        return $query->where('competency', $competency);
+        return $query->where('competency', $competencyCode);
     }
 
     /**
@@ -152,26 +179,15 @@ class SJTQuestion extends Model
     }
 
     /**
-     * Get questions for specific page and version
+     * Scope for questions by number range
      */
-    public static function getPageQuestions(int $pageNumber, ?string $versionId = null): \Illuminate\Database\Eloquent\Collection
+    public function scopeByNumberRange($query, int $start, int $end)
     {
-        $versionId = $versionId ?: QuestionVersion::getActive('sjt')?->id;
-
-        if (!$versionId) {
-            return collect();
-        }
-
-        return static::where('version_id', $versionId)
-            ->where('page_number', $pageNumber)
-            ->where('is_active', true)
-            ->with('options')
-            ->orderBy('number')
-            ->get();
+        return $query->whereBetween('number', [$start, $end]);
     }
 
     /**
-     * Get all questions for active version
+     * Get questions for active version
      */
     public static function getActiveQuestions(): \Illuminate\Database\Eloquent\Collection
     {
@@ -183,47 +199,8 @@ class SJTQuestion extends Model
 
         return static::where('version_id', $activeVersion->id)
             ->where('is_active', true)
-            ->with(['options', 'competencyDescription'])
             ->orderBy('number')
             ->get();
-    }
-
-    /**
-     * Check if question has all required options (a, b, c, d, e)
-     */
-    public function hasCompleteOptions(): bool
-    {
-        $requiredOptions = ['a', 'b', 'c', 'd', 'e'];
-        $existingOptions = $this->options->pluck('option_letter')->toArray();
-
-        return count(array_intersect($requiredOptions, $existingOptions)) === 5;
-    }
-
-    /**
-     * Get missing options
-     */
-    public function getMissingOptionsAttribute(): array
-    {
-        $requiredOptions = ['a', 'b', 'c', 'd', 'e'];
-        $existingOptions = $this->options->pluck('option_letter')->toArray();
-
-        return array_diff($requiredOptions, $existingOptions);
-    }
-
-    /**
-     * Check if question is used in any responses
-     */
-    public function hasResponses(): bool
-    {
-        return $this->responses()->exists();
-    }
-
-    /**
-     * Get usage count in responses
-     */
-    public function getUsageCountAttribute(): int
-    {
-        return $this->responses()->count();
     }
 
     /**
@@ -240,10 +217,46 @@ class SJTQuestion extends Model
     }
 
     /**
-     * Auto-assign page number based on question number
+     * Get options count for this question
      */
-    public function autoAssignPageNumber(): void
+    public function getOptionsCountAttribute(): int
     {
-        $this->page_number = ceil($this->number / 10);
+        return $this->options()->count();
+    }
+
+    /**
+     * Check if question has complete options (5 options)
+     */
+    public function hasCompleteOptions(): bool
+    {
+        return $this->options()->count() === 5;
+    }
+
+    /**
+     * Get highest scoring option
+     */
+    public function getHighestScoringOption()
+    {
+        return $this->options()->orderBy('score', 'desc')->first();
+    }
+
+    /**
+     * Get lowest scoring option
+     */
+    public function getLowestScoringOption()
+    {
+        return $this->options()->orderBy('score', 'asc')->first();
+    }
+
+    /**
+     * Get score distribution for this question
+     */
+    public function getScoreDistribution(): array
+    {
+        return $this->options()
+            ->selectRaw('score, COUNT(*) as count')
+            ->groupBy('score')
+            ->pluck('count', 'score')
+            ->toArray();
     }
 }

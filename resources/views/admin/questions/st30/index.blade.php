@@ -21,7 +21,7 @@
                 </h3>
                 <div class="card-tools">
                     @if(Auth::user()->role === 'admin' && $selectedVersion)
-                        <a href="{{ route('admin.st30.create', ['version' => $selectedVersion->id]) }}" class="btn btn-primary btn-sm">
+                        <a href="{{ route('admin.questions.st30.create', ['version' => $selectedVersion->id]) }}" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Add Question
                         </a>
                     @endif
@@ -88,6 +88,8 @@
 
 @if($selectedVersion)
 <!-- Typology Distribution -->
+
+<!--
 <div class="row">
     <div class="col-12">
         <div class="card">
@@ -115,6 +117,7 @@
         </div>
     </div>
 </div>
+-->
 
 <!-- Questions List -->
 <div class="row">
@@ -142,7 +145,7 @@
                         <thead>
                             <tr>
                                 <th width="80">No.</th>
-                                <th>Statement</th>
+                                <th >Statement</th>
                                 <th width="120">Typology</th>
                                 <th width="100">Status</th>
                                 <th width="80">Used</th>
@@ -153,11 +156,11 @@
                             @foreach($questions as $question)
                             <tr data-question-id="{{ $question->id }}">
                                 <td>
-                                    <span class="badge badge-primary badge-lg">{{ $question->number }}</span>
+                                    <span >{{ $question->number }}</span>
                                 </td>
                                 <td>
                                     <div class="question-item">
-                                        <strong>{{ $question->statement_preview }}</strong>
+                                        <span>{{ $question->statement_preview }}</span>
                                         @if(strlen($question->statement) > 100)
                                             <button type="button" class="btn btn-link btn-xs p-0"
                                                     onclick="showFullStatement('{{ $question->id }}')">

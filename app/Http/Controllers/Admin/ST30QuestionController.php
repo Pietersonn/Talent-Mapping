@@ -47,7 +47,7 @@ class ST30QuestionController extends Controller
         // Get all typologies for reference
         $typologies = TypologyDescription::orderBy('typology_code')->get();
 
-        return view('admin.st30.index', compact(
+        return view('admin.questions.st30.index', compact(
             'questions',
             'selectedVersion',
             'activeVersion',
@@ -149,7 +149,7 @@ class ST30QuestionController extends Controller
         $typologies = TypologyDescription::orderBy('typology_name')->get();
         $versions = QuestionVersion::where('type', 'st30')->orderBy('version', 'desc')->get();
 
-        return view('admin.st30.edit', compact('st30Question', 'typologies', 'versions'));
+        return view('admin.questions.st30.edit', compact('st30Question', 'typologies', 'versions'));
     }
 
     /**
@@ -258,4 +258,5 @@ class ST30QuestionController extends Controller
 
         return response()->json(['success' => true]);
     }
+
 }
