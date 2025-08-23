@@ -87,7 +87,7 @@ class ST30QuestionController extends Controller
         $typologies = TypologyDescription::orderBy('typology_name')->get();
         $versions = QuestionVersion::where('type', 'st30')->orderBy('version', 'desc')->get();
 
-        return view('admin.st30.create', compact(
+        return view('admin.questions.st30.create', compact(
             'selectedVersion',
             'nextNumber',
             'typologies',
@@ -123,7 +123,6 @@ class ST30QuestionController extends Controller
             'number' => $request->number,
             'statement' => $request->statement,
             'typology_code' => $request->typology_code,
-            'is_active' => true,
         ]);
 
         return redirect()->route('admin.st30.index', ['version' => $request->version_id])
@@ -137,7 +136,7 @@ class ST30QuestionController extends Controller
     {
         $st30Question->load(['questionVersion', 'typologyDescription']);
 
-        return view('admin.st30.show', compact('st30Question'));
+        return view('admin.questions.st30.show', compact('st30Question'));
     }
 
     /**
@@ -161,7 +160,6 @@ class ST30QuestionController extends Controller
             'number' => 'required|integer|min:1|max:30',
             'statement' => 'required|string|max:500',
             'typology_code' => 'required|exists:typology_descriptions,typology_code',
-            'is_active' => 'boolean',
         ]);
 
         // Check if number already exists in this version (excluding current question)
@@ -180,7 +178,6 @@ class ST30QuestionController extends Controller
             'number' => $request->number,
             'statement' => $request->statement,
             'typology_code' => $request->typology_code,
-            'is_active' => $request->boolean('is_active', true),
         ]);
 
         return redirect()->route('admin.st30.index', ['version' => $st30Question->version_id])
@@ -258,5 +255,4 @@ class ST30QuestionController extends Controller
 
         return response()->json(['success' => true]);
     }
-
 }

@@ -4,184 +4,155 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\TypologyDescription;
-use App\Models\ST30Question;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class TypologyController extends Controller
 {
-    public function index(Request $request)
+    /**
+     * Display a listing of typologies
+     */
+    public function index()
     {
-        $query = TypologyDescription::query();
+        $typologies = TypologyDescription::orderBy('typology_code')->paginate(15);
 
-        // Search filter
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('typology_name', 'like', "%{$search}%")
-                  ->orWhere('typology_code', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
-            });
-        }
-
-        $typologies = $query->withCount(['st30Questions as questions_count'])
-                           ->orderBy('typology_code')
-                           ->paginate(15);
-
-        // Statistics
-        $totalTypologies = TypologyDescription::count();
-        $activeTypologies = $totalTypologies; // All considered active
-        $totalQuestions = ST30Question::count();
-        $typologyGroups = 8; // Static count for 8 groups (H, N, S, Gi, T, R, E, Te)
-
-        // Group statistics - based on typology code patterns
-        $groupStats = [
-            'H' => ['name' => 'Headman', 'count' => 0, 'questions' => 0],
-            'N' => ['name' => 'Networking', 'count' => 0, 'questions' => 0],
-            'S' => ['name' => 'Servicing', 'count' => 0, 'questions' => 0],
-            'Gi' => ['name' => 'Generating Ideas', 'count' => 0, 'questions' => 0],
-            'T' => ['name' => 'Thinking', 'count' => 0, 'questions' => 0],
-            'R' => ['name' => 'Reasoning', 'count' => 0, 'questions' => 0],
-            'E' => ['name' => 'Elementary', 'count' => 0, 'questions' => 0],
-            'Te' => ['name' => 'Technical', 'count' => 0, 'questions' => 0],
-        ];
-
-        // Calculate group stats based on typology code patterns
-        foreach ($typologies as $typology) {
-            $code = $typology->typology_code;
-            $group = $this->getTypologyGroup($code);
-            if (isset($groupStats[$group])) {
-                $groupStats[$group]['count']++;
-                $groupStats[$group]['questions'] += $typology->questions_count ?? 0;
-            }
-        }
-
-        return view('admin.questions.typologies.index', compact(
-            'typologies',
-            'totalTypologies',
-            'activeTypologies',
-            'totalQuestions',
-            'typologyGroups',
-            'groupStats'
-        ));
-    }
-
-    public function show(TypologyDescription $typology)
-    {
-        // Load related questions
-        $questions = ST30Question::where('typology_code', $typology->typology_code)
-                                ->with(['questionVersion'])
-                                ->orderBy('number')
-                                ->get();
-
-        // Get typology group from code
-        $typologyGroup = $this->getTypologyGroup($typology->typology_code);
-
-        // Related typologies (same group pattern)
-        $relatedTypologies = TypologyDescription::whereRaw('SUBSTRING(typology_code, 1, 1) = ?', [$typologyGroup])
-                                               ->where('id', '!=', $typology->id)
-                                               ->limit(5)
-                                               ->get();
-
-        // Usage statistics (mock data)
-        $usageStats = collect();
-        $totalResponses = 0;
-        $avgSelectionRate = 0;
-
-        // Group descriptions
-        $groupDescriptions = [
-            'H' => 'Headman - Activities that interact with others to control, influence, or supervise',
-            'N' => 'Networking - Activities with others for cooperation, mentoring, coaching, and representing',
-            'S' => 'Servicing - Activities that interact with others in caring, healing, or helping',
-            'G' => 'Generating Ideas - Individual activities related to intuition, ideas, and creativity',
-            'T' => 'Thinking - Individual activities using logical thinking, facts, or analysis',
-            'R' => 'Reasoning - Individual activities using logic to find or prove something',
-            'E' => 'Elementary - Individual activities that require physical energy, precision, and spatial awareness',
-        ];
-
-        return view('admin.questions.typologies.show', compact(
-            'typology',
-            'questions',
-            'relatedTypologies',
-            'usageStats',
-            'totalResponses',
-            'avgSelectionRate',
-            'groupDescriptions'
-        ));
-    }
-
-    public function update(Request $request, TypologyDescription $typology)
-    {
-        $validated = $request->validate([
-            'typology_name' => 'required|string|max:255',
-            'description' => 'nullable|string'
-            // Only validate columns that exist
-        ]);
-
-        $typology->update($validated);
-
-        return redirect()->route('admin.questions.typologies.show', $typology)
-                        ->with('success', 'Typology updated successfully.');
-    }
-
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'typology_code' => 'required|string|max:10|unique:typology_descriptions',
-            'typology_name' => 'required|string|max:255',
-            'description' => 'nullable|string'
-            // Only validate columns that exist
-        ]);
-
-        $typology = TypologyDescription::create($validated);
-
-        return redirect()->route('admin.questions.typologies.index')
-                        ->with('success', 'Typology created successfully.');
-    }
-
-    public function destroy(TypologyDescription $typology)
-    {
-        $questionsCount = ST30Question::where('typology_code', $typology->typology_code)->count();
-
-        if ($questionsCount > 0) {
-            return redirect()->back()
-                           ->with('error', 'Cannot delete typology that is used in questions.');
-        }
-
-        $typology->delete();
-
-        return redirect()->route('admin.questions.typologies.index')
-                        ->with('success', 'Typology deleted successfully.');
+        return view('admin.questions.typologies.index', compact('typologies'));
     }
 
     /**
-     * Determine typology group from code pattern
+     * Show the form for creating a new typology
      */
-    private function getTypologyGroup($code)
+    public function create()
     {
-        // Based on typical ST-30 patterns
-        if (str_starts_with($code, 'AMB') || str_starts_with($code, 'CMD') || str_starts_with($code, 'COM')) {
-            return 'H'; // Headman
-        }
-        if (str_starts_with($code, 'MOT') || str_starts_with($code, 'ARR')) {
-            return 'N'; // Networking
-        }
-        if (str_starts_with($code, 'CAR') || str_starts_with($code, 'SER')) {
-            return 'S'; // Servicing
-        }
-        if (str_starts_with($code, 'CRE') || str_starts_with($code, 'DES')) {
-            return 'G'; // Generating Ideas
-        }
-        if (str_starts_with($code, 'ANA') || str_starts_with($code, 'TRE')) {
-            return 'T'; // Thinking
-        }
-        if (str_starts_with($code, 'EVA') || str_starts_with($code, 'RES')) {
-            return 'R'; // Reasoning
-        }
-        if (str_starts_with($code, 'EDU') || str_starts_with($code, 'EXP')) {
-            return 'E'; // Elementary
+        return view('admin.questions.typologies.create');
+    }
+
+    /**
+     * Store a newly created typology
+     */
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'typology_code' => 'required|string|max:10|unique:typology_descriptions,typology_code',
+            'typology_name' => 'required|string|max:255',
+            'description' => 'required|string',
+            'characteristics' => 'nullable|string',
+            'strengths' => 'nullable|string',
+            'weaknesses' => 'nullable|string',
+            'career_suggestions' => 'nullable|string',
+            'is_active' => 'boolean'
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
         }
 
-        return substr($code, 0, 1); // Default to first character
+        try {
+            TypologyDescription::create([
+                'typology_code' => strtoupper($request->typology_code),
+                'typology_name' => $request->typology_name,
+                'description' => $request->description,
+                'characteristics' => $request->characteristics,
+                'strengths' => $request->strengths,
+                'weaknesses' => $request->weaknesses,
+                'career_suggestions' => $request->career_suggestions,
+                'is_active' => $request->has('is_active')
+            ]);
+
+            return redirect()->route('admin.typologies.index')
+                ->with('success', 'Typology created successfully.');
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Failed to create typology: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    /**
+     * Display the specified typology
+     */
+    public function show(TypologyDescription $typology)
+    {
+        return view('admin.questions.typologies.show', compact('typology'));
+    }
+
+    /**
+     * Show the form for editing the specified typology
+     */
+    public function edit(TypologyDescription $typology)
+    {
+        return view('admin.questions.typologies.edit', compact('typology'));
+    }
+
+    /**
+     * Update the specified typology
+     */
+    public function update(Request $request, TypologyDescription $typology)
+    {
+        $validator = Validator::make($request->all(), [
+            'typology_code' => 'required|string|max:10|unique:typology_descriptions,typology_code,' . $typology->typology_code . ',typology_code',
+            'typology_name' => 'required|string|max:255',
+            'description' => 'required|string',
+            'characteristics' => 'nullable|string',
+            'strengths' => 'nullable|string',
+            'weaknesses' => 'nullable|string',
+            'career_suggestions' => 'nullable|string',
+            'is_active' => 'boolean'
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        try {
+            $typology->update([
+                'typology_code' => strtoupper($request->typology_code),
+                'typology_name' => $request->typology_name,
+                'description' => $request->description,
+                'characteristics' => $request->characteristics,
+                'strengths' => $request->strengths,
+                'weaknesses' => $request->weaknesses,
+                'career_suggestions' => $request->career_suggestions,
+                'is_active' => $request->has('is_active')
+            ]);
+
+            return redirect()->route('admin.typologies.index')
+                ->with('success', 'Typology updated successfully.');
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Failed to update typology: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    /**
+     * Remove the specified typology
+     */
+    public function destroy(TypologyDescription $typology)
+    {
+        try {
+            // Check if typology is being used in ST30 questions
+            $questionsCount = $typology->st30Questions()->count();
+
+            if ($questionsCount > 0) {
+                return redirect()->back()
+                    ->with('error', "Cannot delete typology. It is being used by {$questionsCount} ST-30 questions.");
+            }
+
+            $typology->delete();
+
+            return redirect()->route('admin.typologies.index')
+                ->with('success', 'Typology deleted successfully.');
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Failed to delete typology: ' . $e->getMessage());
+        }
     }
 }

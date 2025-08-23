@@ -45,7 +45,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/panduan-hasil', [GuideController::class, 'index'])->name('guide');
 
 // Auth Routes (Laravel Breeze default + custom)
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 
 // User Profile Routes
 Route::middleware('auth')->group(function () {
@@ -178,9 +178,13 @@ Route::middleware(['auth', 'role:admin,staff'])->prefix('admin')->name('admin.')
     // Typology Descriptions
     Route::prefix('typologies')->name('typologies.')->group(function () {
         Route::get('/', [TypologyController::class, 'index'])->name('index');
-        Route::get('/{typologyDescription}', [TypologyController::class, 'show'])->name('show');
-        Route::get('/{typologyDescription}/edit', [TypologyController::class, 'edit'])->name('edit')->middleware('role:admin');
-        Route::put('/{typologyDescription}', [TypologyController::class, 'update'])->name('update')->middleware('role:admin');
+        Route::get('/create', [TypologyController::class, 'create'])->name('create');
+        Route::post('/', [TypologyController::class, 'store'])->name('store');
+        Route::get('/{typology}', [TypologyController::class, 'show'])->name('show');
+        Route::get('/{typology}/edit', [TypologyController::class, 'edit'])->name('edit');
+        Route::put('/{typology}', [TypologyController::class, 'update'])->name('update');
+        Route::delete('/{typology}', [TypologyController::class, 'destroy'])->name('destroy');
+        Route::patch('/{typology}/toggle-status', [TypologyController::class, 'toggleStatus'])->name('toggle-status');
     });
 
     // User Management (Admin only)
@@ -242,7 +246,6 @@ Route::middleware(['auth', 'role:admin,staff'])->prefix('admin')->name('admin.')
         Route::put('/', [ProfileController::class, 'update'])->name('update');
         Route::put('/password', [ProfileController::class, 'updatePassword'])->name('update-password');
     });
-
 });
 
 // PIC Routes (role: pic)
@@ -269,7 +272,6 @@ Route::middleware(['auth', 'role:pic'])->prefix('pic')->name('pic.')->group(func
         Route::get('/top-performers', [PICResultController::class, 'topPerformers'])->name('top-performers');
         Route::get('/{testResult}', [PICResultController::class, 'show'])->name('show');
     });
-
 });
 
 // Redirect Routes

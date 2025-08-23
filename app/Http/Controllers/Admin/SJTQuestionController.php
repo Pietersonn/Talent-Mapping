@@ -42,7 +42,7 @@ class SJTQuestionController extends Controller
         }
 
         // Get competency distribution
-        $competencyStats = $questions->groupBy('competency_code')
+        $competencyStats = $questions->groupBy('competency')
             ->map(fn($items) => $items->count())
             ->toArray();
 
@@ -106,7 +106,7 @@ class SJTQuestionController extends Controller
             'version_id' => 'required|exists:question_versions,id',
             'number' => 'required|integer|min:1|max:50',
             'question_text' => 'required|string|max:1000',
-            'competency_code' => 'required|exists:competency_descriptions,competency_code',
+            'competency' => 'required|exists:competency_descriptions,competency_code',
             'options' => 'required|array|size:5',
             'options.*.option_text' => 'required|string|max:500',
             'options.*.score' => 'required|integer|min:0|max:4',
@@ -129,8 +129,8 @@ class SJTQuestionController extends Controller
                 'version_id' => $request->version_id,
                 'number' => $request->number,
                 'question_text' => $request->question_text,
-                'competency_code' => $request->competency_code,
-                'is_active' => true,
+                'competency' => $request->competency,
+                'page_number' => ceil($request->number / 10), // Auto-calculate page number
             ]);
 
             // Create options (A, B, C, D, E)
@@ -141,7 +141,7 @@ class SJTQuestionController extends Controller
                     'option_letter' => $optionLetters[$index],
                     'option_text' => $optionData['option_text'],
                     'score' => $optionData['score'],
-                    'competency_target' => $request->competency_code,
+                    'competency_target' => $request->competency,
                 ]);
             }
         });
@@ -180,8 +180,7 @@ class SJTQuestionController extends Controller
         $request->validate([
             'number' => 'required|integer|min:1|max:50',
             'question_text' => 'required|string|max:1000',
-            'competency_code' => 'required|exists:competency_descriptions,competency_code',
-            'is_active' => 'boolean',
+            'competency' => 'required|exists:competency_descriptions,competency_code',
             'options' => 'required|array|size:5',
             'options.*.option_text' => 'required|string|max:500',
             'options.*.score' => 'required|integer|min:0|max:4',
@@ -204,8 +203,8 @@ class SJTQuestionController extends Controller
             $sjtQuestion->update([
                 'number' => $request->number,
                 'question_text' => $request->question_text,
-                'competency_code' => $request->competency_code,
-                'is_active' => $request->boolean('is_active', true),
+                'competency' => $request->competency,
+                'page_number' => ceil($request->number / 10), // Auto-calculate page number
             ]);
 
             // Update options
@@ -216,7 +215,7 @@ class SJTQuestionController extends Controller
                     $option->update([
                         'option_text' => $optionData['option_text'],
                         'score' => $optionData['score'],
-                        'competency_target' => $request->competency_code,
+                        'competency_target' => $request->competency,
                     ]);
                 }
             }
@@ -296,10 +295,15 @@ class SJTQuestionController extends Controller
             'questions.*.number' => 'required|integer|min:1|max:50',
         ]);
 
-        foreach ($request->questions as $questionData) {
-            SJTQuestion::where('id', $questionData['id'])
-                ->update(['number' => $questionData['number']]);
-        }
+        DB::transaction(function () use ($request) {
+            foreach ($request->questions as $questionData) {
+                SJTQuestion::where('id', $questionData['id'])
+                    ->update([
+                        'number' => $questionData['number'],
+                        'page_number' => ceil($questionData['number'] / 10) // Auto-recalculate page
+                    ]);
+            }
+        });
 
         return response()->json(['success' => true]);
     }

@@ -21,6 +21,56 @@ class TypologyDescription extends Model
         'weakness_description',
     ];
 
+    // Tambahkan accessor methods untuk kompatibilitas dengan view
+
+    /**
+     * Accessor untuk description (menggunakan strength_description)
+     */
+    public function getDescriptionAttribute(): string
+    {
+        return $this->strength_description ?? 'No description available';
+    }
+
+    /**
+     * Accessor untuk strengths
+     */
+    public function getStrengthsAttribute(): ?string
+    {
+        return $this->strength_description;
+    }
+
+    /**
+     * Accessor untuk weaknesses
+     */
+    public function getWeaknessesAttribute(): ?string
+    {
+        return $this->weakness_description;
+    }
+
+    /**
+     * Accessor untuk characteristics (tidak ada di database, return null)
+     */
+    public function getCharacteristicsAttribute(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Accessor untuk career_suggestions (tidak ada di database, return null)
+     */
+    public function getCareerSuggestionsAttribute(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Accessor untuk is_active (default true karena tidak ada kolom ini)
+     */
+    public function getIsActiveAttribute(): bool
+    {
+        return true;
+    }
+
     /**
      * ST-30 questions that use this typology
      */

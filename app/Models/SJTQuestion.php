@@ -25,7 +25,6 @@ class SJTQuestion extends Model
         'question_text',
         'competency', // BENAR - ini nama kolom yang ada di database
         'page_number',
-        'is_active',
     ];
 
     /**

@@ -24,15 +24,15 @@ class CompetencyController extends Controller
     /**
      * Show the form for editing competency
      */
-    public function edit(CompetencyDescription $competency)
+    public function edit(CompetencyDescription $competencyDescription)
     {
-        return view('admin.questions.competencies.edit', compact('competency'));
+        return view('admin.questions.competencies.edit', compact('competencyDescription'));
     }
 
     /**
      * Update the specified competency
      */
-    public function update(Request $request, CompetencyDescription $competency)
+    public function update(Request $request, CompetencyDescription $competencyDescription)
     {
         $request->validate([
             'competency_name' => 'required|string|max:100',
@@ -41,7 +41,7 @@ class CompetencyController extends Controller
             'improvement_activity' => 'required|string|max:1000',
         ]);
 
-        $competency->update($request->only([
+        $competencyDescription->update($request->only([
             'competency_name',
             'strength_description',
             'weakness_description',
@@ -55,10 +55,10 @@ class CompetencyController extends Controller
     /**
      * Display the specified competency
      */
-    public function show(CompetencyDescription $competency)
+    public function show(CompetencyDescription $competencyDescription)
     {
-        $competency->load('sjtQuestions.questionVersion');
+        $competencyDescription->load('sjtQuestions.questionVersion');
 
-        return view('admin.questions.competencies.show', compact('competency'));
+        return view('admin.questions.competencies.show', compact('competencyDescription'));
     }
 }

@@ -43,7 +43,7 @@
                         @foreach($competencies as $competency)
                         <tr>
                             <td>
-                                <span class="badge badge-primary badge-lg">{{ $competency->competency_code }}</span>
+                                <span class="badge ">{{ $competency->competency_code }}</span>
                             </td>
                             <td>
                                 <div>

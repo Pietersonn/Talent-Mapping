@@ -25,14 +25,12 @@ class ST30Question extends Model
         'number',
         'statement',
         'typology_code',
-        'is_active',
     ];
 
     /**
      * The attributes that should be cast.
      */
     protected $casts = [
-        'is_active' => 'boolean',
         'number' => 'integer',
     ];
 

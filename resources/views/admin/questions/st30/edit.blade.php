@@ -71,14 +71,6 @@
                         @enderror
                     </div>
 
-                    <!-- Status -->
-                    <div class="form-group">
-                        <div class="custom-control custom-switch">
-                            <input type="checkbox" class="custom-control-input" id="is_active" name="is_active" value="1"
-                                   {{ old('is_active', $st30Question->is_active) ? 'checked' : '' }}>
-                            <label class="custom-control-label" for="is_active">Active Question</label>
-                        </div>
-                    </div>
 
                     <!-- Typology Description -->
                     <div id="typology_description" class="alert alert-light">
