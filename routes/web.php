@@ -88,6 +88,11 @@ Route::middleware(['auth', 'role:admin,staff'])->prefix('admin')->name('admin.')
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/stats', [AdminDashboardController::class, 'getStatistics'])->name('dashboard.stats');
 
+    Route::get('/test-alert', function () {
+        return redirect()->route('admin.dashboard')->with('success', 'SweetAlert2 is working!');
+    })->name('test-alert');
+
+
     // Question Bank Management
     Route::prefix('questions')->name('questions.')->group(function () {
         Route::get('/', [AdminQuestionController::class, 'index'])->name('index');
@@ -188,6 +193,7 @@ Route::middleware(['auth', 'role:admin,staff'])->prefix('admin')->name('admin.')
     });
 
     // User Management (Admin only)
+    // User Management (Admin only)
     Route::middleware('role:admin')->prefix('users')->name('users.')->group(function () {
         Route::get('/', [AdminUserController::class, 'index'])->name('index');
         Route::get('/create', [AdminUserController::class, 'create'])->name('create');
@@ -197,6 +203,9 @@ Route::middleware(['auth', 'role:admin,staff'])->prefix('admin')->name('admin.')
         Route::put('/{user}', [AdminUserController::class, 'update'])->name('update');
         Route::delete('/{user}', [AdminUserController::class, 'destroy'])->name('destroy');
         Route::post('/{user}/toggle-status', [AdminUserController::class, 'toggleStatus'])->name('toggle-status');
+
+        // TAMBAH ROUTE INI:
+        Route::post('/{user}/reset-password', [AdminUserController::class, 'resetPassword'])->name('reset-password');
     });
 
     // Event Management

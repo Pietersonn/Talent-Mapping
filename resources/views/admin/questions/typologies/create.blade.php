@@ -225,43 +225,131 @@
 @endsection
 
 @push('scripts')
-<script>
-// Auto uppercase typology code
-document.getElementById('typology_code').addEventListener('input', function(e) {
-    e.target.value = e.target.value.toUpperCase();
-});
+    <script>
+        $(document).ready(function() {
+            // Character counters for text areas
+            function updateCharacterCount(textareaId, maxLength) {
+                const textarea = $('#' + textareaId);
+                const helpText = textarea.siblings('.form-text').first();
+                const currentLength = textarea.val().length;
+                const remaining = maxLength - currentLength;
 
-// Character count for textareas
-function setupCharacterCount(elementId, maxLength = null) {
-    const element = document.getElementById(elementId);
-    if (element) {
-        const countDiv = document.createElement('small');
-        countDiv.className = 'form-text text-muted character-count';
-        element.parentNode.appendChild(countDiv);
+                if (remaining < 50) {
+                    helpText.addClass('text-warning').removeClass('text-muted');
+                } else {
+                    helpText.addClass('text-muted').removeClass('text-warning');
+                }
 
-        function updateCount() {
-            const length = element.value.length;
-            countDiv.textContent = maxLength ? `${length}/${maxLength} characters` : `${length} characters`;
-
-            if (maxLength && length > maxLength * 0.9) {
-                countDiv.className = 'form-text text-warning character-count';
-            } else {
-                countDiv.className = 'form-text text-muted character-count';
+                helpText.text(helpText.data('original-text') + ` (${remaining} characters remaining)`);
             }
-        }
 
-        element.addEventListener('input', updateCount);
-        updateCount();
-    }
-}
+            // Initialize character counters
+            $('.form-text').each(function() {
+                $(this).data('original-text', $(this).text());
+            });
 
-// Setup character counters
-setupCharacterCount('description');
-setupCharacterCount('characteristics');
-setupCharacterCount('strengths');
-setupCharacterCount('weaknesses');
-setupCharacterCount('career_suggestions');
-</script>
+            $('#strengths, #weaknesses, #career_suggestions').on('input', function() {
+                const maxLength = 1000;
+                updateCharacterCount($(this).attr('id'), maxLength);
+            });
+
+            // Form submission confirmation for important operations
+            $('form').on('submit', function(e) {
+                e.preventDefault();
+
+                const typologyName = $('#typology_name').val();
+                const typologyCode = $('#typology_code').val();
+
+                if (!typologyName || !typologyCode) {
+                    showErrorToast('Please fill in all required fields.');
+                    return;
+                }
+
+                customConfirm({
+                    title: 'Create New Typology?',
+                    text: `Create typology "${typologyName}" with code "${typologyCode}"?`,
+                    icon: 'question',
+                    confirmButtonText: 'Yes, create it!',
+                    confirmButtonColor: '#28a745'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        showLoading('Creating Typology...', 'Please wait while we save the typology...');
+                        this.submit();
+                    }
+                });
+            });
+
+            // Auto-generate typology code based on name
+            $('#typology_name').on('input', function() {
+                const name = $(this).val();
+                const code = name.substring(0, 3).toUpperCase();
+                if (code && !$('#typology_code').val()) {
+                    $('#typology_code').val(code);
+                }
+            });
+
+            // Validate typology code format
+            $('#typology_code').on('input', function() {
+                const code = $(this).val().toUpperCase();
+                $(this).val(code);
+
+                if (code.length > 5) {
+                    showErrorToast('Typology code cannot exceed 5 characters.');
+                    $(this).val(code.substring(0, 5));
+                }
+            });
+
+            // Preview functionality
+            $('#preview-btn').on('click', function(e) {
+                e.preventDefault();
+
+                const typologyData = {
+                    name: $('#typology_name').val(),
+                    code: $('#typology_code').val(),
+                    strengths: $('#strengths').val(),
+                    weaknesses: $('#weaknesses').val(),
+                    career: $('#career_suggestions').val()
+                };
+
+                if (!typologyData.name || !typologyData.code) {
+                    showErrorToast('Please fill in name and code to preview.');
+                    return;
+                }
+
+                Swal.fire({
+                    title: `${typologyData.name} (${typologyData.code})`,
+                    html: `
+                        <div class="text-left">
+                            <h6 class="text-success">Strengths:</h6>
+                            <p class="small">${typologyData.strengths || 'Not specified'}</p>
+                            <h6 class="text-warning">Areas for Development:</h6>
+                            <p class="small">${typologyData.weaknesses || 'Not specified'}</p>
+                            <h6 class="text-info">Career Suggestions:</h6>
+                            <p class="small">${typologyData.career || 'Not specified'}</p>
+                        </div>
+                    `,
+                    width: 600,
+                    confirmButtonText: 'Close Preview'
+                });
+            });
+
+            // Keyboard shortcuts
+            $(document).keydown(function(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    switch(e.which) {
+                        case 83: // Ctrl+S for Save
+                            e.preventDefault();
+                            $('form').submit();
+                            break;
+                        case 80: // Ctrl+P for Preview
+                            e.preventDefault();
+                            $('#preview-btn').click();
+                            break;
+                    }
+                }
+            });
+        });
+    </script>
 @endpush
 
 @push('styles')

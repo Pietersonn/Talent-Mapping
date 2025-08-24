@@ -25,10 +25,19 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
-
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $user = Auth::user();
+
+        // Check email verification using database column
+        if (is_null($user->email_verified_at)) {
+            return redirect()->route('verification.notice')
+                ->with('warning', 'Please verify your email to access all features.');
+        }
+
+        // Semua role ke home setelah login
+        return redirect()->intended(route('home'))
+            ->with('success', 'Welcome back, ' . $user->name . '!');
     }
 
     /**
@@ -37,11 +46,10 @@ class AuthenticatedSessionController extends Controller
     public function destroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();
-
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect()->route('home')
+            ->with('success', 'You have been logged out successfully.');
     }
 }

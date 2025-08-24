@@ -9,305 +9,303 @@
 @endsection
 
 @section('content')
-    <div class="row">
+    <div class="container-fluid">
 
-        <!-- Version Selector & Actions -->
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-brain mr-1"></i>
-                        ST-30 (Strength Typology) Questions
-                    </h3>
-                    <div class="card-tools">
-                        @if (Auth::user()->role === 'admin' && $selectedVersion)
-                            <a href="{{ route('admin.questions.st30.create', ['version' => $selectedVersion->id]) }}"
-                                class="btn btn-primary">
-                                <i class="fas fa-plus"></i> Add Question
-                            </a>
-                        @endif
-                        <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#importModal">
-                            <i class="fas fa-upload"></i> Import
-                        </button>
-                        @if ($questions->count() > 0)
-                            <button type="button" class="btn btn-success btn-sm" onclick="exportQuestions()">
-                                <i class="fas fa-download"></i> Export
-                            </button>
-                        @endif
-                    </div>
-                </div>
-                <div class="card-body">
-
-                    <!-- Version Selection -->
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label for="version_select">Select Version:</label>
-                            <select id="version_select" class="form-control" onchange="changeVersion()">
-                                <option value="">Choose Version...</option>
-                                @foreach ($versions as $version)
-                                    <option value="{{ $version->id }}"
-                                        {{ $selectedVersion && $selectedVersion->id === $version->id ? 'selected' : '' }}>
-                                        {{ $version->display_name }}
-                                        @if ($version->is_active)
-                                            (ACTIVE)
-                                        @endif
-                                        - {{ $version->st30Questions()->count() }}/30 Questions
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-8">
-                            @if ($selectedVersion)
-                                <div class="info-box bg-light">
-                                    <span
-                                        class="info-box-icon bg-{{ $selectedVersion->is_active ? 'success' : 'secondary' }}">
-                                        <i class="fas fa-brain"></i>
-                                    </span>
-                                    <div class="info-box-content">
-                                        <span class="info-box-text">{{ $selectedVersion->display_name }}</span>
-                                        <span class="info-box-number">
-                                            {{ $questions->count() }}/30 Questions
-                                            @if ($selectedVersion->is_active)
-                                                <small class="badge badge-success ml-1">ACTIVE</small>
-                                            @endif
-                                        </span>
-                                        <div class="progress">
-                                            <div class="progress-bar bg-{{ $selectedVersion->is_active ? 'success' : 'info' }}"
-                                                style="width: {{ ($questions->count() / 30) * 100 }}%"></div>
-                                        </div>
-                                        <span class="progress-description">
-                                            {{ round(($questions->count() / 30) * 100, 1) }}% Complete
-                                        </span>
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    @if ($selectedVersion)
-        <!-- Typology Distribution -->
-
-        <!--
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-chart-pie mr-1"></i>
-                        Typology Distribution
-                    </h3>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        @foreach ($typologies as $typology)
-    <div class="col-md-2 col-sm-3 col-6">
-                                <div class="description-block">
-                                    <span class="description-percentage text-primary">
-                                        {{ $typologyStats[$typology->typology_code] ?? 0 }}
-                                    </span>
-                                    <h5 class="description-header">{{ $typology->typology_code }}</h5>
-                                    <span class="description-text">{{ $typology->typology_name }}</span>
-                                </div>
-                            </div>
-    @endforeach
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    -->
-
-        <!-- Questions List -->
         <div class="row">
+            <!-- Version Selection & Actions -->
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">
-                            <i class="fas fa-list mr-1"></i>
-                            Questions List ({{ $questions->count() }})
+                            <i class="fas fa-brain mr-1"></i>
+                            ST-30 Questions
+                            @if($selectedVersion)
+                                - {{ $selectedVersion->name }}
+                            @endif
                         </h3>
                         <div class="card-tools">
-                            <div class="input-group input-group-sm" style="width: 200px;">
-                                <input type="text" id="searchQuestions" class="form-control float-right"
-                                    placeholder="Search questions...">
-                                <div class="input-group-append">
-                                    <button type="submit" class="btn btn-default">
-                                        <i class="fas fa-search"></i>
+                            @if(Auth::user()->role === 'admin' && $selectedVersion)
+                                <a href="{{ route('admin.st30.create', ['version' => $selectedVersion->id]) }}"
+                                   class="btn btn-primary btn-sm">
+                                    <i class="fas fa-plus"></i> Add Question
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label for="version_select">Select Version:</label>
+                                <select id="version_select" class="form-control" onchange="changeVersion()">
+                                    <option value="">-- Select Version --</option>
+                                    @foreach($versions as $version)
+                                        <option value="{{ $version->id }}"
+                                                {{ $selectedVersion && $selectedVersion->id == $version->id ? 'selected' : '' }}>
+                                            {{ $version->name }}
+                                            @if($version->is_active)
+                                                (Active)
+                                            @endif
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="searchQuestions">Search Questions:</label>
+                                <input type="text" id="searchQuestions" class="form-control"
+                                       placeholder="Search by statement or typology...">
+                            </div>
+                            <div class="col-md-4">
+                                <label>&nbsp;</label><br>
+                                @if($selectedVersion)
+                                    <button onclick="exportQuestions()" class="btn btn-success btn-sm">
+                                        <i class="fas fa-download"></i> Export
                                     </button>
+                                    @if(Auth::user()->role === 'admin')
+                                        <button class="btn btn-info btn-sm" data-toggle="modal" data-target="#importModal">
+                                            <i class="fas fa-upload"></i> Import
+                                        </button>
+                                    @endif
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if($selectedVersion)
+            <!-- Statistics Cards -->
+            <div class="row">
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-info">
+                        <div class="inner">
+                            <h3>{{ $questions->count() }}</h3>
+                            <p>Total Questions</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-question-circle"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-success">
+                        <div class="inner">
+                            <h3>{{ $selectedVersion->is_active ? 'Active' : 'Inactive' }}</h3>
+                            <p>Version Status</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-{{ $selectedVersion->is_active ? 'check-circle' : 'times-circle' }}"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-warning">
+                        <div class="inner">
+                            <h3>{{ count($typologyStats) }}</h3>
+                            <p>Typologies Covered</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-danger">
+                        <div class="inner">
+                            <h3>{{ 30 - $questions->count() }}</h3>
+                            <p>Questions Needed</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Questions Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Questions List</h3>
+                        </div>
+                        <div class="card-body table-responsive p-0">
+                            @if($questions->count() > 0)
+                                <table id="questionsTable" class="table table-hover text-nowrap">
+                                    <thead>
+                                        <tr>
+                                            <th width="60">No.</th>
+                                            <th width="45%">Statement</th>
+                                            <th width="15%">Typology</th>
+                                            <th width="10%">Status</th>
+                                            <th width="15%">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($questions as $question)
+                                            <tr>
+                                                <td>
+                                                    <span class="badge badge-info badge-lg">{{ $question->number }}</span>
+                                                </td>
+                                                <td>
+                                                    <div class="statement-text">
+                                                        {{ Str::limit($question->statement, 80) }}
+                                                        @if(strlen($question->statement) > 80)
+                                                            <button class="btn btn-link btn-sm p-0"
+                                                                    onclick="showFullStatement({{ $question->id }})">
+                                                                <i class="fas fa-expand-alt"></i>
+                                                            </button>
+                                                            <div id="full-statement-{{ $question->id }}"
+                                                                 style="display: none;" class="mt-2 text-muted">
+                                                                {{ $question->statement }}
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge badge-secondary">
+                                                        {{ $question->typology_code }}
+                                                    </span>
+                                                    @if($question->typologyDescription)
+                                                        <br><small class="text-muted">
+                                                            {{ Str::limit($question->typologyDescription->typology_name, 20) }}
+                                                        </small>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    <span class="badge badge-{{ $question->questionVersion->is_active ? 'success' : 'secondary' }}">
+                                                        {{ $question->questionVersion->is_active ? 'Active' : 'Inactive' }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm" role="group">
+                                                        <a href="{{ route('admin.st30.show', $question) }}"
+                                                           class="btn btn-info" title="View">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        @if(Auth::user()->role === 'admin')
+                                                            <a href="{{ route('admin.st30.edit', $question) }}"
+                                                               class="btn btn-warning" title="Edit">
+                                                                <i class="fas fa-edit"></i>
+                                                            </a>
+                                                            <button type="button"
+                                                                    class="btn btn-danger btn-delete"
+                                                                    data-question-number="{{ $question->number }}"
+                                                                    data-delete-url="{{ route('admin.st30.destroy', $question) }}"
+                                                                    title="Delete">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            @else
+                                <div class="text-center py-4">
+                                    <i class="fas fa-question-circle fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">No Questions Found</h5>
+                                    <p class="text-muted">
+                                        @if($selectedVersion)
+                                            This version doesn't have any questions yet.
+                                            @if(Auth::user()->role === 'admin')
+                                                <br><a href="{{ route('admin.st30.create', ['version' => $selectedVersion->id]) }}"
+                                                       class="btn btn-primary mt-2">
+                                                    <i class="fas fa-plus"></i> Add First Question
+                                                </a>
+                                            @endif
+                                        @else
+                                            Please select a version to view questions.
+                                        @endif
+                                    </p>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Typology Distribution -->
+            @if($questions->count() > 0)
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Typology Distribution</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    @foreach($typologies as $typology)
+                                        @php
+                                            $count = $typologyStats[$typology->typology_code] ?? 0;
+                                            $percentage = $questions->count() > 0 ? ($count / 30) * 100 : 0;
+                                        @endphp
+                                        <div class="col-md-3 mb-2">
+                                            <div class="info-box info-box-sm">
+                                                <span class="info-box-icon bg-{{ $count > 0 ? 'success' : 'secondary' }}">
+                                                    {{ $typology->typology_code }}
+                                                </span>
+                                                <div class="info-box-content">
+                                                    <span class="info-box-text">{{ $typology->typology_name }}</span>
+                                                    <span class="info-box-number">
+                                                        {{ $count }}/1
+                                                        <small>({{ number_format($percentage, 1) }}%)</small>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="card-body table-responsive p-0">
-                        @if ($questions->count() > 0)
-                            <table class="table table-hover text-nowrap" id="questionsTable">
-                                <thead>
-                                    <tr>
-                                        <th width="60">No.</th>
-                                        <th width="45%">Statement</th>
-                                        <th width="120">Typology</th>
-                                        <th width="60">Used</th>
-                                        <th width="180">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($questions as $question)
-                                        <tr data-question-id="{{ $question->id }}">
-                                            <td>
-                                                <span class="badge badge-light">{{ $question->number }}</span>
-                                            </td>
-                                            <td>
-                                                <div class="question-item">
-                                                    <span>{{ Str::limit($question->statement, 80) }}</span>
-                                                    @if (strlen($question->statement) > 80)
-                                                        <button type="button" class="btn btn-link btn-xs p-0 ml-1"
-                                                            onclick="showFullStatement('{{ $question->id }}')">
-                                                            <i class="fas fa-expand-alt"></i>
-                                                        </button>
-                                                    @endif
-                                                    <div id="full-statement-{{ $question->id }}" class="mt-2"
-                                                        style="display: none;">
-                                                        <div class="alert alert-light small">
-                                                            {{ $question->statement }}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span class="badge badge-secondary">{{ $question->typology_code }}</span>
-                                                <br>
-                                                <small class="text-muted">{{ $question->typology_name }}</small>
-                                            </td>
-                                            <td>
-                                                <span
-                                                    class="badge badge-{{ $question->usage_count > 0 ? 'info' : 'light' }}">
-                                                    {{ $question->usage_count }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <div class="btn-group btn-group-sm" role="group">
-                                                    <a href="{{ route('admin.st30.show', $question) }}"
-                                                        class="btn btn-info btn-sm" title="View Details">
-                                                        <i class="fas fa-eye"></i> View
-                                                    </a>
-                                                    @if (Auth::user()->role === 'admin')
-                                                        <a href="{{ route('admin.st30.edit', $question) }}"
-                                                            class="btn btn-warning btn-sm" title="Edit Question">
-                                                            <i class="fas fa-edit"></i> Edit
-                                                        </a>
-                                                        @if ($question->usage_count === 0)
-                                                            <button type="button" class="btn btn-danger btn-sm"
-                                                                onclick="confirmDelete('{{ $question->number }}', '{{ route('admin.st30.destroy', $question) }}')"
-                                                                title="Delete Question">
-                                                                <i class="fas fa-trash"></i> Delete
-                                                            </button>
-                                                        @else
-                                                            <button class="btn btn-secondary btn-sm"
-                                                                title="Cannot delete - has responses" disabled>
-                                                                <i class="fas fa-lock"></i> Used
-                                                            </button>
-                                                        @endif
-                                                    @endif
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        @else
-                            <div class="text-center py-5">
-                                <i class="fas fa-question-circle fa-3x text-muted mb-3"></i>
-                                <h5 class="text-muted">No Questions Found</h5>
-                                <p class="text-muted">
-                                    @if ($selectedVersion)
-                                        Start by adding ST-30 questions to this version.
-                                    @else
-                                        Please select a version to view questions.
-                                    @endif
-                                </p>
-                                @if (Auth::user()->role === 'admin' && $selectedVersion)
-                                    <a href="{{ route('admin.st30.create', ['version' => $selectedVersion->id]) }}"
-                                        class="btn btn-primary">
-                                        <i class="fas fa-plus"></i> Add First Question
-                                    </a>
-                                @endif
+                </div>
+            @endif
+        @endif
+
+        <!-- Import Modal -->
+        @if(Auth::user()->role === 'admin')
+            <div class="modal fade" id="importModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <form action="{{ route('admin.st30.import') }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            <div class="modal-header">
+                                <h5 class="modal-title">Import ST-30 Questions</h5>
+                                <button type="button" class="close" data-dismiss="modal">
+                                    <span>&times;</span>
+                                </button>
                             </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-        </div>
-    @else
-        <!-- No Version Selected -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body text-center py-5">
-                        <i class="fas fa-brain fa-3x text-muted mb-3"></i>
-                        <h5 class="text-muted">No ST-30 Version Available</h5>
-                        <p class="text-muted">Create a ST-30 version first to manage questions.</p>
-                        <a href="{{ route('admin.questions.create') }}" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Create ST-30 Version
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endif
+                            <div class="modal-body">
+                                <input type="hidden" name="version_id" value="{{ $selectedVersion ? $selectedVersion->id : '' }}">
 
-    <!-- Import Modal -->
-    <div class="modal fade" id="importModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Import ST-30 Questions</h5>
-                    <button type="button" class="close" data-dismiss="modal">
-                        <span>&times;</span>
-                    </button>
-                </div>
-                <form action="{{ route('admin.st30.import') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    <div class="modal-body">
-                        @if ($selectedVersion)
-                            <input type="hidden" name="version_id" value="{{ $selectedVersion->id }}">
-                            <div class="form-group">
-                                <label>Target Version:</label>
-                                <input type="text" class="form-control" value="{{ $selectedVersion->display_name }}"
-                                    readonly>
+                                <div class="form-group">
+                                    <label for="import_file">Select File</label>
+                                    <input type="file" class="form-control-file" id="import_file"
+                                           name="import_file" accept=".csv,.xlsx,.xls" required>
+                                    <small class="form-text text-muted">Supported formats: CSV, Excel</small>
+                                </div>
+
+                                <div class="alert alert-info">
+                                    <strong>File Format:</strong>
+                                    <ul class="mb-0">
+                                        <li>Column 1: number (1-30)</li>
+                                        <li>Column 2: statement</li>
+                                        <li>Column 3: typology_code</li>
+                                    </ul>
+                                </div>
                             </div>
-                        @endif
-
-                        <div class="form-group">
-                            <label for="import_file">Select File:</label>
-                            <input type="file" name="import_file" id="import_file" class="form-control"
-                                accept=".csv,.xlsx" required>
-                            <small class="form-text text-muted">Supported formats: CSV, Excel</small>
-                        </div>
-
-                        <div class="alert alert-info">
-                            <strong>File Format:</strong>
-                            <ul class="mb-0">
-                                <li>Column 1: number (1-30)</li>
-                                <li>Column 2: statement</li>
-                                <li>Column 3: typology_code</li>
-                            </ul>
-                        </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Import Questions</button>
+                            </div>
+                        </form>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Import Questions</button>
-                    </div>
-                </form>
+                </div>
             </div>
-        </div>
+        @endif
     </div>
-
 @endsection
 
 @push('scripts')
@@ -328,7 +326,7 @@
             if (versionId) {
                 window.location.href = '{{ route('admin.st30.export') }}?version=' + versionId;
             } else {
-                alert('Please select a version to export.');
+                showErrorToast('Please select a version to export.');
             }
         }
 
@@ -351,54 +349,18 @@
                 });
             });
 
-            // Delete confirmation
+            // Delete confirmation with SweetAlert2
             $('.btn-delete').on('click', function(e) {
                 e.preventDefault();
-                var form = $(this).closest('form');
+                var questionNumber = $(this).data('question-number');
+                var deleteUrl = $(this).data('delete-url');
 
-                if (confirm(
-                    'Are you sure you want to delete this question? This action cannot be undone.')) {
-                    form.submit();
-                }
+                confirmDelete(
+                    'Delete ST-30 Question?',
+                    `Are you sure you want to delete Question #${questionNumber}? This action cannot be undone and may affect assessment results.`,
+                    deleteUrl
+                );
             });
-
-            // Sortable questions (for reordering)
-            @if (Auth::user()->role === 'admin' && $selectedVersion)
-                $('#questionsTable tbody').sortable({
-                    handle: '.badge-primary',
-                    update: function(event, ui) {
-                        var questions = [];
-                        $('#questionsTable tbody tr').each(function(index) {
-                            questions.push({
-                                id: $(this).data('question-id'),
-                                number: index + 1
-                            });
-                        });
-
-                        // Send AJAX request to reorder
-                        $.post('{{ route('admin.st30.reorder') }}', {
-                            _token: '{{ csrf_token() }}',
-                            version_id: '{{ $selectedVersion ? $selectedVersion->id : '' }}',
-                            questions: questions
-                        }).done(function(response) {
-                            if (response.success) {
-                                // Update the question numbers in the table
-                                $('#questionsTable tbody tr').each(function(index) {
-                                    $(this).find('.badge-primary').text(index + 1);
-                                });
-
-                                // Show success message
-                                toastr.success('Questions reordered successfully!');
-                            }
-                        }).fail(function() {
-                            toastr.error(
-                                'Failed to reorder questions. Please refresh and try again.'
-                                );
-                            location.reload();
-                        });
-                    }
-                });
-            @endif
         });
     </script>
 @endpush

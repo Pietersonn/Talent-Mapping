@@ -201,24 +201,25 @@
                                     </a>
                                     @if(Auth::user()->role === 'admin')
                                         @if(!$version->is_active && $version->st30_questions_count >= 30)
-                                            <form action="{{ route('admin.questions.activate', $version) }}" method="POST" class="d-inline">
-                                                @csrf
-                                                <button type="submit" class="btn btn-success btn-xs" title="Activate">
-                                                    <i class="fas fa-check"></i>
-                                                </button>
-                                            </form>
+                                            <button class="btn btn-success btn-xs btn-activate"
+                                                    data-version-id="{{ $version->id }}"
+                                                    data-version-name="{{ $version->name }}"
+                                                    data-version-type="ST-30"
+                                                    title="Activate">
+                                                <i class="fas fa-check"></i>
+                                            </button>
                                         @endif
                                         <a href="{{ route('admin.questions.edit', $version) }}" class="btn btn-warning btn-xs">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         @if(!$version->is_active && !$version->hasResponses())
-                                            <form action="{{ route('admin.questions.destroy', $version) }}" method="POST" class="d-inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-danger btn-xs btn-delete" title="Delete">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
+                                            <button class="btn btn-danger btn-xs btn-delete"
+                                                    data-version-id="{{ $version->id }}"
+                                                    data-version-name="{{ $version->name }}"
+                                                    data-version-type="ST-30"
+                                                    title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
                                         @endif
                                     @endif
                                 </div>
@@ -291,24 +292,25 @@
                                     </a>
                                     @if(Auth::user()->role === 'admin')
                                         @if(!$version->is_active && $version->sjt_questions_count >= 50)
-                                            <form action="{{ route('admin.questions.activate', $version) }}" method="POST" class="d-inline">
-                                                @csrf
-                                                <button type="submit" class="btn btn-success btn-xs" title="Activate">
-                                                    <i class="fas fa-check"></i>
-                                                </button>
-                                            </form>
+                                            <button class="btn btn-success btn-xs btn-activate"
+                                                    data-version-id="{{ $version->id }}"
+                                                    data-version-name="{{ $version->name }}"
+                                                    data-version-type="SJT"
+                                                    title="Activate">
+                                                <i class="fas fa-check"></i>
+                                            </button>
                                         @endif
                                         <a href="{{ route('admin.questions.edit', $version) }}" class="btn btn-warning btn-xs">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         @if(!$version->is_active && !$version->hasResponses())
-                                            <form action="{{ route('admin.questions.destroy', $version) }}" method="POST" class="d-inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-danger btn-xs btn-delete" title="Delete">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
+                                            <button class="btn btn-danger btn-xs btn-delete"
+                                                    data-version-id="{{ $version->id }}"
+                                                    data-version-name="{{ $version->name }}"
+                                                    data-version-type="SJT"
+                                                    title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
                                         @endif
                                     @endif
                                 </div>
@@ -376,19 +378,49 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
-    // Confirm delete actions
+    // SweetAlert2 Activate Version Confirmation
+    $('.btn-activate').on('click', function(e) {
+        e.preventDefault();
+        var versionId = $(this).data('version-id');
+        var versionName = $(this).data('version-name');
+        var versionType = $(this).data('version-type');
+
+        customConfirm({
+            title: `Activate ${versionType} Version?`,
+            text: `Are you sure you want to activate "${versionName}"? This will deactivate the current active version.`,
+            icon: 'question',
+            confirmButtonText: 'Yes, activate!',
+            confirmButtonColor: '#28a745'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Create and submit form
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ route('admin.questions.activate', ':id') }}'.replace(':id', versionId);
+                form.innerHTML = '@csrf';
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    });
+
+    // SweetAlert2 Delete Version Confirmation
     $('.btn-delete').on('click', function(e) {
         e.preventDefault();
-        var form = $(this).closest('form');
+        var versionId = $(this).data('version-id');
+        var versionName = $(this).data('version-name');
+        var versionType = $(this).data('version-type');
 
-        if (confirm('Are you sure you want to delete this version? This action cannot be undone.')) {
-            form.submit();
-        }
+        confirmDelete(
+            `Delete ${versionType} Version?`,
+            `Are you sure you want to delete "${versionName}"? This action cannot be undone and will remove all questions in this version.`,
+            '{{ route('admin.questions.destroy', ':id') }}'.replace(':id', versionId)
+        );
     });
 
     // Auto refresh version statistics every 30 seconds
     setInterval(function() {
-        // You can add AJAX calls here to refresh version stats
+        // You can add AJAX calls here to refresh version stats if needed
     }, 30000);
 });
 </script>

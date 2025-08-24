@@ -177,13 +177,9 @@
 
                 <!-- Logout -->
                 <li class="nav-item">
-                    <form method="POST" action="{{ route('logout') }}" class="d-inline">
-                        @csrf
-                        <button type="submit" class="nav-link btn btn-link text-left w-100 border-0 bg-transparent">
-                            <i class="nav-icon fas fa-sign-out-alt text-danger"></i>
-                            <p class="text-danger">Logout</p>
-                        </button>
-                    </form>
+                    <a href="#" class="nav-link text-danger" onclick="confirmLogout()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
                 </li>
 
             </ul>
@@ -192,3 +188,25 @@
     </div>
     <!-- /.sidebar -->
 </aside>
+<script>
+    function confirmLogout() {
+        Swal.fire({
+            title: 'Logout?',
+            text: 'Are you sure you want to logout?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Yes, logout!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Create and submit logout form
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ route('logout') }}';
+                form.innerHTML = '@csrf';
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+</script>
