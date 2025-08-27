@@ -21,6 +21,7 @@ class AuthenticatedSessionController extends Controller
 
     /**
      * Handle an incoming authentication request.
+     * ALL USERS REDIRECT TO HOME AFTER LOGIN
      */
     public function store(LoginRequest $request): RedirectResponse
     {
@@ -35,13 +36,14 @@ class AuthenticatedSessionController extends Controller
                 ->with('warning', 'Please verify your email to access all features.');
         }
 
-        // Semua role ke home setelah login
+        // ALL ROLES REDIRECT TO HOME (NOT DASHBOARD)
         return redirect()->intended(route('home'))
             ->with('success', 'Welcome back, ' . $user->name . '!');
     }
 
     /**
      * Destroy an authenticated session.
+     * LOGOUT ALWAYS REDIRECT TO HOME
      */
     public function destroy(Request $request): RedirectResponse
     {

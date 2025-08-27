@@ -52,28 +52,28 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('admin.st30.index') }}"
+                            <a href="{{ route('admin.questions.st30.index') }}"
                                 class="nav-link {{ request()->routeIs('admin.st30.*') ? 'active' : '' }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>ST-30 Questions</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('admin.sjt.index') }}"
+                            <a href="{{ route('admin.questions.sjt.index') }}"
                                 class="nav-link {{ request()->routeIs('admin.sjt.*') ? 'active' : '' }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>SJT Questions</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('admin.competencies.index') }}"
+                            <a href="{{ route('admin.questions.competencies.index') }}"
                                 class="nav-link {{ request()->routeIs('admin.competencies.*') ? 'active' : '' }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Competencies</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('admin.typologies.index') }}"
+                            <a href="{{ route('admin.questions.typologies.index') }}"
                                 class="nav-link {{ request()->routeIs('admin.typologies.*') ? 'active' : '' }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Typologies</p>
@@ -143,7 +143,7 @@
 
                 <!-- System Monitoring -->
                 <li class="nav-item">
-                    <a href="{{ route('admin.monitoring.index') }}"
+                    <a href="#"
                         class="nav-link {{ request()->routeIs('admin.monitoring.*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-chart-line"></i>
                         <p>System Monitoring</p>

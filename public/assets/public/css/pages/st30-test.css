@@ -1,0 +1,289 @@
+/* Reset dan Base Styles untuk Test Interface */
+* {
+    box-sizing: border-box;
+}
+
+/* Test Container */
+.st30-test-container {
+    min-height: 100vh;
+    background: #f8fafc;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Hero Section */
+.st30-hero {
+    background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('../../../images/test-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.st30-hero-content {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 40px 50px;
+    border-radius: 20px;
+    max-width: 800px;
+    width: 100%;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.st30-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 20px;
+    line-height: 1.3;
+}
+
+.st30-instruction {
+    font-size: 15px;
+    color: #4a5568;
+    line-height: 1.6;
+    text-align: justify;
+    margin-bottom: 0;
+}
+
+.st30-instruction strong {
+    color: #2b6cb0;
+    font-weight: 600;
+}
+
+/* Progress Section */
+.st30-progress-section {
+    background: white;
+    padding: 25px 40px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.st30-progress-wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.st30-progress-bar {
+    width: 100%;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+
+.st30-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3182ce, #2b6cb0);
+    border-radius: 10px;
+    transition: width 0.8s ease;
+}
+
+.st30-progress-steps {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.st30-step {
+    font-size: 12px;
+    color: #a0aec0;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.st30-step.active {
+    color: #2b6cb0;
+    font-weight: 600;
+}
+
+.st30-selection-note {
+    background: #e53e3e;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.st30-counter {
+    text-align: center;
+    margin-top: 10px;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.st30-counter.valid {
+    background: #48bb78;
+    color: white;
+}
+
+.st30-counter.invalid {
+    background: #f56565;
+    color: white;
+}
+
+/* Questions Section */
+.st30-questions-section {
+    padding: 40px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.st30-questions-list {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 40px;
+}
+
+.st30-question-item {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.st30-question-item:hover {
+    border-color: #cbd5e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.st30-question-label {
+    display: block;
+    cursor: pointer;
+    width: 100%;
+}
+
+.st30-question-content {
+    display: flex;
+    align-items: flex-start;
+    padding: 15px 20px;
+    gap: 10px;
+}
+
+.st30-checkbox {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: #3182ce;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.st30-number {
+    font-weight: 600;
+    color: #2d3748;
+    flex-shrink: 0;
+    min-width: 25px;
+}
+
+.st30-text {
+    color: #4a5568;
+    line-height: 1.4;
+    font-size: 14px;
+}
+
+/* Selected State */
+.st30-question-item.selected {
+    border-color: #3182ce;
+    background: #ebf8ff;
+}
+
+.st30-question-item.selected .st30-text {
+    color: #2b6cb0;
+    font-weight: 500;
+}
+
+/* Form Actions */
+.st30-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 30px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.st30-btn {
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.st30-btn-back {
+    background: #718096;
+    color: white;
+}
+
+.st30-btn-back:hover {
+    background: #4a5568;
+}
+
+.st30-btn-primary {
+    background: #2d3748;
+    color: white;
+}
+
+.st30-btn-primary:hover:not(:disabled) {
+    background: #1a202c;
+}
+
+.st30-btn-primary:disabled {
+    background: #a0aec0;
+    color: #e2e8f0;
+    cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .st30-hero {
+        min-height: 350px;
+        padding: 20px;
+    }
+
+    .st30-hero-content {
+        padding: 30px 25px;
+    }
+
+    .st30-title {
+        font-size: 24px;
+    }
+
+    .st30-instruction {
+        font-size: 14px;
+    }
+
+    .st30-progress-section {
+        padding: 20px;
+    }
+
+    .st30-questions-section {
+        padding: 30px 20px;
+    }
+
+    .st30-actions {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .st30-btn {
+        width: 100%;
+        text-align: center;
+    }
+}

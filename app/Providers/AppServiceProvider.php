@@ -21,4 +21,10 @@ class AppServiceProvider extends ServiceProvider
     {
         //
     }
+    // Di app/Providers/EventServiceProvider.php
+    protected $listen = [
+        \App\Events\TestCompleted::class => [
+            \App\Listeners\GenerateTestResults::class,
+        ],
+    ];
 }

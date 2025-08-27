@@ -15,6 +15,7 @@ class ST30Response extends Model
     protected $table = 'st30_responses';
     protected $keyType = 'string';
     public $incrementing = false;
+    public $timestamps = false; // DISABLE TIMESTAMPS - table tidak punya created_at/updated_at
 
     /**
      * The attributes that are mass assignable.
@@ -50,18 +51,20 @@ class ST30Response extends Model
      */
     public function generateCustomId(): string
     {
-        $lastId = static::where('id', 'like', $this->customIdPrefix . '%')
+        $prefix = 'STR';  // 3 karakter
+
+        $lastId = static::where('id', 'like', $prefix . '%')
             ->orderBy('id', 'desc')
             ->first();
 
         if (!$lastId) {
-            return $this->customIdPrefix . '01';
+            return $prefix . '01';  // STR01 = 5 karakter (fit di varchar(5))
         }
 
-        $lastNumber = (int) substr($lastId->id, strlen($this->customIdPrefix));
+        $lastNumber = (int) substr($lastId->id, strlen($prefix));
         $newNumber = $lastNumber + 1;
 
-        return $this->customIdPrefix . str_pad($newNumber, 2, '0', STR_PAD_LEFT);
+        return $prefix . str_pad($newNumber, 2, '0', STR_PAD_LEFT);  // 2 digit = STR99 max
     }
 
     /**
@@ -90,7 +93,7 @@ class ST30Response extends Model
         }
 
         return ST30Question::where('version_id', $this->question_version_id)
-            ->whereIn('number', $this->selected_items)
+            ->whereIn('id', $this->selected_items)
             ->orderBy('number')
             ->get();
     }
@@ -105,7 +108,7 @@ class ST30Response extends Model
         }
 
         return ST30Question::where('version_id', $this->question_version_id)
-            ->whereIn('number', $this->excluded_items)
+            ->whereIn('id', $this->excluded_items)
             ->orderBy('number')
             ->get();
     }
@@ -127,9 +130,9 @@ class ST30Response extends Model
     }
 
     /**
-     * Check if this response contains a specific question number
+     * Check if response includes a specific question number
      */
-    public function containsQuestion(int $questionNumber): bool
+    public function hasQuestion(int $questionNumber): bool
     {
         $selected = $this->selected_items ?? [];
         $excluded = $this->excluded_items ?? [];
@@ -165,7 +168,7 @@ class ST30Response extends Model
         }
 
         $questions = ST30Question::where('version_id', $this->question_version_id)
-            ->whereIn('number', $this->selected_items)
+            ->whereIn('id', $this->selected_items)
             ->get();
 
         return $questions->groupBy('typology_code')
@@ -255,71 +258,5 @@ class ST30Response extends Model
     {
         return static::where('session_id', $sessionId)
             ->sum('response_time') ?? 0;
-    }
-
-    /**
-     * Get average response time per stage
-     */
-    public static function getAverageResponseTimePerStage(string $sessionId): array
-    {
-        return static::where('session_id', $sessionId)
-            ->selectRaw('stage_number, AVG(response_time) as avg_time')
-            ->groupBy('stage_number')
-            ->pluck('avg_time', 'stage_number')
-            ->toArray();
-    }
-
-    /**
-     * Validate response data
-     */
-    public function validateResponseData(): array
-    {
-        $errors = [];
-
-        // Check if stage number is valid (1-4)
-        if (!in_array($this->stage_number, [1, 2, 3, 4])) {
-            $errors[] = 'Invalid stage number. Must be between 1 and 4.';
-        }
-
-        // Check if selected items count is appropriate for stage
-        $selectedCount = $this->selected_count;
-        $expectedCounts = [
-            1 => [5, 6, 7], // Stage 1: 5-7 items
-            2 => [5, 6, 7], // Stage 2: 5-7 items
-            3 => [5, 6, 7], // Stage 3: 5-7 items
-            4 => [5, 6, 7], // Stage 4: 5-7 items
-        ];
-
-        if (isset($expectedCounts[$this->stage_number])) {
-            if (!in_array($selectedCount, $expectedCounts[$this->stage_number])) {
-                $errors[] = "Stage {$this->stage_number} should have 5-7 selected items, got {$selectedCount}.";
-            }
-        }
-
-        // Check if question numbers are valid (1-30)
-        $allItems = array_merge($this->selected_items ?? [], $this->excluded_items ?? []);
-        foreach ($allItems as $item) {
-            if (!is_numeric($item) || $item < 1 || $item > 30) {
-                $errors[] = "Invalid question number: {$item}. Must be between 1 and 30.";
-            }
-        }
-
-        // Check for duplicates between selected and excluded
-        $duplicates = array_intersect($this->selected_items ?? [], $this->excluded_items ?? []);
-        if (!empty($duplicates)) {
-            $errors[] = "Question numbers cannot be both selected and excluded: " . implode(', ', $duplicates);
-        }
-
-        return $errors;
-    }
-
-    /**
-     * Check if response is complete
-     */
-    public function isComplete(): bool
-    {
-        return !empty($this->selected_items) &&
-               count($this->selected_items) >= 5 &&
-               count($this->selected_items) <= 7;
     }
 }

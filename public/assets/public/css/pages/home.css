@@ -1,0 +1,540 @@
+/* === HOMEPAGE SPECIFIC STYLES === */
+
+/* === HERO SECTION === */
+.hero-section {
+    padding: 40px 0 60px; /* Reduced top padding from 120px to 40px */
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    overflow: hidden;
+    position: relative;
+    min-height: 75vh;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="%23f1f5f9" stroke-width="1"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grid)"/></svg>');
+    opacity: 0.6;
+}
+
+.hero-content {
+    display: grid;
+    grid-template-columns: 40% 60%;
+    gap: 40px; /* Reduced gap */
+    align-items: center;
+    position: relative;
+    z-index: 1;
+    min-height: 550px;
+}
+
+.hero-text {
+    max-width: 100%;
+    padding-right: 20px;
+}
+
+.hero-title {
+    font-size: 56px;
+    font-weight: 900;
+    line-height: 1.1;
+    color: #1f2937;
+    margin-bottom: 28px;
+    letter-spacing: -0.025em;
+}
+
+.hero-subtitle {
+    font-size: 19px;
+    color: #4b5563;
+    line-height: 1.7;
+    margin-bottom: 40px;
+    font-weight: 400;
+}
+
+.hero-image {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    position: relative;
+}
+
+.hero-image img {
+    width: 100%;
+    max-width: 750px; /* Increased from 600px to 750px */
+    height: auto;
+    filter: drop-shadow(0 25px 50px rgba(0, 0, 0, 0.15));
+    transform: scale(1.2); /* Increased from 1.1 to 1.2 */
+}
+
+/* === DISCOVER SECTION === */
+.discover-section {
+    padding: 80px 0 140px; /* Reduced top padding from 140px to 80px */
+    background: white;
+    position: relative;
+}
+
+.section-header {
+    text-align: left;
+    margin-bottom: 80px; /* Reduced from 100px to 80px */
+    max-width: 900px;
+}
+
+.section-title {
+    font-size: 42px;
+    font-weight: 800;
+    margin-bottom: 24px;
+    color: #1f2937;
+    line-height: 1.2;
+}
+
+.section-description {
+    font-size: 17px;
+    color: #4b5563;
+    line-height: 1.7;
+    font-weight: 400;
+}
+
+.discover-content {
+    display: grid;
+    grid-template-columns: 50% 50%;
+    gap: 80px;
+    align-items: flex-start;
+    margin-top: 60px;
+}
+
+.discover-image {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    order: 1;
+}
+
+.discover-image img {
+    width: 100%;
+    max-width: 480px;
+    height: auto;
+    filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.08));
+}
+
+.talent-competency-card {
+    background: #f9fafb;
+    border-radius: 28px;
+    padding: 50px 45px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e5e7eb;
+    position: relative;
+    transform: translateY(0);
+    transition: all 0.4s ease;
+    order: 2;
+    margin-top: 40px;
+}
+
+.talent-competency-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 35px 80px rgba(0, 0, 0, 0.1);
+}
+
+.card-header h3 {
+    font-size: 28px;
+    font-weight: 800;
+    color: #1f2937;
+    line-height: 1.3;
+    margin-bottom: 24px;
+}
+
+.card-content p {
+    color: #4b5563;
+    line-height: 1.8;
+    font-size: 16px;
+    font-weight: 400;
+}
+
+.card-arrow {
+    position: absolute;
+    top: 50%;
+    right: -16px;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+}
+
+.arrow-icon {
+    width: 32px;
+    height: 32px;
+    background: #84cc16;
+    border-radius: 50%;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(132, 204, 22, 0.3);
+}
+
+.arrow-icon::after {
+    content: '→';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* === PROFILE SECTION === */
+.profile-section {
+    padding: 140px 0;
+    background: #1e293b;
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+.profile-header {
+    text-align: left;
+    margin-bottom: 80px;
+    max-width: 800px;
+    position: relative;
+    z-index: 1;
+}
+
+.profile-section .section-title {
+    color: white;
+    font-size: 38px;
+}
+
+.section-subtitle {
+    font-size: 17px;
+    color: #94a3b8;
+    line-height: 1.7;
+    margin-top: 20px;
+    font-weight: 400;
+}
+
+.competency-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+    margin-top: 60px;
+    position: relative;
+    z-index: 1;
+}
+
+.competency-card {
+    background: #334155;
+    border-radius: 24px;
+    padding: 40px 36px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+    border: 1px solid #475569;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.competency-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #84cc16, #65a30d);
+}
+
+.competency-card.primary::before {
+    background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+}
+
+.competency-card.secondary::before {
+    background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+}
+
+.competency-card.tertiary::before {
+    background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.competency-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+    background: #3f4a5a;
+}
+
+.competency-card .card-content p {
+    color: #e2e8f0;
+    line-height: 1.8;
+    font-size: 15px;
+    margin-bottom: 24px;
+    font-weight: 400;
+}
+
+.learn-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: #60a5fa;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.learn-more:hover {
+    color: #3b82f6;
+    gap: 14px;
+}
+
+.learn-more .arrow {
+    transition: transform 0.3s ease;
+    font-size: 16px;
+}
+
+.learn-more:hover .arrow {
+    transform: translateX(4px);
+}
+
+/* === SEARCH POTENTIAL SECTION === */
+.search-potential-section {
+    padding: 140px 0;
+    background: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.search-potential-section::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -300px;
+    width: 600px;
+    height: 600px;
+    background: linear-gradient(135deg, #84cc16, #65a30d);
+    border-radius: 50%;
+    opacity: 0.03;
+    transform: translateY(-50%);
+}
+
+.search-content {
+    display: grid;
+    grid-template-columns: 55% 45%;
+    gap: 100px;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.search-card {
+    background: white;
+    border-radius: 32px;
+    padding: 60px 50px;
+    border: 2px solid #e5e7eb;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.04);
+    position: relative;
+}
+
+.search-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+    border-radius: 30px;
+    z-index: -1;
+}
+
+.search-card h2 {
+    font-size: 38px;
+    font-weight: 800;
+    color: #1f2937;
+    margin-bottom: 20px;
+    line-height: 1.2;
+}
+
+.search-card p {
+    color: #4b5563;
+    line-height: 1.8;
+    font-size: 17px;
+    margin-bottom: 40px;
+    font-weight: 400;
+}
+
+.stats {
+    margin-bottom: 40px;
+}
+
+.stat-number {
+    font-size: 64px;
+    font-weight: 900;
+    background: linear-gradient(120deg, #84cc16 0%, #65a30d 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 0.9;
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
+}
+
+.stat-label {
+    color: #6b7280;
+    font-weight: 600;
+    font-size: 18px;
+    line-height: 1.4;
+}
+
+.search-illustration {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.search-illustration img {
+    width: 100%;
+    max-width: 420px;
+    height: auto;
+    filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.1));
+    transform: scale(1.05);
+}
+
+/* === RESPONSIVE DESIGN === */
+@media (max-width: 1200px) {
+    .hero-content {
+        gap: 40px;
+    }
+
+    .hero-title {
+        font-size: 48px;
+    }
+
+    .discover-content {
+        gap: 60px;
+    }
+
+    .search-content {
+        gap: 80px;
+    }
+
+    .competency-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 32px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .hero-content {
+        gap: 60px;
+    }
+
+    .hero-title {
+        font-size: 42px;
+    }
+
+    .discover-content {
+        gap: 60px;
+    }
+
+    .search-content {
+        gap: 60px;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-content {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        text-align: center;
+    }
+
+    .hero-title {
+        font-size: 36px;
+    }
+
+    .hero-subtitle {
+        font-size: 17px;
+    }
+
+    .discover-content {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    .talent-competency-card {
+        padding: 40px 32px;
+        margin-top: 0;
+    }
+
+    .competency-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+
+    .search-content {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        text-align: center;
+    }
+
+    .search-card {
+        padding: 40px 32px;
+    }
+
+    .section-title {
+        font-size: 32px;
+    }
+
+    .profile-section .section-title {
+        font-size: 30px;
+    }
+
+    .section-header {
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-section {
+        padding: 80px 0 60px;
+    }
+
+    .hero-title {
+        font-size: 32px;
+    }
+
+    .hero-subtitle {
+        font-size: 16px;
+    }
+
+    .discover-section,
+    .profile-section,
+    .search-potential-section {
+        padding: 100px 0;
+    }
+
+    .talent-competency-card {
+        padding: 32px 24px;
+    }
+
+    .competency-card {
+        padding: 32px 24px;
+    }
+
+    .search-card {
+        padding: 40px 24px;
+    }
+
+    .search-card h2 {
+        font-size: 28px;
+    }
+
+    .stat-number {
+        font-size: 48px;
+    }
+}

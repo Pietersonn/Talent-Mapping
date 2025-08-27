@@ -30,68 +30,84 @@ use App\Http\Controllers\Public\ProfileController as PublicProfileController;
 use App\Http\Controllers\Public\GuideController;
 
 // Auth Controllers
-use App\Http\Controllers\Auth\CustomLoginController;
-use App\Http\Controllers\Auth\CustomRegisterController;
 use App\Http\Controllers\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes
+| PUBLIC ROUTES - ACCESSIBLE BY ANYONE
 |--------------------------------------------------------------------------
 */
 
-// Public Routes
+// Homepage - First page everyone sees
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/panduan-hasil', [GuideController::class, 'index'])->name('guide');
 
-// Auth Routes (Laravel Breeze default + custom)
+/*
+|--------------------------------------------------------------------------
+| AUTHENTICATION ROUTES
+|--------------------------------------------------------------------------
+*/
 require __DIR__ . '/auth.php';
 
-// User Profile Routes
+/*
+|--------------------------------------------------------------------------
+| AUTHENTICATED USER ROUTES
+|--------------------------------------------------------------------------
+*/
 Route::middleware('auth')->group(function () {
+    // General profile routes for all authenticated users
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Test Flow Routes (role: user)
-Route::middleware(['auth', 'role:user'])->prefix('test')->name('test.')->group(function () {
-    Route::get('/form', [TestController::class, 'form'])->name('form');
-    Route::post('/form', [TestController::class, 'storeForm'])->name('form.store');
-
-    // ST-30 Test Pages
-    Route::prefix('st30')->name('st30.')->group(function () {
-        Route::get('/stage/{stage}', [TestController::class, 'st30Stage'])->name('stage');
-        Route::post('/stage/{stage}', [TestController::class, 'storeST30Stage'])->name('stage.store');
-    });
-
-    // SJT Test Pages
-    Route::prefix('sjt')->name('sjt.')->group(function () {
-        Route::get('/page/{page}', [TestController::class, 'sjtPage'])->name('page');
-        Route::post('/page/{page}', [TestController::class, 'storeSJTPage'])->name('page.store');
-    });
-
-    Route::get('/thank-you', [TestController::class, 'thankYou'])->name('thank-you');
-    Route::post('/complete', [TestController::class, 'complete'])->name('complete');
-});
-
-// User Profile & History Routes
+/*
+|--------------------------------------------------------------------------
+| USER ROUTES (role: user)
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth', 'role:user'])->group(function () {
-    Route::get('/profile', [PublicProfileController::class, 'index'])->name('public.profile');
-    Route::post('/resend-request', [PublicProfileController::class, 'requestResend'])->name('public.resend-request');
+    // User profile & test history
+    Route::get('/my-profile', [PublicProfileController::class, 'index'])->name('user.profile');
+    Route::post('/resend-request', [PublicProfileController::class, 'requestResend'])->name('user.resend-request');
+
+    // Test Flow Routes
+    Route::prefix('test')->name('test.')->group(function () {
+        Route::get('/form', [TestController::class, 'form'])->name('form');
+        Route::post('/form', [TestController::class, 'storeForm'])->name('form.store');
+
+        // ST-30 Test Pages
+        Route::prefix('st30')->name('st30.')->group(function () {
+            Route::get('/stage/{stage}', [TestController::class, 'st30Stage'])->name('stage');
+            Route::post('/stage/{stage}', [TestController::class, 'storeST30Stage'])->name('stage.store');
+        });
+
+        // SJT Test Pages
+        Route::prefix('sjt')->name('sjt.')->group(function () {
+            Route::get('/page/{page}', [TestController::class, 'sjtPage'])->name('page');
+            Route::post('/page/{page}', [TestController::class, 'storeSJTPage'])->name('page.store');
+        });
+
+        Route::get('/thank-you', [TestController::class, 'thankYou'])->name('thank-you');
+        Route::post('/complete', [TestController::class, 'complete'])->name('complete');
+    });
 });
 
-// Admin & Staff Routes (role-based access)
+/*
+|--------------------------------------------------------------------------
+| ADMIN & STAFF ROUTES (role: admin,staff)
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth', 'role:admin,staff'])->prefix('admin')->name('admin.')->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/stats', [AdminDashboardController::class, 'getStatistics'])->name('dashboard.stats');
 
+    // Test alert for SweetAlert2
     Route::get('/test-alert', function () {
         return redirect()->route('admin.dashboard')->with('success', 'SweetAlert2 is working!');
     })->name('test-alert');
-
 
     // Question Bank Management
     Route::prefix('questions')->name('questions.')->group(function () {
@@ -106,7 +122,7 @@ Route::middleware(['auth', 'role:admin,staff'])->prefix('admin')->name('admin.')
         Route::post('/{questionVersion}/clone', [AdminQuestionController::class, 'clone'])->name('clone')->middleware('role:admin');
         Route::get('/{questionVersion}/statistics', [AdminQuestionController::class, 'statistics'])->name('statistics');
 
-        // ST-30 Questions - FIXED ROUTES
+        // ST-30 Questions
         Route::prefix('st30')->name('st30.')->group(function () {
             Route::get('/', [ST30QuestionController::class, 'index'])->name('index');
             Route::get('/create', [ST30QuestionController::class, 'create'])->name('create')->middleware('role:admin');
@@ -115,14 +131,9 @@ Route::middleware(['auth', 'role:admin,staff'])->prefix('admin')->name('admin.')
             Route::get('/{st30Question}/edit', [ST30QuestionController::class, 'edit'])->name('edit')->middleware('role:admin');
             Route::put('/{st30Question}', [ST30QuestionController::class, 'update'])->name('update')->middleware('role:admin');
             Route::delete('/{st30Question}', [ST30QuestionController::class, 'destroy'])->name('destroy')->middleware('role:admin');
-
-            // Additional ST-30 routes
-            Route::post('/import', [ST30QuestionController::class, 'import'])->name('import')->middleware('role:admin');
-            Route::get('/export', [ST30QuestionController::class, 'export'])->name('export');
-            Route::post('/reorder', [ST30QuestionController::class, 'reorder'])->name('reorder')->middleware('role:admin');
         });
 
-        // SJT Questions - FIXED ROUTES
+        // SJT Questions
         Route::prefix('sjt')->name('sjt.')->group(function () {
             Route::get('/', [SJTQuestionController::class, 'index'])->name('index');
             Route::get('/create', [SJTQuestionController::class, 'create'])->name('create')->middleware('role:admin');
@@ -131,70 +142,30 @@ Route::middleware(['auth', 'role:admin,staff'])->prefix('admin')->name('admin.')
             Route::get('/{sjtQuestion}/edit', [SJTQuestionController::class, 'edit'])->name('edit')->middleware('role:admin');
             Route::put('/{sjtQuestion}', [SJTQuestionController::class, 'update'])->name('update')->middleware('role:admin');
             Route::delete('/{sjtQuestion}', [SJTQuestionController::class, 'destroy'])->name('destroy')->middleware('role:admin');
+        });
 
-            // Additional SJT routes
-            Route::post('/import', [SJTQuestionController::class, 'import'])->name('import')->middleware('role:admin');
-            Route::get('/export', [SJTQuestionController::class, 'export'])->name('export');
-            Route::post('/reorder', [SJTQuestionController::class, 'reorder'])->name('reorder')->middleware('role:admin');
+        // Competency Descriptions
+        Route::prefix('competencies')->name('competencies.')->group(function () {
+            Route::get('/', [CompetencyController::class, 'index'])->name('index');
+            Route::get('/{competency}', [CompetencyController::class, 'show'])->name('show');
+            Route::get('/{competency}/edit', [CompetencyController::class, 'edit'])->name('edit')->middleware('role:admin');
+            Route::put('/{competency}', [CompetencyController::class, 'update'])->name('update')->middleware('role:admin');
+        });
+
+        // Typology Descriptions
+        Route::prefix('typologies')->name('typologies.')->group(function () {
+            Route::get('/', [TypologyController::class, 'index'])->name('index');
+            Route::get('/create', [TypologyController::class, 'create'])->name('create')->middleware('role:admin');
+            Route::post('/', [TypologyController::class, 'store'])->name('store')->middleware('role:admin');
+            Route::get('/{typology}', [TypologyController::class, 'show'])->name('show');
+            Route::get('/{typology}/edit', [TypologyController::class, 'edit'])->name('edit')->middleware('role:admin');
+            Route::put('/{typology}', [TypologyController::class, 'update'])->name('update')->middleware('role:admin');
+            Route::delete('/{typology}', [TypologyController::class, 'destroy'])->name('destroy')->middleware('role:admin');
         });
     });
 
-    // LEGACY ROUTES (untuk backward compatibility)
-    // ST-30 Questions (legacy)
-    Route::prefix('st30')->name('st30.')->group(function () {
-        Route::get('/', [ST30QuestionController::class, 'index'])->name('index');
-        Route::get('/create', [ST30QuestionController::class, 'create'])->name('create')->middleware('role:admin');
-        Route::post('/', [ST30QuestionController::class, 'store'])->name('store')->middleware('role:admin');
-        Route::get('/{st30Question}', [ST30QuestionController::class, 'show'])->name('show');
-        Route::get('/{st30Question}/edit', [ST30QuestionController::class, 'edit'])->name('edit')->middleware('role:admin');
-        Route::put('/{st30Question}', [ST30QuestionController::class, 'update'])->name('update')->middleware('role:admin');
-        Route::delete('/{st30Question}', [ST30QuestionController::class, 'destroy'])->name('destroy')->middleware('role:admin');
-
-        // Additional ST-30 routes
-        Route::post('/import', [ST30QuestionController::class, 'import'])->name('import')->middleware('role:admin');
-        Route::get('/export', [ST30QuestionController::class, 'export'])->name('export');
-        Route::post('/reorder', [ST30QuestionController::class, 'reorder'])->name('reorder')->middleware('role:admin');
-    });
-
-    // SJT Questions (legacy)
-    Route::prefix('sjt')->name('sjt.')->group(function () {
-        Route::get('/', [SJTQuestionController::class, 'index'])->name('index');
-        Route::get('/create', [SJTQuestionController::class, 'create'])->name('create')->middleware('role:admin');
-        Route::post('/', [SJTQuestionController::class, 'store'])->name('store')->middleware('role:admin');
-        Route::get('/{sjtQuestion}', [SJTQuestionController::class, 'show'])->name('show');
-        Route::get('/{sjtQuestion}/edit', [SJTQuestionController::class, 'edit'])->name('edit')->middleware('role:admin');
-        Route::put('/{sjtQuestion}', [SJTQuestionController::class, 'update'])->name('update')->middleware('role:admin');
-        Route::delete('/{sjtQuestion}', [SJTQuestionController::class, 'destroy'])->name('destroy')->middleware('role:admin');
-
-        // Additional SJT routes
-        Route::post('/import', [SJTQuestionController::class, 'import'])->name('import')->middleware('role:admin');
-        Route::get('/export', [SJTQuestionController::class, 'export'])->name('export');
-        Route::post('/reorder', [SJTQuestionController::class, 'reorder'])->name('reorder')->middleware('role:admin');
-    });
-
-    // Competency Descriptions
-    Route::prefix('competencies')->name('competencies.')->group(function () {
-        Route::get('/', [CompetencyController::class, 'index'])->name('index');
-        Route::get('/{competencyDescription}', [CompetencyController::class, 'show'])->name('show');
-        Route::get('/{competencyDescription}/edit', [CompetencyController::class, 'edit'])->name('edit')->middleware('role:admin');
-        Route::put('/{competencyDescription}', [CompetencyController::class, 'update'])->name('update')->middleware('role:admin');
-    });
-
-    // Typology Descriptions
-    Route::prefix('typologies')->name('typologies.')->group(function () {
-        Route::get('/', [TypologyController::class, 'index'])->name('index');
-        Route::get('/create', [TypologyController::class, 'create'])->name('create');
-        Route::post('/', [TypologyController::class, 'store'])->name('store');
-        Route::get('/{typology}', [TypologyController::class, 'show'])->name('show');
-        Route::get('/{typology}/edit', [TypologyController::class, 'edit'])->name('edit');
-        Route::put('/{typology}', [TypologyController::class, 'update'])->name('update');
-        Route::delete('/{typology}', [TypologyController::class, 'destroy'])->name('destroy');
-        Route::patch('/{typology}/toggle-status', [TypologyController::class, 'toggleStatus'])->name('toggle-status');
-    });
-
-    // User Management (Admin only)
-    // User Management (Admin only)
-    Route::middleware('role:admin')->prefix('users')->name('users.')->group(function () {
+    // User Management
+    Route::prefix('users')->name('users.')->group(function () {
         Route::get('/', [AdminUserController::class, 'index'])->name('index');
         Route::get('/create', [AdminUserController::class, 'create'])->name('create');
         Route::post('/', [AdminUserController::class, 'store'])->name('store');
@@ -203,8 +174,6 @@ Route::middleware(['auth', 'role:admin,staff'])->prefix('admin')->name('admin.')
         Route::put('/{user}', [AdminUserController::class, 'update'])->name('update');
         Route::delete('/{user}', [AdminUserController::class, 'destroy'])->name('destroy');
         Route::post('/{user}/toggle-status', [AdminUserController::class, 'toggleStatus'])->name('toggle-status');
-
-        // TAMBAH ROUTE INI:
         Route::post('/{user}/reset-password', [AdminUserController::class, 'resetPassword'])->name('reset-password');
     });
 
@@ -223,28 +192,27 @@ Route::middleware(['auth', 'role:admin,staff'])->prefix('admin')->name('admin.')
     // Results Management
     Route::prefix('results')->name('results.')->group(function () {
         Route::get('/', [AdminResultController::class, 'index'])->name('index');
+        Route::get('/top-performers', [AdminResultController::class, 'topPerformers'])->name('top-performers');
         Route::get('/{testResult}', [AdminResultController::class, 'show'])->name('show');
-        Route::get('/{testResult}/download', [AdminResultController::class, 'download'])->name('download');
-        Route::post('/{testResult}/resend', [AdminResultController::class, 'resend'])->name('resend')->middleware('role:admin');
+        Route::post('/{testResult}/send-result', [AdminResultController::class, 'sendResult'])->name('send-result');
     });
 
-    // Resend Request Management
+    // Resend Requests Management
     Route::prefix('resend')->name('resend.')->group(function () {
         Route::get('/', [ResendRequestController::class, 'index'])->name('index');
-        Route::get('/{resendRequest}', [ResendRequestController::class, 'show'])->name('show');
-        Route::post('/{resendRequest}/approve', [ResendRequestController::class, 'approve'])->name('approve')->middleware('role:admin');
-        Route::post('/{resendRequest}/reject', [ResendRequestController::class, 'reject'])->name('reject')->middleware('role:admin');
+        Route::post('/{resendRequest}/approve', [ResendRequestController::class, 'approve'])->name('approve');
+        Route::post('/{resendRequest}/reject', [ResendRequestController::class, 'reject'])->name('reject');
     });
 
-    // System Monitoring
+    // Monitoring
     Route::prefix('monitoring')->name('monitoring.')->group(function () {
-        Route::get('/', [MonitoringController::class, 'index'])->name('index');
-        Route::get('/logs', [MonitoringController::class, 'logs'])->name('logs');
-        Route::get('/performance', [MonitoringController::class, 'performance'])->name('performance');
+        Route::get('/sessions', [MonitoringController::class, 'sessions'])->name('sessions');
+        Route::get('/activities', [MonitoringController::class, 'activities'])->name('activities');
+        Route::get('/system-logs', [MonitoringController::class, 'systemLogs'])->name('system-logs');
     });
 
     // Settings (Admin only)
-    Route::middleware('role:admin')->prefix('settings')->name('settings.')->group(function () {
+    Route::prefix('settings')->name('settings.')->middleware('role:admin')->group(function () {
         Route::get('/', [SettingController::class, 'index'])->name('index');
         Route::put('/', [SettingController::class, 'update'])->name('update');
     });
@@ -257,7 +225,11 @@ Route::middleware(['auth', 'role:admin,staff'])->prefix('admin')->name('admin.')
     });
 });
 
-// PIC Routes (role: pic)
+/*
+|--------------------------------------------------------------------------
+| PIC ROUTES (role: pic)
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth', 'role:pic'])->prefix('pic')->name('pic.')->group(function () {
 
     // PIC Dashboard
@@ -282,38 +254,3 @@ Route::middleware(['auth', 'role:pic'])->prefix('pic')->name('pic.')->group(func
         Route::get('/{testResult}', [PICResultController::class, 'show'])->name('show');
     });
 });
-
-// Redirect Routes
-Route::get('/admin', function () {
-    if (Auth::check() && in_array(Auth::user()->role, ['admin', 'staff'])) {
-        return redirect()->route('admin.dashboard');
-    }
-    return redirect()->route('login');
-})->name('admin.index');
-
-Route::get('/pic', function () {
-    if (Auth::check() && Auth::user()->role === 'pic') {
-        return redirect()->route('pic.dashboard');
-    }
-    return redirect()->route('login');
-})->name('pic.index');
-
-// Role-based redirect after login
-Route::get('/dashboard', function () {
-    if (!Auth::check()) {
-        return redirect()->route('login');
-    }
-
-    $user = Auth::user();
-
-    switch ($user->role) {
-        case 'admin':
-        case 'staff':
-            return redirect()->route('admin.dashboard');
-        case 'pic':
-            return redirect()->route('pic.dashboard');
-        case 'user':
-        default:
-            return redirect()->route('home');
-    }
-})->middleware('auth')->name('dashboard');
