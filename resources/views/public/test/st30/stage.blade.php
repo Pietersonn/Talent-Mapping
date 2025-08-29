@@ -52,11 +52,11 @@
                 @if($stage == 1)
                     * Pilih 5-7 Yang Paling Sesuai Sama Kamu
                 @elseif($stage == 2)
-                    * Pilih 5-7 Yang Paling Tidak Sesuai Sama Kamu (dari sisa {{ $availableQuestions->count() }} soal)
+                    * Pilih 5-7 Yang Paling Tidak Sesuai Sama Kamu
                 @elseif($stage == 3)
-                    * Pilih 5-7 Yang Cukup Sesuai Sama Kamu (dari sisa {{ $availableQuestions->count() }} soal)
+                    * Pilih 5-7 Yang Cukup Sesuai Sama Kamu
                 @else
-                    * Pilih 5-7 Yang Kurang Sesuai Sama Kamu (dari sisa {{ $availableQuestions->count() }} soal)
+                    * Pilih 5-7 Yang Kurang Sesuai Sama Kamu
                 @endif
             </div>
             <div class="st30-counter invalid">0/7 dipilih</div>
@@ -69,14 +69,13 @@
             @csrf
             <div class="st30-questions-list">
                 @foreach($availableQuestions as $question)
-                    <div class="st30-question-item {{ in_array($question->id, $selectedQuestions ?? []) ? 'selected' : '' }}">
+                    <div class="st30-question-item">
                         <label class="st30-question-label">
                             <div class="st30-question-content">
                                 <input type="checkbox"
                                        name="selected_questions[]"
                                        value="{{ $question->id }}"
-                                       class="st30-checkbox"
-                                       {{ in_array($question->id, $selectedQuestions ?? []) ? 'checked' : '' }}>
+                                       class="st30-checkbox">
                                 <span class="st30-number">{{ $question->number }}.</span>
                                 <span class="st30-text">{{ $question->statement }}</span>
                             </div>
@@ -88,18 +87,18 @@
             <!-- Action Buttons -->
             <div class="st30-actions">
                 @if($stage > 1)
-                    <a href="{{ route('test.st30.stage', ['stage' => $stage - 1]) }}" class="st30-btn st30-btn-back">
-                        Kembali ke Stage {{ $stage - 1 }}
-                    </a>
+                    <button type="button" class="st30-btn st30-btn-back" onclick="history.back()">
+                        Kembali
+                    </button>
                 @else
                     <div></div>
                 @endif
 
                 <button type="submit" id="submitBtn" class="st30-btn st30-btn-primary" disabled>
                     @if($stage < 4)
-                        Kirim & Lanjutkan ke Stage {{ $stage + 1 }}
+                        Kirim & Lanjutkan
                     @else
-                        Selesaikan ST-30 & Lanjut ke SJT
+                        Kirim & Lanjutkan
                     @endif
                 </button>
             </div>

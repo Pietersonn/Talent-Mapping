@@ -30,220 +30,211 @@ class ScoringHelper
     }
 
     /**
-     * Calculate ST-30 results based on scoring responses (Stage 1 & 3)
+     * Calculate ST-30 results based on Stage 1 (strengths) and Stage 2 (development areas)
+     * FIXED: Now uses Stage 1 & 2 instead of Stage 1 & 3
      */
     public static function calculateST30Results(TestSession $session): array
     {
-        // Get scoring responses (stage 1 & 3 - positive selections)
-        $scoringResponses = ST30Response::where('session_id', $session->id)
+        // Get Stage 1 responses (STRENGTHS)
+        $strengthsResponse = ST30Response::where('session_id', $session->id)
+            ->where('stage_number', 1)
             ->where('for_scoring', true)
-            ->get();
+            ->first();
 
-        if ($scoringResponses->isEmpty()) {
+        // Get Stage 2 responses (DEVELOPMENT AREAS)
+        $developmentResponse = ST30Response::where('session_id', $session->id)
+            ->where('stage_number', 2)
+            ->where('for_scoring', true)
+            ->first();
+
+        if (!$strengthsResponse || !$developmentResponse) {
             return [
                 'strengths' => [],
                 'development_areas' => [],
-                'error' => 'No scoring responses found'
+                'error' => 'Missing scoring responses for Stage 1 or Stage 2'
             ];
         }
 
-        // Collect all selected question IDs from scoring responses
-        $selectedQuestionIds = [];
-        foreach ($scoringResponses as $response) {
-            $questionIds = json_decode($response->selected_items, true) ?? [];
-            $selectedQuestionIds = array_merge($selectedQuestionIds, $questionIds);
-        }
+        // Get selected question IDs for strengths (Stage 1)
+        $strengthQuestionIds = json_decode($strengthsResponse->selected_items, true) ?? [];
 
-        // Get questions and count typology frequency
-        $questions = ST30Question::whereIn('id', $selectedQuestionIds)->get();
-        $typologyFrequency = [];
+        // Get selected question IDs for development areas (Stage 2)
+        $developmentQuestionIds = json_decode($developmentResponse->selected_items, true) ?? [];
 
-        foreach ($questions as $question) {
-            $typologyCode = $question->typology_code;
-            $typologyFrequency[$typologyCode] = ($typologyFrequency[$typologyCode] ?? 0) + 1;
-        }
+        // Get questions and map to typologies
+        $strengthQuestions = ST30Question::whereIn('id', $strengthQuestionIds)->get();
+        $developmentQuestions = ST30Question::whereIn('id', $developmentQuestionIds)->get();
 
-        // Sort by frequency (descending)
-        arsort($typologyFrequency);
-
-        // Get top 7 as strengths, bottom 7 as development areas
-        $allTypologies = array_keys($typologyFrequency);
-        $strengthCodes = array_slice($allTypologies, 0, 7);
-        $developmentCodes = array_slice($allTypologies, -7);
+        // Get typology codes
+        $strengthTypologyCodes = $strengthQuestions->pluck('typology_code')->unique()->toArray();
+        $developmentTypologyCodes = $developmentQuestions->pluck('typology_code')->unique()->toArray();
 
         // Get typology descriptions
-        $strengths = self::getTypologyDetails($strengthCodes, $typologyFrequency);
-        $developmentAreas = self::getTypologyDetails($developmentCodes, $typologyFrequency);
+        $strengths = self::getTypologyDetails($strengthTypologyCodes, 'strength');
+        $developmentAreas = self::getTypologyDetails($developmentTypologyCodes, 'weakness');
 
         return [
             'strengths' => $strengths,
             'development_areas' => $developmentAreas,
-            'dominant_typology' => $strengthCodes[0] ?? null,
-            'typology_frequency' => $typologyFrequency,
-            'total_responses' => count($selectedQuestionIds)
+            'dominant_typology' => $strengthTypologyCodes[0] ?? null,
+            'typology_frequency' => [
+                'strengths' => array_count_values($strengthQuestions->pluck('typology_code')->toArray()),
+                'development' => array_count_values($developmentQuestions->pluck('typology_code')->toArray())
+            ]
         ];
     }
 
     /**
-     * Calculate SJT results based on competency scores
+     * Calculate SJT results with competency scoring
      */
     public static function calculateSJTResults(TestSession $session): array
     {
         // Get all SJT responses for this session
-        $sjtResponses = SJTResponse::where('session_id', $session->id)->get();
+        $responses = SJTResponse::where('session_id', $session->id)->get();
 
-        if ($sjtResponses->isEmpty()) {
+        if ($responses->isEmpty()) {
             return [
                 'competency_scores' => [],
-                'strengths' => [],
-                'development_areas' => [],
+                'top_competencies' => [],
+                'bottom_competencies' => [],
                 'error' => 'No SJT responses found'
             ];
         }
 
-        // Get selected options with their scores and competency targets
-        $optionIds = $sjtResponses->pluck('selected_option_id');
-        $selectedOptions = SJTOption::whereIn('id', $optionIds)->get();
-
-        // Calculate scores per competency
+        // Calculate competency scores
         $competencyScores = [];
-        $competencyQuestionCounts = [];
 
-        foreach ($selectedOptions as $option) {
-            $competency = $option->competency_target;
-            $competencyScores[$competency] = ($competencyScores[$competency] ?? 0) + $option->score;
-            $competencyQuestionCounts[$competency] = ($competencyQuestionCounts[$competency] ?? 0) + 1;
+        foreach ($responses as $response) {
+            // Get the option and its score
+            $option = SJTOption::where('question_id', $response->question_id)
+                ->where('option_letter', $response->selected_option)
+                ->first();
+
+            if ($option) {
+                $competency = $option->competency_target;
+                if (!isset($competencyScores[$competency])) {
+                    $competencyScores[$competency] = [];
+                }
+                $competencyScores[$competency][] = $option->score;
+            }
         }
 
-        // Calculate average scores per competency
+        // Calculate averages and scale to 0-20
         $competencyAverages = [];
-        foreach ($competencyScores as $competency => $totalScore) {
-            $questionCount = $competencyQuestionCounts[$competency];
-            $competencyAverages[$competency] = round($totalScore / $questionCount, 2);
+        foreach ($competencyScores as $competency => $scores) {
+            $average = array_sum($scores) / count($scores);
+            $competencyAverages[$competency] = round($average * 5, 1); // Scale 0-4 to 0-20
         }
 
-        // Sort by average score (descending)
+        // Sort competencies by score
         arsort($competencyAverages);
 
-        // Get top 5 as strengths, bottom 5 as development areas
-        $allCompetencies = array_keys($competencyAverages);
-        $strengthCompetencies = array_slice($allCompetencies, 0, 5);
-        $developmentCompetencies = array_slice($allCompetencies, -5);
+        // Get top 3 and bottom 3
+        $sortedCompetencies = array_keys($competencyAverages);
+        $topCompetencies = array_slice($sortedCompetencies, 0, 3);
+        $bottomCompetencies = array_slice($sortedCompetencies, -3);
 
-        // Get competency descriptions
-        $strengths = self::getCompetencyDetails($strengthCompetencies, $competencyAverages, $competencyScores);
-        $developmentAreas = self::getCompetencyDetails($developmentCompetencies, $competencyAverages, $competencyScores);
+        // Get competency details
+        $topDetails = self::getCompetencyDetails($topCompetencies, $competencyAverages, 'strength');
+        $bottomDetails = self::getCompetencyDetails($bottomCompetencies, $competencyAverages, 'weakness');
 
         return [
-            'competency_scores' => $competencyScores,
-            'competency_averages' => $competencyAverages,
-            'strengths' => $strengths,
-            'development_areas' => $developmentAreas,
-            'total_questions' => $sjtResponses->count(),
-            'max_possible_score' => $sjtResponses->count() * 4 // Max score per question is 4
+            'competency_scores' => $competencyAverages,
+            'top_competencies' => $topDetails,
+            'bottom_competencies' => $bottomDetails,
+            'competency_averages' => $competencyAverages
         ];
     }
 
     /**
      * Get typology details with descriptions
+     * FIXED: Added description_type parameter to get correct descriptions
      */
-    private static function getTypologyDetails(array $typologyCodes, array $frequency): array
+    private static function getTypologyDetails(array $typologyCodes, string $descriptionType = 'strength'): array
     {
         $typologies = TypologyDescription::whereIn('typology_code', $typologyCodes)->get();
+        $details = [];
 
-        $result = [];
-        foreach ($typologyCodes as $code) {
-            $typology = $typologies->firstWhere('typology_code', $code);
-
-            $result[] = [
-                'code' => $code,
-                'name' => $typology->typology_name ?? 'Unknown',
-                'frequency' => $frequency[$code] ?? 0,
-                'strength_description' => $typology->strength_description ?? '',
-                'weakness_description' => $typology->weakness_description ?? ''
+        foreach ($typologies as $typology) {
+            $details[] = [
+                'code' => $typology->typology_code,
+                'name' => $typology->typology_name,
+                'description' => $descriptionType === 'strength'
+                    ? $typology->strength_description
+                    : $typology->weakness_description
             ];
         }
 
-        return $result;
+        return $details;
     }
 
     /**
-     * Get competency details with descriptions
+     * Get competency details with scores and descriptions
      */
-    private static function getCompetencyDetails(array $competencyCodes, array $averages, array $totalScores): array
+    private static function getCompetencyDetails(array $competencyCodes, array $scores, string $descriptionType = 'strength'): array
     {
         $competencies = CompetencyDescription::whereIn('competency_code', $competencyCodes)->get();
+        $details = [];
 
-        $result = [];
-        foreach ($competencyCodes as $code) {
-            $competency = $competencies->firstWhere('competency_code', $code);
-
-            $result[] = [
-                'code' => $code,
-                'name' => $competency->competency_name ?? 'Unknown',
-                'average_score' => $averages[$code] ?? 0,
-                'total_score' => $totalScores[$code] ?? 0,
-                'strength_description' => $competency->strength_description ?? '',
-                'weakness_description' => $competency->weakness_description ?? '',
-                'improvement_activity' => $competency->improvement_activity ?? ''
+        foreach ($competencies as $competency) {
+            $details[] = [
+                'code' => $competency->competency_code,
+                'name' => $competency->competency_name,
+                'score' => $scores[$competency->competency_code] ?? 0,
+                'description' => $descriptionType === 'strength'
+                    ? $competency->strength_description
+                    : $competency->weakness_description,
+                'improvement_activity' => $competency->improvement_activity,
+                'training_recommendations' => $competency->training_recommendations
             ];
         }
 
-        return $result;
+        return $details;
     }
 
     /**
-     * Calculate total response time for session
+     * Calculate total response time
      */
-    private static function calculateTotalResponseTime(TestSession $session): int
+    private static function calculateTotalResponseTime(TestSession $session): ?int
     {
         $st30Time = ST30Response::where('session_id', $session->id)
-            ->sum('response_time') ?? 0;
+            ->whereNotNull('response_time')
+            ->sum('response_time');
 
-        // SJT doesn't have response_time in current structure, but we can add it later
-        $sjtTime = 0;
+        $sjtTime = SJTResponse::where('session_id', $session->id)
+            ->whereNotNull('response_time')
+            ->sum('response_time');
 
-        return $st30Time + $sjtTime;
+        return ($st30Time + $sjtTime) ?: null;
     }
 
     /**
-     * Generate summary interpretation
+     * Get comprehensive result summary
      */
-    public static function generateSummary(array $results): array
+    public static function getResultSummary(TestSession $session): array
     {
+        $results = self::calculateTestResults($session);
         $st30 = $results['st30_results'];
         $sjt = $results['sjt_results'];
 
-        $summary = [];
+        $summary = [
+            'participant' => $results['session_info']['participant_name'],
+            'completed_at' => $results['session_info']['completed_at'],
+        ];
 
         // ST-30 Summary
-        if (!empty($st30['strengths'])) {
-            $topStrength = $st30['strengths'][0];
-            $summary['dominant_typology'] = [
-                'code' => $topStrength['code'],
-                'name' => $topStrength['name'],
-                'description' => $topStrength['strength_description']
-            ];
-        }
+        $summary['st30_summary'] = [
+            'dominant_typology' => $st30['dominant_typology'],
+            'total_strengths' => count($st30['strengths']),
+            'total_development_areas' => count($st30['development_areas'])
+        ];
 
         // SJT Summary
-        if (!empty($sjt['strengths'])) {
-            $topCompetency = $sjt['strengths'][0];
-            $summary['top_competency'] = [
-                'code' => $topCompetency['code'],
-                'name' => $topCompetency['name'],
-                'score' => $topCompetency['average_score']
-            ];
-        }
-
-        // Overall performance
-        $avgSjtScore = !empty($sjt['competency_averages']) ?
-            array_sum($sjt['competency_averages']) / count($sjt['competency_averages']) : 0;
-
-        $summary['overall_performance'] = [
-            'st30_diversity' => count($st30['typology_frequency'] ?? []),
-            'sjt_average_score' => round($avgSjtScore, 2),
-            'completion_date' => $results['session_info']['completed_at']
+        $summary['sjt_summary'] = [
+            'highest_competency' => $sjt['top_competencies'][0] ?? null,
+            'lowest_competency' => end($sjt['bottom_competencies']) ?? null,
+            'average_score' => !empty($sjt['competency_averages']) ?
+                array_sum($sjt['competency_averages']) / count($sjt['competency_averages']) : 0
         ];
 
         return $summary;
@@ -260,27 +251,27 @@ class ScoringHelper
             'warnings' => []
         ];
 
-        // Check ST-30 responses
+        // Check ST-30 responses (need 4 stages)
         $st30Responses = ST30Response::where('session_id', $session->id)->get();
         if ($st30Responses->count() < 4) {
             $validation['errors'][] = 'Incomplete ST-30 responses (expected 4 stages)';
             $validation['is_valid'] = false;
         }
 
-        // Check SJT responses
-        $sjtResponses = SJTResponse::where('session_id', $session->id)->get();
-        if ($sjtResponses->count() < 50) {
-            $validation['errors'][] = 'Incomplete SJT responses (expected 50 questions)';
-            $validation['is_valid'] = false;
-        }
-
-        // Check for scoring responses
+        // Check specific scoring responses (Stage 1 & 2)
         $scoringResponses = ST30Response::where('session_id', $session->id)
             ->where('for_scoring', true)
             ->get();
 
-        if ($scoringResponses->isEmpty()) {
-            $validation['errors'][] = 'No ST-30 scoring responses found';
+        if ($scoringResponses->count() < 2) {
+            $validation['errors'][] = 'Missing ST-30 scoring responses (need Stage 1 & 2)';
+            $validation['is_valid'] = false;
+        }
+
+        // Check SJT responses (need 50 questions)
+        $sjtResponses = SJTResponse::where('session_id', $session->id)->get();
+        if ($sjtResponses->count() < 50) {
+            $validation['errors'][] = 'Incomplete SJT responses (expected 50 questions)';
             $validation['is_valid'] = false;
         }
 
