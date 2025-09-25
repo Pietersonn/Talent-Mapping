@@ -3,55 +3,42 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Auth\LoginRequest;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
+use Illuminate\Validation\ValidationException;
 
 class AuthenticatedSessionController extends Controller
 {
-    /**
-     * Display the login view.
-     */
-    public function create(): View
+    public function create()
     {
         return view('auth.login');
     }
 
-    /**
-     * Handle an incoming authentication request.
-     * ALL USERS REDIRECT TO HOME AFTER LOGIN
-     */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(Request $request)
     {
-        $request->authenticate();
-        $request->session()->regenerate();
+        $credentials = $request->validate([
+            'email'    => ['required', 'email'],
+            'password' => ['required'],
+        ]);
 
-        $user = Auth::user();
-
-        // Check email verification using database column
-        if (is_null($user->email_verified_at)) {
-            return redirect()->route('verification.notice')
-                ->with('warning', 'Please verify your email to access all features.');
+        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+            throw ValidationException::withMessages([
+                'email' => __('auth.failed'),
+            ]);
         }
 
-        // ALL ROLES REDIRECT TO HOME (NOT DASHBOARD)
-        return redirect()->intended(route('home'))
-            ->with('success', 'Welcome back, ' . $user->name . '!');
+        $request->session()->regenerate();
+
+        // INTENDED ke Home untuk SEMUA ROLE
+        return redirect()->intended(route('home'));
     }
 
-    /**
-     * Destroy an authenticated session.
-     * LOGOUT ALWAYS REDIRECT TO HOME
-     */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request)
     {
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('home')
-            ->with('success', 'You have been logged out successfully.');
+        return redirect()->route('home');
     }
 }

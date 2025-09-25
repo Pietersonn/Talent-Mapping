@@ -19,7 +19,7 @@
                             <h3 class="card-title mb-0">ST-30 Typologies</h3>
                         </div>
                         <div class="col-auto">
-                            <a href="{{ route('admin.typologies.create') }}" class="btn btn-primary btn-sm">
+                            <a href="{{ route('admin.questions.typologies.create') }}" class="btn btn-primary btn-sm">
                                 <i class="fas fa-plus"></i> Add New Typology
                             </a>
                         </div>
@@ -160,29 +160,17 @@
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm" role="group">
-                                        <a href="{{ route('admin.typologies.show', $typology) }}"
+                                        <a href="{{ route('admin.questions.typologies.show', $typology) }}"
                                            class="btn btn-info" title="View">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="{{ route('admin.typologies.edit', $typology) }}"
+                                        <a href="{{ route('admin.questions.typologies.edit', $typology) }}"
                                            class="btn btn-warning" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        @if($typology->is_active)
-                                            <button type="button" class="btn btn-secondary"
-                                                    onclick="confirmToggleStatus('{{ $typology->typology_code }}', '{{ route('admin.typologies.toggle-status', $typology) }}', true)"
-                                                    title="Deactivate">
-                                                <i class="fas fa-power-off"></i>
-                                            </button>
-                                        @else
-                                            <button type="button" class="btn btn-success"
-                                                    onclick="confirmToggleStatus('{{ $typology->typology_code }}', '{{ route('admin.typologies.toggle-status', $typology) }}', false)"
-                                                    title="Activate">
-                                                <i class="fas fa-power-off"></i>
-                                            </button>
-                                        @endif
+                        
                                         <button type="button" class="btn btn-danger"
-                                                onclick="confirmDelete('{{ $typology->typology_code }}', '{{ route('admin.typologies.destroy', $typology) }}')"
+                                                onclick="confirmDelete('{{ $typology->typology_code }}', '{{ route('admin.questions.typologies.destroy', $typology) }}')"
                                                 title="Delete">
                                             <i class="fas fa-trash"></i>
                                         </button>

@@ -5,7 +5,7 @@
 
 @section('breadcrumbs')
     <li class="breadcrumb-item"><a href="{{ route('admin.questions.index') }}">Question Bank</a></li>
-    <li class="breadcrumb-item"><a href="{{ route('admin.st30.index') }}">ST-30 Questions</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('admin.questions.st30.index') }}">ST-30 Questions</a></li>
     <li class="breadcrumb-item active">Question #{{ $st30Question->number }}</li>
 @endsection
 
@@ -118,7 +118,7 @@
                             <div class="row">
                                 <div class="col-md-4">
                                     @if (isset($prevQuestion))
-                                        <a href="{{ route('admin.st30.show', $prevQuestion) }}"
+                                        <a href="{{ route('admin.questions.st30.show', $prevQuestion) }}"
                                             class="btn btn-outline-secondary">
                                             <i class="fas fa-chevron-left mr-1"></i> Previous
                                         </a>
@@ -131,7 +131,7 @@
                                 </div>
                                 <div class="col-md-4 text-right">
                                     @if (isset($nextQuestion))
-                                        <a href="{{ route('admin.st30.show', $nextQuestion) }}"
+                                        <a href="{{ route('admin.questions.st30.show', $nextQuestion) }}"
                                             class="btn btn-outline-secondary">
                                             Next <i class="fas fa-chevron-right ml-1"></i>
                                         </a>
@@ -155,16 +155,16 @@
                     <div class="card-body">
                         <div class="d-grid gap-2">
                             @if (Auth::user()->role === 'admin')
-                                <a href="{{ route('admin.st30.edit', $st30Question) }}" class="btn btn-warning btn-block">
+                                <a href="{{ route('admin.questions.st30.edit', $st30Question) }}" class="btn btn-warning btn-block">
                                     <i class="fas fa-edit mr-2"></i> Edit Question
                                 </a>
                                 <button class="btn btn-danger btn-block"
-                                    onclick="confirmDelete('{{ $st30Question->number }}', '{{ route('admin.st30.destroy', $st30Question) }}')">
+                                    onclick="confirmDelete('{{ $st30Question->number }}', '{{ route('admin.questions.st30.destroy', $st30Question) }}')">
                                     <i class="fas fa-trash mr-2"></i> Delete Question
                                 </button>
                                 <hr>
                             @endif
-                            <a href="{{ route('admin.st30.index', ['version' => $st30Question->version_id]) }}"
+                            <a href="{{ route('admin.questions.st30.index', ['version' => $st30Question->version_id]) }}"
                                 class="btn btn-secondary btn-block">
                                 <i class="fas fa-list mr-2"></i> Back to List
                             </a>
@@ -252,16 +252,16 @@
 
         // Navigation helpers
         function goToEdit() {
-            window.location.href = '{{ route('admin.st30.edit', $st30Question) }}';
+            window.location.href = '{{ route('admin.questions.st30.edit', $st30Question) }}';
         }
 
         function goToIndex() {
-            window.location.href = '{{ route('admin.st30.index', ['version' => $st30Question->version_id]) }}';
+            window.location.href = '{{ route('admin.questions.st30.index', ['version' => $st30Question->version_id]) }}';
         }
 
         function goToNextQuestion() {
             @if (isset($nextQuestion))
-                window.location.href = '{{ route('admin.st30.show', $nextQuestion) }}';
+                window.location.href = '{{ route('admin.questions.st30.show', $nextQuestion) }}';
             @else
                 showInfoToast('This is the last question in this version.');
             @endif
@@ -269,7 +269,7 @@
 
         function goToPrevQuestion() {
             @if (isset($prevQuestion))
-                window.location.href = '{{ route('admin.st30.show', $prevQuestion) }}';
+                window.location.href = '{{ route('admin.questions.st30.show', $prevQuestion) }}';
             @else
                 showInfoToast('This is the first question in this version.');
             @endif

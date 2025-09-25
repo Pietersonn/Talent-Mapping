@@ -1,5 +1,4 @@
 <?php
-// app/Jobs/GenerateAssessmentReport.php
 
 namespace App\Jobs;
 
@@ -18,14 +17,14 @@ class GenerateAssessmentReport implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
-     * ID sesi tes (mis. TS503)
-     */
+    public $tries   = 1;
+    public $timeout = 120;
+
     public function __construct(public string $sessionId) {}
 
     public function handle(): void
     {
-        // === Session & user (nama & email)
+        // ---- 1) Session & user
         $session = DB::table('test_sessions')->where('id', $this->sessionId)->first();
         if (!$session) return;
 
@@ -33,7 +32,7 @@ class GenerateAssessmentReport implements ShouldQueue
         $recipientName  = $session->participant_name ?: ($user->name ?? 'Peserta');
         $recipientEmail = $user->email ?? null;
 
-        // === SJT aggregate 0..20 per competency
+        // ---- 2) Agregat SJT
         $agg = DB::table('sjt_responses as sr')
             ->join('sjt_options as so', function ($j) {
                 $j->on('sr.question_id', '=', 'so.question_id')
@@ -45,78 +44,89 @@ class GenerateAssessmentReport implements ShouldQueue
             ->get()
             ->keyBy('competency_target');
 
-        // master kompetensi
         $comp = DB::table('competency_descriptions')->get()->keyBy('competency_code');
 
-        // bentuk array utk blade person(5)/(6)/(7)/(12)
+        // Bentuk ranking + lengkapi nama & narasi dari master
         $ranked = collect($agg)->map(function ($row, $code) use ($comp) {
             $m = $comp[$code] ?? null;
             return [
                 'code'     => $code,
                 'name'     => $m->competency_name ?? $code,
                 'score'    => round((float)$row->scaled, 1),
-                'strength' => $m->strength_description ?? '',
-                'weakness' => $m->weakness_description ?? '',
-                'activity' => $m->improvement_activity ?? '',
-                'training' => $m->training_recommendations ?? '',
+                'strength' => (string)($m->strength_description ?? ''),
+                'weakness' => (string)($m->weakness_description ?? ''),
+                'activity' => (string)($m->improvement_activity ?? ''),
+                'training' => (string)($m->training_recommendations ?? ''),
             ];
         })->sortByDesc('score')->values();
 
-        $top3    = $ranked->take(3)->values();                 // person (5)
-        $bottom3 = $ranked->sortBy('score')->take(3)->values(); // person (6),(7),(12)
+        $top3    = $ranked->take(3)->values()->all();
+        $bottom3 = $ranked->sortBy('score')->take(3)->values()->all();
 
-        // === ST-30 dari selected_items (JSON) per stage
-        $st1Json = DB::table('st30_responses')
+        // ---- 3) ST-30
+        $st1Ids = json_decode((string) DB::table('st30_responses')
             ->where('session_id', $this->sessionId)
             ->where('stage_number', 1)->where('for_scoring', 1)
-            ->value('selected_items');
+            ->value('selected_items'), true) ?: [];
 
-        $st2Json = DB::table('st30_responses')
+        $st2Ids = json_decode((string) DB::table('st30_responses')
             ->where('session_id', $this->sessionId)
             ->where('stage_number', 2)->where('for_scoring', 1)
-            ->value('selected_items');
+            ->value('selected_items'), true) ?: [];
 
-        $st1Ids = $st1Json ? json_decode($st1Json, true) : [];
-        $st2Ids = $st2Json ? json_decode($st2Json, true) : [];
-
-        // dominant typology = typology dari item pertama stage 1 (jika ada)
         $dominantTypologyCode = null;
         if (!empty($st1Ids)) {
             $firstSt1 = DB::table('st30_questions')->where('id', $st1Ids[0])->first();
             $dominantTypologyCode = $firstSt1->typology_code ?? null;
         }
 
-        // Stage 1 → Potensi Kekuatan (OBJECTS: ->name, ->desc) untuk blade person(10)
         $st1Typos = collect();
         if (!empty($st1Ids)) {
             $st1Typos = DB::table('st30_questions as q')
                 ->join('typology_descriptions as t', 't.typology_code', '=', 'q.typology_code')
                 ->whereIn('q.id', $st1Ids)
-                ->select('t.typology_name AS name', 't.strength_description AS desc')
-                ->distinct()
-                ->get();
+                ->select('t.typology_code AS code', 't.typology_name AS name', 't.strength_description AS desc')
+                ->distinct()->get();
         }
 
-        // Stage 2 → Potensi Kelemahan (OBJECTS: ->name, ->desc) untuk blade person(11)
         $st2Typos = collect();
         if (!empty($st2Ids)) {
             $st2Typos = DB::table('st30_questions as q')
                 ->join('typology_descriptions as t', 't.typology_code', '=', 'q.typology_code')
                 ->whereIn('q.id', $st2Ids)
-                ->select('t.typology_name AS name', 't.weakness_description AS desc')
-                ->distinct()
-                ->get();
+                ->select('t.typology_code AS code', 't.typology_name AS name', 't.weakness_description AS desc')
+                ->distinct()->get();
         }
 
-        // === Data ke view
+        // ---- 3.1) Splitter & formatter bullet
+        $toPointsSmart = function (?string $t, int $max = 5): array {
+            $t = trim((string)$t);
+            if ($t === '') return [];
+            // newline | '|' | akhir kalimat (.!? + spasi + Huruf Kapital)
+            $parts = preg_split('/\r\n|\r|\n|\s*\|\s*|(?<=[\.!?])\s+(?=\p{Lu})/u', $t);
+            $parts = array_values(array_filter(array_map('trim', $parts), fn($s) => $s !== ''));
+            $parts = array_map(fn($s) => rtrim($s, ". \t\n\r\0\x0B"), $parts);
+            return array_slice($parts, 0, $max);
+        };
+        $fmtDash = fn(array $lines) => implode("\n", array_map(fn($s) => '- '.$s, $lines));
+
+        // ---- 3.2) Siapkan isi 3 kotak (lemah #1..#3) berupa string multi-baris ber-dash
+        $recoActivityBoxes = [];
+        $recoTrainingBoxes = [];
+        foreach (array_slice($bottom3, 0, 3) as $row) {
+            $recoActivityBoxes[] = $fmtDash($toPointsSmart($row['activity'] ?? '', 5));
+            $recoTrainingBoxes[] = $fmtDash($toPointsSmart($row['training'] ?? '', 5));
+        }
+
+        // ---- 4) Data ke view
         $data = [
             'user'            => ['name' => $recipientName, 'email' => $recipientEmail],
-            'sjt_top3'        => $top3,
-            'sjt_bottom3'     => $bottom3,
-            'reco_activity'   => $bottom3->pluck('activity')->take(3)->values(),
-            'reco_training'   => $bottom3->pluck('training')->take(3)->values(),
-            'st30_strengths'  => $st1Typos->values(),  // objek: ->name, ->desc
-            'st30_weakness'   => $st2Typos->values(),  // objek: ->name, ->desc
+            'sjt_top3'        => $top3,                 // array
+            'sjt_bottom3'     => $bottom3,              // array
+            'reco_activity'   => $recoActivityBoxes,    // 3 string (tiap string multi-baris ber-dash)
+            'reco_training'   => $recoTrainingBoxes,    // 3 string (tiap string multi-baris ber-dash)
+            'st30_strengths'  => $st1Typos->values(),
+            'st30_weakness'   => $st2Typos->values(),
             'pages'           => [
                 'person','person 2','person 3','person 4','user',
                 'person 5','person 6','person 7','person 8','person 9',
@@ -124,56 +134,57 @@ class GenerateAssessmentReport implements ShouldQueue
             ],
         ];
 
-        // === Render PDF (VIEW: resources/views/public/pdf/report.blade.php)
+        // ---- 5) Render & simpan ke storage/app/reports/<nama dengan spasi>.pdf
+        Storage::disk('local')->makeDirectory('reports');
+
+        $fileName     = Str::of($recipientName)->slug(' ') . '.pdf';
+        $relativePath = "reports/{$fileName}";
+
+        // PENTING: jangan setOptions agar metrik layout sama seperti versi “benar”
         $pdf = Pdf::loadView('public.pdf.report', $data)->setPaper('a4', 'landscape');
 
-        $fileName = Str::of($recipientName)->slug(' ') . '.pdf';
-        $relative = "reports/{$fileName}";
-        $absolute = storage_path("app/{$relative}");
+        Storage::disk('local')->put($relativePath, $pdf->output());
+        $absolutePath = Storage::disk('local')->path($relativePath);
 
-        Storage::disk('local')->put($relative, $pdf->output());
-
-        // === Upsert ringkasan & path ke test_results (BUKAN test_sessions)
-        $st30Summary = ['strengths' => $st1Typos->values(), 'weakness' => $st2Typos->values()];
-        $sjtSummary  = ['top3' => $top3, 'bottom3' => $bottom3];
+        // ---- 6) Persist ringkasan + path
+        $payload = [
+            'st30_results'        => json_encode([
+                'strengths' => $st1Typos->values(),
+                'weakness'  => $st2Typos->values(),
+            ], JSON_UNESCAPED_UNICODE),
+            'sjt_results'         => json_encode([
+                'top3'     => $top3,
+                'bottom3'  => $bottom3,
+            ], JSON_UNESCAPED_UNICODE),
+            'dominant_typology'   => $dominantTypologyCode,
+            'report_generated_at' => now(),
+            'pdf_path'            => $relativePath,
+            'updated_at'          => now(),
+        ];
 
         $existing = DB::table('test_results')->where('session_id', $this->sessionId)->first();
         if ($existing) {
-            DB::table('test_results')->where('id', $existing->id)->update([
-                'st30_results'        => json_encode($st30Summary, JSON_UNESCAPED_UNICODE),
-                'sjt_results'         => json_encode($sjtSummary, JSON_UNESCAPED_UNICODE),
-                'dominant_typology'   => $dominantTypologyCode,
-                'report_generated_at' => now(),
-                'pdf_path'            => $relative,
-                'updated_at'          => now(),
-            ]);
+            DB::table('test_results')->where('id', $existing->id)->update($payload);
         } else {
-            // generate TRxxx (panjang total 5: TR001..TR999) — cocok dgn kolom CHAR(5)
             do {
-                $trId = 'TR' . str_pad((string)random_int(1, 999), 3, '0', STR_PAD_LEFT);
+                $trId = 'TR' . str_pad((string) random_int(1, 999), 3, '0', STR_PAD_LEFT);
             } while (DB::table('test_results')->where('id', $trId)->exists());
 
-            DB::table('test_results')->insert([
-                'id'                  => $trId,
-                'session_id'          => $this->sessionId,
-                'st30_results'        => json_encode($st30Summary, JSON_UNESCAPED_UNICODE),
-                'sjt_results'         => json_encode($sjtSummary, JSON_UNESCAPED_UNICODE),
-                'dominant_typology'   => $dominantTypologyCode,
-                'report_generated_at' => now(),
-                'pdf_path'            => $relative,
-                'created_at'          => now(),
-                'updated_at'          => now(),
-            ]);
+            $payload['id']         = $trId;
+            $payload['session_id'] = $this->sessionId;
+            $payload['created_at'] = now();
+
+            DB::table('test_results')->insert($payload);
         }
 
-        // === Kirim email (kalau ada email)
-        if ($recipientEmail) {
+        // ---- 7) Kirim email (opsional: kalau ada email)
+        if ($recipientEmail && is_file($absolutePath)) {
             Mail::raw(
                 "Halo {$recipientName},\n\nBerikut hasil Talent Assessment Anda terlampir.\n\nTerima kasih.",
-                function ($m) use ($recipientEmail, $recipientName, $absolute) {
+                function ($m) use ($recipientEmail, $recipientName, $absolutePath) {
                     $m->to($recipientEmail, $recipientName)
                       ->subject('Hasil Talent Assessment')
-                      ->attach($absolute);
+                      ->attach($absolutePath);
                 }
             );
 
@@ -183,7 +194,7 @@ class GenerateAssessmentReport implements ShouldQueue
             ]);
         }
 
-        // (opsional) tandai sesi completed
+        // ---- 8) Tandai sesi selesai (opsional)
         DB::table('test_sessions')->where('id', $this->sessionId)->update([
             'is_completed' => 1,
             'updated_at'   => now(),

@@ -3,234 +3,121 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 
-class User extends Authenticatable implements MustVerifyEmail
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+
+class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
+    protected $table = 'users';
+
     protected $fillable = [
         'name',
         'email',
         'password',
         'role',
         'is_active',
+        'google_id', // SSO Google
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'is_active' => 'boolean',
+            'password'          => 'hashed',
+            'is_active'         => 'boolean',
         ];
     }
 
-    /**
-     * Check if user has specific role
-     */
-    public function hasRole(string $role): bool
-    {
-        return $this->role === $role;
-    }
+    // ===== Helpers (role/status) =====
+    public function hasRole(string $role): bool { return $this->role === $role; }
+    public function hasAnyRole(array $roles): bool { return in_array($this->role, $roles, true); }
+    public function isActive(): bool { return (bool) $this->is_active; }
+    public function isAdmin(): bool  { return $this->role === 'admin'; }
+    public function isStaff(): bool  { return $this->role === 'staff'; }
+    public function isPIC(): bool    { return $this->role === 'pic'; }
+    public function isUser(): bool   { return $this->role === 'user'; }
 
-    /**
-     * Check if user has any of the given roles
-     */
-    public function hasAnyRole(array $roles): bool
-    {
-        return in_array($this->role, $roles);
-    }
+    public function scopeActive($q)               { return $q->where('is_active', true); }
+    public function scopeByRole($q, string $role) { return $q->where('role', $role); }
+    public function scopeAdmins($q)               { return $q->where('role', 'admin'); }
+    public function scopeStaff($q)                { return $q->where('role', 'staff'); }
+    public function scopePICs($q)                 { return $q->where('role', 'pic'); }
+    public function scopeUsers($q)                { return $q->where('role', 'user'); }
 
-    /**
-     * Check if user is active
-     */
-    public function isActive(): bool
-    {
-        return $this->is_active;
-    }
-
-    /**
-     * Check if user is admin
-     */
-    public function isAdmin(): bool
-    {
-        return $this->role === 'admin';
-    }
-
-    /**
-     * Check if user is staff
-     */
-    public function isStaff(): bool
-    {
-        return $this->role === 'staff';
-    }
-
-    /**
-     * Check if user is PIC
-     */
-    public function isPIC(): bool
-    {
-        return $this->role === 'pic';
-    }
-
-    /**
-     * Check if user is regular user
-     */
-    public function isUser(): bool
-    {
-        return $this->role === 'user';
-    }
-
-    /**
-     * Events where this user is assigned as PIC
-     */
-    public function picEvents(): HasMany
-    {
-        return $this->hasMany(Event::class, 'pic_id');
-    }
-
-    /**
-     * Events this user has participated in
-     */
-    public function participatedEvents(): BelongsToMany
-    {
-        return $this->belongsToMany(Event::class, 'event_participants')
-            ->withPivot('test_completed', 'results_sent')
-            ->withTimestamps();
-    }
-
-    /**
-     * Test sessions created by this user
-     */
-    public function testSessions(): HasMany
-    {
-        return $this->hasMany(TestSession::class);
-    }
-
-    /**
-     * Resend requests made by this user
-     */
-    public function resendRequests(): HasMany
-    {
-        return $this->hasMany(ResendRequest::class);
-    }
-
-    /**
-     * Resend requests approved by this user (for admins)
-     */
-    public function approvedResendRequests(): HasMany
-    {
-        return $this->hasMany(ResendRequest::class, 'approved_by');
-    }
-
-    /**
-     * Activity logs for this user
-     */
-    public function activityLogs(): HasMany
-    {
-        return $this->hasMany(ActivityLog::class);
-    }
-
-    /**
-     * Question versions created by this user (for admins)
-     */
-    public function createdQuestionVersions(): HasMany
-    {
-        return $this->hasMany(QuestionVersion::class, 'created_by');
-    }
-
-    /**
-     * Get user's role display name
-     */
     public function getRoleDisplayAttribute(): string
     {
-        return match($this->role) {
+        return match ($this->role) {
             'admin' => 'Administrator',
             'staff' => 'Staff',
-            'pic' => 'Person in Charge',
-            'user' => 'User',
-            default => 'Unknown'
+            'pic'   => 'Person in Charge',
+            'user'  => 'User',
+            default => 'Unknown',
         };
     }
 
-    /**
-     * Get user's status display
-     */
     public function getStatusDisplayAttribute(): string
     {
         return $this->is_active ? 'Active' : 'Inactive';
     }
 
-    /**
-     * Scope for active users
-     */
-    public function scopeActive($query)
+    // ===== RELATIONS =====
+
+    /** User -> TestSessions (FK: test_sessions.user_id) */
+    public function testSessions(): HasMany
     {
-        return $query->where('is_active', true);
+        return $this->hasMany(TestSession::class, 'user_id', 'id');
     }
 
-    /**
-     * Scope for users by role
-     */
-    public function scopeByRole($query, string $role)
+    /** User -> TestResults (via TestSessions) */
+    public function testResults(): HasManyThrough
     {
-        return $query->where('role', $role);
+        return $this->hasManyThrough(
+            TestResult::class,   // target
+            TestSession::class,  // through
+            'user_id',           // FK di test_sessions -> users.id
+            'session_id',        // FK di test_results -> test_sessions.id
+            'id',                // PK users
+            'id'                 // PK test_sessions
+        );
     }
 
-    /**
-     * Scope for admins
-     */
-    public function scopeAdmins($query)
+    /** User <-> Events sebagai peserta (pivot: event_participants) */
+    public function events(): BelongsToMany
     {
-        return $query->where('role', 'admin');
+        return $this->belongsToMany(Event::class, 'event_participants', 'user_id', 'event_id')
+            ->withPivot(['test_completed', 'results_sent'])
+            ->withTimestamps(); // pivot punya created_at/updated_at
     }
 
-    /**
-     * Scope for staff
-     */
-    public function scopeStaff($query)
+    /** User -> Events yang dia kelola sebagai PIC (events.pic_id) */
+    public function picEvents(): HasMany
     {
-        return $query->where('role', 'staff');
+        return $this->hasMany(Event::class, 'pic_id', 'id');
     }
 
-    /**
-     * Scope for PICs
-     */
-    public function scopePICs($query)
+    /** User -> ResendRequests yang dibuat user (resend_requests.user_id) */
+    public function resendRequests(): HasMany
     {
-        return $query->where('role', 'pic');
+        return $this->hasMany(ResendRequest::class, 'user_id', 'id');
     }
 
-    /**
-     * Scope for regular users
-     */
-    public function scopeUsers($query)
+    /** User -> ResendRequests yang disetujui user ini sebagai admin/pic (resend_requests.approved_by) */
+    public function approvedResendRequests(): HasMany
     {
-        return $query->where('role', 'user');
+        return $this->hasMany(ResendRequest::class, 'approved_by', 'id');
     }
+
+    // ===== Scopes tambahan =====
+    public function scopeWithResults($q) { return $q->whereHas('testResults'); }
 }

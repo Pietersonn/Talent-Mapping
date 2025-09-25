@@ -7,23 +7,13 @@
 }
 
 .test-hero {
-    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
-                url('{{ asset('assets/public/images/test-hero-bg.jpg') }}') center/cover;
+    background: url('/assets/public/images/img-test1.jpg') top center / cover no-repeat;
     padding: 120px 0 80px;
     position: relative;
     overflow: hidden;
 }
 
-.test-hero::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(29, 78, 216, 0.9) 100%);
-    z-index: 1;
-}
+
 
 .hero-content {
     position: relative;

@@ -5,7 +5,7 @@
 
 @section('breadcrumbs')
     <li class="breadcrumb-item"><a href="{{ route('admin.questions.index') }}">Question Bank</a></li>
-    <li class="breadcrumb-item"><a href="{{ route('admin.typologies.index') }}">Typologies</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('admin.questions.typologies.index') }}">Typologies</a></li>
     <li class="breadcrumb-item active">Edit {{ $typology->typology_code }}</li>
 @endsection
 
@@ -19,16 +19,16 @@
                             <i class="fas fa-edit"></i> Edit Typology: {{ $typology->typology_code }}
                         </h3>
                         <div class="card-tools">
-                            <a href="{{ route('admin.typologies.index') }}" class="btn btn-secondary btn-sm">
+                            <a href="{{ route('admin.questions.typologies.index') }}" class="btn btn-secondary btn-sm">
                                 <i class="fas fa-arrow-left"></i> Back to List
                             </a>
-                            <a href="{{ route('admin.typologies.show', $typology) }}" class="btn btn-info btn-sm">
+                            <a href="{{ route('admin.questions.typologies.show', $typology) }}" class="btn btn-info btn-sm">
                                 <i class="fas fa-eye"></i> View Details
                             </a>
                         </div>
                     </div>
 
-                    <form action="{{ route('admin.typologies.update', $typology) }}" method="POST">
+                    <form action="{{ route('admin.questions.typologies.update', $typology) }}" method="POST">
                         @csrf
                         @method('PUT')
                         <div class="card-body">
@@ -213,10 +213,10 @@
                                     </button>
                                 </div>
                                 <div class="col-md-6 text-right">
-                                    <a href="{{ route('admin.typologies.show', $typology) }}" class="btn btn-info mr-2">
+                                    <a href="{{ route('admin.questions.typologies.show', $typology) }}" class="btn btn-info mr-2">
                                         <i class="fas fa-eye"></i> View Details
                                     </a>
-                                    <a href="{{ route('admin.typologies.index') }}" class="btn btn-outline-secondary">
+                                    <a href="{{ route('admin.questions.typologies.index') }}" class="btn btn-outline-secondary">
                                         <i class="fas fa-times"></i> Cancel
                                     </a>
                                 </div>

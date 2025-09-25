@@ -5,51 +5,47 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
-use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
     /**
-     * Display the registration view.
+     * Show the registration view.
      */
-    public function create(): View
+    public function create()
     {
         return view('auth.register');
     }
 
     /**
      * Handle an incoming registration request.
-     *
-     * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        $validated = $request->validate([
+            'name'  => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
+            // HAPUS 'confirmed' karena kita tidak pakai confirm password di form
+            'password' => ['required', Rules\Password::defaults()],
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => 'user',
-            'is_active' => false, // Inactive until verified
+            'name'      => $validated['name'],
+            'email'     => $validated['email'],
+            'password'  => Hash::make($validated['password']),
+            // kolom khusus app kamu:
+            'role'      => 'user',
+            'is_active' => true,
         ]);
 
         event(new Registered($user));
 
-        // Auto login user setelah register
+        // langsung login & redirect ke home (sesuai requirement kamu)
         Auth::login($user);
 
-        // Redirect ke verification notice
-        return redirect()->route('verification.notice')
-            ->with('success', 'Registration successful! Please verify your email to access all features.');
+        return redirect()->route('home')->with('success', 'Account created successfully. Welcome!');
     }
 }

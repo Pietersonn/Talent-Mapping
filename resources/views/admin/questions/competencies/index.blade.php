@@ -141,18 +141,18 @@
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm" role="group">
-                                        <a href="{{ route('admin.competencies.show', $competency) }}"
+                                        <a href="{{ route('admin.questions.competencies.show', $competency) }}"
                                            class="btn btn-info" title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                         @if(Auth::user()->role === 'admin')
-                                            <a href="{{ route('admin.competencies.edit', $competency) }}"
+                                            <a href="{{ route('admin.questions.competencies.edit', $competency) }}"
                                                class="btn btn-warning" title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                         @endif
                                         @if($competency->sjt_questions_count > 0)
-                                            <a href="{{ route('admin.sjt.index') }}?competency={{ $competency->competency_code }}"
+                                            <a href="{{ route('admin.questions.sjt.index') }}?competency={{ $competency->competency_code }}"
                                                class="btn btn-success" title="View Questions">
                                                 <i class="fas fa-question-circle"></i>
                                             </a>
@@ -222,7 +222,7 @@
                                 <div class="info-box-content">
                                     <span class="info-box-text">Add SJT Questions</span>
                                     <span class="info-box-number">
-                                        <a href="{{ route('admin.sjt.create') }}" class="btn btn-sm btn-primary">
+                                        <a href="{{ route('admin.questions.sjt.create') }}" class="btn btn-sm btn-primary">
                                             Create Question
                                         </a>
                                     </span>

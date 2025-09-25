@@ -5,7 +5,7 @@
 
 @section('breadcrumbs')
     <li class="breadcrumb-item"><a href="{{ route('admin.questions.index') }}">Question Bank</a></li>
-    <li class="breadcrumb-item"><a href="{{ route('admin.sjt.index') }}">SJT Questions</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('admin.questions.sjt.index') }}">SJT Questions</a></li>
     <li class="breadcrumb-item active">Create Question</li>
 @endsection
 
@@ -19,7 +19,7 @@
                     Create SJT Question
                 </h3>
             </div>
-            <form action="{{ route('admin.sjt.store') }}" method="POST" id="sjtForm">
+            <form action="{{ route('admin.questions.sjt.store') }}" method="POST" id="sjtForm">
                 @csrf
                 <div class="card-body">
                     <input type="hidden" name="version_id" value="{{ $selectedVersion->id }}">
@@ -134,7 +134,7 @@
                     <button type="submit" class="btn btn-primary" id="submitBtn">
                         <i class="fas fa-save mr-1"></i> Create Question
                     </button>
-                    <a href="{{ route('admin.sjt.index', ['version' => $selectedVersion->id]) }}" class="btn btn-secondary">
+                    <a href="{{ route('admin.questions.sjt.index', ['version' => $selectedVersion->id]) }}" class="btn btn-secondary">
                         <i class="fas fa-times mr-1"></i> Cancel
                     </a>
                 </div>

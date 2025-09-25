@@ -113,7 +113,11 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding-left: 12px;
+    padding-right: 16px;
+    gap: 12px;
 }
+
 
 .navbar-brand {
     display: flex;
@@ -122,7 +126,7 @@ body {
 }
 
 .navbar-brand .logo {
-    height: 40px;
+    height: 50px;
     width: auto;
 }
 
@@ -167,6 +171,102 @@ body {
     background: linear-gradient(120deg, #84cc16, #65a30d);
     border-radius: 1px;
 }
+
+/* === User avatar hover + animation === */
+:root{
+  --tm-accent: #84cc16;      /* hijau utama */
+  --tm-accent-dark:#65a30d;  /* hijau tua */
+}
+
+.btn-user.btn-user--avatar{
+  position: relative;
+  width:44px; height:44px;
+  display:flex; align-items:center; justify-content:center;
+  padding:0; border-radius:9999px;
+  background:#fff; border:1px solid #e5e7eb;
+  cursor:pointer; transition:box-shadow .25s ease, transform .08s ease, border-color .25s ease;
+  overflow:hidden;
+}
+
+/* ring lembut saat hover/focus */
+.btn-user.btn-user--avatar:hover{ border-color: rgba(132,204,22,.45); }
+.btn-user.btn-user--avatar:focus{ outline:0; box-shadow:0 0 0 3px rgba(132,204,22,.35); }
+.btn-user.btn-user--avatar:active{ transform: translateY(1px); }
+
+.user-avatar-img{
+  width:70%; height:70%; object-fit:contain;
+  transition: transform .18s ease, filter .25s ease;
+  filter: grayscale(15%); /* tampilan normal */
+}
+
+/* Re-tint PNG saat hover → jadi hijau + sedikit zoom */
+.btn-user.btn-user--avatar:hover .user-avatar-img{
+  transform: scale(1.06);
+  /* tint PNG hitam ke hijau dengan CSS filter */
+  filter: brightness(0) saturate(100%) invert(61%) sepia(53%)
+          saturate(495%) hue-rotate(41deg) brightness(94%) contrast(93%);
+}
+
+/* Pulse ring saat dropdown terbuka (opsional) */
+.user-menu.open .btn-user.btn-user--avatar::after{
+  content:"";
+  position:absolute; inset:-2px; border-radius:inherit;
+  box-shadow:0 0 0 0 rgba(132,204,22,.25);
+  animation: tmPulse 1.8s ease-out infinite;
+}
+@keyframes tmPulse{
+  0%   { box-shadow:0 0 0 0 rgba(132,204,22,.25); }
+  70%  { box-shadow:0 0 0 10px rgba(132,204,22,0); }
+  100% { box-shadow:0 0 0 0 rgba(132,204,22,0); }
+}
+/* === User avatar hover + animation === */
+:root{
+  --tm-accent: #84cc16;      /* hijau utama */
+  --tm-accent-dark:#65a30d;  /* hijau tua */
+}
+
+.btn-user.btn-user--avatar{
+  position: relative;
+  width:44px; height:44px;
+  display:flex; align-items:center; justify-content:center;
+  padding:0; border-radius:9999px;
+  background:#fff; border:1px solid #e5e7eb;
+  cursor:pointer; transition:box-shadow .25s ease, transform .08s ease, border-color .25s ease;
+  overflow:hidden;
+}
+
+/* ring lembut saat hover/focus */
+.btn-user.btn-user--avatar:hover{ border-color: rgba(132,204,22,.45); }
+.btn-user.btn-user--avatar:focus{ outline:0; box-shadow:0 0 0 3px rgba(132,204,22,.35); }
+.btn-user.btn-user--avatar:active{ transform: translateY(1px); }
+
+.user-avatar-img{
+  width:70%; height:70%; object-fit:contain;
+  transition: transform .18s ease, filter .25s ease;
+  filter: grayscale(15%); /* tampilan normal */
+}
+
+/* Re-tint PNG saat hover → jadi hijau + sedikit zoom */
+.btn-user.btn-user--avatar:hover .user-avatar-img{
+  transform: scale(1.06);
+  /* tint PNG hitam ke hijau dengan CSS filter */
+  filter: brightness(0) saturate(100%) invert(61%) sepia(53%)
+          saturate(495%) hue-rotate(41deg) brightness(94%) contrast(93%);
+}
+
+/* Pulse ring saat dropdown terbuka (opsional) */
+.user-menu.open .btn-user.btn-user--avatar::after{
+  content:"";
+  position:absolute; inset:-2px; border-radius:inherit;
+  box-shadow:0 0 0 0 rgba(132,204,22,.25);
+  animation: tmPulse 1.8s ease-out infinite;
+}
+@keyframes tmPulse{
+  0%   { box-shadow:0 0 0 0 rgba(132,204,22,.25); }
+  70%  { box-shadow:0 0 0 10px rgba(132,204,22,0); }
+  100% { box-shadow:0 0 0 0 rgba(132,204,22,0); }
+}
+
 
 /* User Menu */
 .user-menu {

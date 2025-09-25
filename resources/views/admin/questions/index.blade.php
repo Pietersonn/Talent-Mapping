@@ -69,7 +69,7 @@
                         <a href="{{ route('admin.questions.show', $activeVersions['st30']) }}" class="btn btn-primary btn-sm">
                             <i class="fas fa-eye"></i> View Details
                         </a>
-                        <a href="{{ route('admin.st30.index') }}" class="btn btn-success btn-sm">
+                        <a href="{{ route('admin.questions.st30.index') }}" class="btn btn-success btn-sm">
                             <i class="fas fa-edit"></i> Manage Questions
                         </a>
                     </div>
@@ -123,7 +123,7 @@
                         <a href="{{ route('admin.questions.show', $activeVersions['sjt']) }}" class="btn btn-primary btn-sm">
                             <i class="fas fa-eye"></i> View Details
                         </a>
-                        <a href="{{ route('admin.sjt.index') }}" class="btn btn-info btn-sm">
+                        <a href="{{ route('admin.questions.sjt.index') }}" class="btn btn-info btn-sm">
                             <i class="fas fa-edit"></i> Manage Questions
                         </a>
                     </div>
@@ -344,25 +344,25 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-3">
-                        <a href="{{ route('admin.st30.index') }}" class="btn btn-success btn-block">
+                        <a href="{{ route('admin.questions.st30.index') }}" class="btn btn-success btn-block">
                             <i class="fas fa-brain mr-1"></i>
                             Manage ST-30 Questions
                         </a>
                     </div>
                     <div class="col-md-3">
-                        <a href="{{ route('admin.sjt.index') }}" class="btn btn-info btn-block">
+                        <a href="{{ route('admin.questions.sjt.index') }}" class="btn btn-info btn-block">
                             <i class="fas fa-clipboard-check mr-1"></i>
                             Manage SJT Questions
                         </a>
                     </div>
                     <div class="col-md-3">
-                        <a href="{{ route('admin.typologies.index') }}" class="btn btn-warning btn-block">
+                        <a href="{{ route('admin.questions.typologies.index') }}" class="btn btn-warning btn-block">
                             <i class="fas fa-tags mr-1"></i>
                             Manage Typologies
                         </a>
                     </div>
                     <div class="col-md-3">
-                        <a href="{{ route('admin.competencies.index') }}" class="btn btn-primary btn-block">
+                        <a href="{{ route('admin.questions.competencies.index') }}" class="btn btn-primary btn-block">
                             <i class="fas fa-star mr-1"></i>
                             Manage Competencies
                         </a>

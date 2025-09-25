@@ -5,7 +5,7 @@
 
 @section('breadcrumbs')
     <li class="breadcrumb-item"><a href="{{ route('admin.questions.index') }}">Question Bank</a></li>
-    <li class="breadcrumb-item"><a href="{{ route('admin.st30.index') }}">ST-30 Questions</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('admin.questions.st30.index') }}">ST-30 Questions</a></li>
     <li class="breadcrumb-item active">Create Question</li>
 @endsection
 
@@ -19,7 +19,7 @@
                     Create ST-30 Question
                 </h3>
             </div>
-            <form action="{{ route('admin.st30.store') }}" method="POST" id="st30Form">
+            <form action="{{ route('admin.questions.st30.store') }}" method="POST" id="st30Form">
                 @csrf
                 <div class="card-body">
                     <input type="hidden" name="version_id" value="{{ $selectedVersion->id }}">
@@ -85,7 +85,7 @@
                     <button type="submit" class="btn btn-primary" id="submitBtn">
                         <i class="fas fa-save mr-1"></i> Create Question
                     </button>
-                    <a href="{{ route('admin.st30.index', ['version' => $selectedVersion->id]) }}" class="btn btn-secondary">
+                    <a href="{{ route('admin.questions.st30.index', ['version' => $selectedVersion->id]) }}" class="btn btn-secondary">
                         <i class="fas fa-times mr-1"></i> Cancel
                     </a>
                 </div>

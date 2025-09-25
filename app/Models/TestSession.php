@@ -58,27 +58,6 @@ class TestSession extends Model
         return $this->hasOne(TestResult::class, 'session_id');
     }
 
-    /**
-     * Get progress percentage based on current step
-     */
-    public function getProgressPercentageAttribute(): float
-    {
-        $progressMap = [
-            'form_data' => 0,
-            'st30_stage1' => 15,    // ST-30: 60% total, 15% per stage
-            'st30_stage2' => 30,
-            'st30_stage3' => 45,
-            'st30_stage4' => 60,
-            'sjt_page1' => 68,      // SJT: 40% total, 8% per page
-            'sjt_page2' => 76,
-            'sjt_page3' => 84,
-            'sjt_page4' => 92,
-            'sjt_page5' => 100,
-            'completed' => 100
-        ];
-
-        return $progressMap[$this->current_step] ?? 0;
-    }
 
     /**
      * Get simple progress display text
@@ -108,10 +87,18 @@ class TestSession extends Model
             'display' => $this->progress_display,
             'current_step' => $this->current_step,
             'is_st30_phase' => in_array($this->current_step, [
-                'form_data', 'st30_stage1', 'st30_stage2', 'st30_stage3', 'st30_stage4'
+                'form_data',
+                'st30_stage1',
+                'st30_stage2',
+                'st30_stage3',
+                'st30_stage4'
             ]),
             'is_sjt_phase' => in_array($this->current_step, [
-                'sjt_page1', 'sjt_page2', 'sjt_page3', 'sjt_page4', 'sjt_page5'
+                'sjt_page1',
+                'sjt_page2',
+                'sjt_page3',
+                'sjt_page4',
+                'sjt_page5'
             ]),
             'is_completed' => $this->is_completed
         ];
@@ -123,8 +110,17 @@ class TestSession extends Model
     public function canAccessStage(string $targetStep): bool
     {
         $stepOrder = [
-            'form_data', 'st30_stage1', 'st30_stage2', 'st30_stage3', 'st30_stage4',
-            'sjt_page1', 'sjt_page2', 'sjt_page3', 'sjt_page4', 'sjt_page5', 'completed'
+            'form_data',
+            'st30_stage1',
+            'st30_stage2',
+            'st30_stage3',
+            'st30_stage4',
+            'sjt_page1',
+            'sjt_page2',
+            'sjt_page3',
+            'sjt_page4',
+            'sjt_page5',
+            'completed'
         ];
 
         $currentIndex = array_search($this->current_step, $stepOrder);
@@ -172,11 +168,19 @@ class TestSession extends Model
         switch ($phase) {
             case 'st30':
                 return $query->whereIn('current_step', [
-                    'form_data', 'st30_stage1', 'st30_stage2', 'st30_stage3', 'st30_stage4'
+                    'form_data',
+                    'st30_stage1',
+                    'st30_stage2',
+                    'st30_stage3',
+                    'st30_stage4'
                 ]);
             case 'sjt':
                 return $query->whereIn('current_step', [
-                    'sjt_page1', 'sjt_page2', 'sjt_page3', 'sjt_page4', 'sjt_page5'
+                    'sjt_page1',
+                    'sjt_page2',
+                    'sjt_page3',
+                    'sjt_page4',
+                    'sjt_page5'
                 ]);
             default:
                 return $query;
@@ -189,8 +193,8 @@ class TestSession extends Model
     public function isReadyForResults(): bool
     {
         return $this->is_completed &&
-               $this->st30Responses()->where('for_scoring', true)->count() >= 2 && // Stage 1 & 2
-               $this->sjtResponses()->count() >= 50;
+            $this->st30Responses()->where('for_scoring', true)->count() >= 2 && // Stage 1 & 2
+            $this->sjtResponses()->count() >= 50;
     }
 
     /**

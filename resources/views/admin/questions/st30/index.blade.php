@@ -25,7 +25,7 @@
                         </h3>
                         <div class="card-tools">
                             @if(Auth::user()->role === 'admin' && $selectedVersion)
-                                <a href="{{ route('admin.st30.create', ['version' => $selectedVersion->id]) }}"
+                                <a href="{{ route('admin.questions.st30.create', ['version' => $selectedVersion->id]) }}"
                                    class="btn btn-primary btn-sm">
                                     <i class="fas fa-plus"></i> Add Question
                                 </a>
@@ -179,19 +179,19 @@
                                                 </td>
                                                 <td>
                                                     <div class="btn-group btn-group-sm" role="group">
-                                                        <a href="{{ route('admin.st30.show', $question) }}"
+                                                        <a href="{{ route('admin.questions.st30.show', $question) }}"
                                                            class="btn btn-info" title="View">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
                                                         @if(Auth::user()->role === 'admin')
-                                                            <a href="{{ route('admin.st30.edit', $question) }}"
+                                                            <a href="{{ route('admin.questions.st30.edit', $question) }}"
                                                                class="btn btn-warning" title="Edit">
                                                                 <i class="fas fa-edit"></i>
                                                             </a>
                                                             <button type="button"
                                                                     class="btn btn-danger btn-delete"
                                                                     data-question-number="{{ $question->number }}"
-                                                                    data-delete-url="{{ route('admin.st30.destroy', $question) }}"
+                                                                    data-delete-url="{{ route('admin.questions.st30.destroy', $question) }}"
                                                                     title="Delete">
                                                                 <i class="fas fa-trash"></i>
                                                             </button>
@@ -210,7 +210,7 @@
                                         @if($selectedVersion)
                                             This version doesn't have any questions yet.
                                             @if(Auth::user()->role === 'admin')
-                                                <br><a href="{{ route('admin.st30.create', ['version' => $selectedVersion->id]) }}"
+                                                <br><a href="{{ route('admin.questions.st30.create', ['version' => $selectedVersion->id]) }}"
                                                        class="btn btn-primary mt-2">
                                                     <i class="fas fa-plus"></i> Add First Question
                                                 </a>
@@ -263,48 +263,6 @@
                 </div>
             @endif
         @endif
-
-        <!-- Import Modal -->
-        @if(Auth::user()->role === 'admin')
-            <div class="modal fade" id="importModal" tabindex="-1" role="dialog">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <form action="{{ route('admin.st30.import') }}" method="POST" enctype="multipart/form-data">
-                            @csrf
-                            <div class="modal-header">
-                                <h5 class="modal-title">Import ST-30 Questions</h5>
-                                <button type="button" class="close" data-dismiss="modal">
-                                    <span>&times;</span>
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                                <input type="hidden" name="version_id" value="{{ $selectedVersion ? $selectedVersion->id : '' }}">
-
-                                <div class="form-group">
-                                    <label for="import_file">Select File</label>
-                                    <input type="file" class="form-control-file" id="import_file"
-                                           name="import_file" accept=".csv,.xlsx,.xls" required>
-                                    <small class="form-text text-muted">Supported formats: CSV, Excel</small>
-                                </div>
-
-                                <div class="alert alert-info">
-                                    <strong>File Format:</strong>
-                                    <ul class="mb-0">
-                                        <li>Column 1: number (1-30)</li>
-                                        <li>Column 2: statement</li>
-                                        <li>Column 3: typology_code</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Import Questions</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        @endif
     </div>
 @endsection
 
@@ -314,9 +272,9 @@
         function changeVersion() {
             var versionId = document.getElementById('version_select').value;
             if (versionId) {
-                window.location.href = '{{ route('admin.st30.index') }}?version=' + versionId;
+                window.location.href = '{{ route('admin.questions.st30.index') }}?version=' + versionId;
             } else {
-                window.location.href = '{{ route('admin.st30.index') }}';
+                window.location.href = '{{ route('admin.questions.st30.index') }}';
             }
         }
 
@@ -324,7 +282,7 @@
         function exportQuestions() {
             var versionId = '{{ $selectedVersion ? $selectedVersion->id : '' }}';
             if (versionId) {
-                window.location.href = '{{ route('admin.st30.export') }}?version=' + versionId;
+                window.location.href = '{{ route('admin.questions.st30.export') }}?version=' + versionId;
             } else {
                 showErrorToast('Please select a version to export.');
             }

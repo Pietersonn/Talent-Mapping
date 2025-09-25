@@ -1,13 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_','-', app()->getLocale()) }}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'TalentMapping - Discover Your Potential')</title>
 
+    {{-- ADD: load resources/js/app.js via Vite (Notiflix/Alpine) --}}
+    @vite(['resources/js/app.js'])
+
+    {{-- App base CSS (override Bootstrap bila perlu) --}}
+
     <link rel="stylesheet" href="{{ asset('assets/public/css/app.css') }}">
 
+
+    {{-- Page CSS by route --}}
     @if (request()->routeIs('home'))
         <link rel="stylesheet" href="{{ asset('assets/public/css/pages/home.css') }}">
     @endif
@@ -16,9 +24,12 @@
         <link rel="stylesheet" href="{{ asset('assets/public/css/pages/test.css') }}">
         <link rel="stylesheet" href="{{ asset('assets/public/css/pages/st30-test.css') }}">
         <link rel="stylesheet" href="{{ asset('assets/public/css/pages/sjt-test.css') }}">
+        <link rel="stylesheet" href="{{ asset('assets/public/css/pages/thanks.css') }}">
+        <link rel="stylesheet" href="{{ asset('assets/public/css/profile.css') }}">
+        <link rel="stylesheet" href="{{ asset('assets/public/css/components/stepper.css') }}">
     @endif
 
-    @stack('styles')  <!-- TAMBAHKAN INI -->
+    @stack('styles')
     @yield('styles')
 </head>
 
@@ -31,8 +42,15 @@
 
     @includeWhen(!isset($hideFooter), 'public.layouts.footer')
 
+    {{-- jQuery + Popper + Bootstrap JS --}}
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
+
+    {{-- App JS lama (biarkan, tidak dihapus) --}}
     <script src="{{ asset('assets/public/js/public.js') }}"></script>
-    @stack('scripts')  <!-- TAMBAHKAN INI -->
+
+    @stack('scripts')
     @yield('scripts')
 </body>
 </html>

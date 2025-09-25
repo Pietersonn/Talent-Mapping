@@ -25,7 +25,7 @@
                         </h3>
                         <div class="card-tools">
                             @if(Auth::user()->role === 'admin' && $selectedVersion)
-                                <a href="{{ route('admin.sjt.create', ['version' => $selectedVersion->id]) }}"
+                                <a href="{{ route('admin.questions.sjt.create', ['version' => $selectedVersion->id]) }}"
                                    class="btn btn-primary btn-sm">
                                     <i class="fas fa-plus"></i> Add Question
                                 </a>
@@ -53,19 +53,6 @@
                                 <label for="searchQuestions">Search Questions:</label>
                                 <input type="text" id="searchQuestions" class="form-control"
                                        placeholder="Search by situation or competency...">
-                            </div>
-                            <div class="col-md-4">
-                                <label>&nbsp;</label><br>
-                                @if($selectedVersion)
-                                    <button onclick="exportQuestions()" class="btn btn-success btn-sm">
-                                        <i class="fas fa-download"></i> Export
-                                    </button>
-                                    @if(Auth::user()->role === 'admin')
-                                        <button class="btn btn-info btn-sm" data-toggle="modal" data-target="#importModal">
-                                            <i class="fas fa-upload"></i> Import
-                                        </button>
-                                    @endif
-                                @endif
                             </div>
                         </div>
                     </div>
@@ -185,19 +172,19 @@
                                                 </td>
                                                 <td>
                                                     <div class="btn-group btn-group-sm" role="group">
-                                                        <a href="{{ route('admin.sjt.show', $question) }}"
+                                                        <a href="{{ route('admin.questions.sjt.show', $question) }}"
                                                            class="btn btn-info" title="View">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
                                                         @if(Auth::user()->role === 'admin')
-                                                            <a href="{{ route('admin.sjt.edit', $question) }}"
+                                                            <a href="{{ route('admin.questions.sjt.edit', $question) }}"
                                                                class="btn btn-warning" title="Edit">
                                                                 <i class="fas fa-edit"></i>
                                                             </a>
                                                             <button type="button"
                                                                     class="btn btn-danger btn-delete"
                                                                     data-question-number="{{ $question->number }}"
-                                                                    data-delete-url="{{ route('admin.sjt.destroy', $question) }}"
+                                                                    data-delete-url="{{ route('admin.questions.sjt.destroy', $question) }}"
                                                                     title="Delete">
                                                                 <i class="fas fa-trash"></i>
                                                             </button>
@@ -216,7 +203,7 @@
                                         @if($selectedVersion)
                                             This version doesn't have any SJT questions yet.
                                             @if(Auth::user()->role === 'admin')
-                                                <br><a href="{{ route('admin.sjt.create', ['version' => $selectedVersion->id]) }}"
+                                                <br><a href="{{ route('admin.questions.sjt.create', ['version' => $selectedVersion->id]) }}"
                                                        class="btn btn-primary mt-2">
                                                     <i class="fas fa-plus"></i> Add First Question
                                                 </a>
@@ -272,50 +259,6 @@
                 </div>
             @endif
         @endif
-
-        <!-- Import Modal -->
-        @if(Auth::user()->role === 'admin')
-            <div class="modal fade" id="importModal" tabindex="-1" role="dialog">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <form action="{{ route('admin.sjt.import') }}" method="POST" enctype="multipart/form-data">
-                            @csrf
-                            <div class="modal-header">
-                                <h5 class="modal-title">Import SJT Questions</h5>
-                                <button type="button" class="close" data-dismiss="modal">
-                                    <span>&times;</span>
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                                <input type="hidden" name="version_id" value="{{ $selectedVersion ? $selectedVersion->id : '' }}">
-
-                                <div class="form-group">
-                                    <label for="import_file">Select File</label>
-                                    <input type="file" class="form-control-file" id="import_file"
-                                           name="import_file" accept=".csv,.xlsx,.xls" required>
-                                    <small class="form-text text-muted">Supported formats: CSV, Excel</small>
-                                </div>
-
-                                <div class="alert alert-info">
-                                    <strong>File Format:</strong>
-                                    <ul class="mb-0">
-                                        <li>Column 1: number (1-50)</li>
-                                        <li>Column 2: question_text</li>
-                                        <li>Column 3: competency_code</li>
-                                        <li>Column 4-8: option_a_text, option_b_text, etc</li>
-                                        <li>Column 9-13: option_a_score, option_b_score, etc</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Import Questions</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        @endif
     </div>
 @endsection
 
@@ -325,21 +268,13 @@
         function changeVersion() {
             var versionId = document.getElementById('version_select').value;
             if (versionId) {
-                window.location.href = '{{ route('admin.sjt.index') }}?version=' + versionId;
+                window.location.href = '{{ route('admin.questions.sjt.index') }}?version=' + versionId;
             } else {
-                window.location.href = '{{ route('admin.sjt.index') }}';
+                window.location.href = '{{ route('admin.questions.sjt.index') }}';
             }
         }
 
-        // Export questions
-        function exportQuestions() {
-            var versionId = '{{ $selectedVersion ? $selectedVersion->id : '' }}';
-            if (versionId) {
-                window.location.href = '{{ route('admin.sjt.export') }}?version=' + versionId;
-            } else {
-                showErrorToast('Please select a version to export.');
-            }
-        }
+
 
         // Show full question
         function showFullQuestion(questionId) {

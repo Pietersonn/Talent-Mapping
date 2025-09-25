@@ -7,7 +7,6 @@ use App\Models\ST30Question;
 use App\Models\QuestionVersion;
 use App\Models\TypologyDescription;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class ST30QuestionController extends Controller
 {
@@ -17,16 +16,13 @@ class ST30QuestionController extends Controller
     public function index(Request $request)
     {
         $activeVersion = QuestionVersion::getActive('st30');
-        $selectedVersion = null;
 
-        // Get version from request or use active version
-        if ($request->has('version')) {
-            $selectedVersion = QuestionVersion::find($request->version);
-        } else {
-            $selectedVersion = $activeVersion;
-        }
+        // pilih versi dari request atau default active
+        $selectedVersion = $request->filled('version')
+            ? QuestionVersion::find($request->version)
+            : $activeVersion;
 
-        // Get all ST-30 versions for dropdown
+        // semua versi ST-30 untuk dropdown
         $versions = QuestionVersion::where('type', 'st30')
             ->orderBy('version', 'desc')
             ->get();
@@ -39,12 +35,11 @@ class ST30QuestionController extends Controller
                 ->get();
         }
 
-        // Get typology distribution
+        // statistik distribusi tipologi
         $typologyStats = $questions->groupBy('typology_code')
             ->map(fn($items) => $items->count())
             ->toArray();
 
-        // Get all typologies for reference
         $typologies = TypologyDescription::orderBy('typology_code')->get();
 
         return view('admin.questions.st30.index', compact(
@@ -62,30 +57,24 @@ class ST30QuestionController extends Controller
      */
     public function create(Request $request)
     {
-        $selectedVersion = null;
-
-        if ($request->has('version')) {
-            $selectedVersion = QuestionVersion::find($request->version);
-        } else {
-            $selectedVersion = QuestionVersion::getActive('st30');
-        }
+        $selectedVersion = $request->filled('version')
+            ? QuestionVersion::find($request->version)
+            : QuestionVersion::getActive('st30');
 
         if (!$selectedVersion) {
             return redirect()->route('admin.questions.index')
                 ->with('error', 'No ST-30 version available. Please create a version first.');
         }
 
-        // Get next question number
-        $nextNumber = ST30Question::where('version_id', $selectedVersion->id)
-            ->max('number') + 1;
-
+        // Next number
+        $nextNumber = (int) ST30Question::where('version_id', $selectedVersion->id)->max('number') + 1;
         if ($nextNumber > 30) {
-            return redirect()->route('admin.st30.index', ['version' => $selectedVersion->id])
+            return redirect()->route('admin.questions.st30.index', ['version' => $selectedVersion->id])
                 ->with('error', 'This version already has 30 questions (maximum).');
         }
 
         $typologies = TypologyDescription::orderBy('typology_name')->get();
-        $versions = QuestionVersion::where('type', 'st30')->orderBy('version', 'desc')->get();
+        $versions   = QuestionVersion::where('type', 'st30')->orderBy('version', 'desc')->get();
 
         return view('admin.questions.st30.create', compact(
             'selectedVersion',
@@ -101,13 +90,12 @@ class ST30QuestionController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'version_id' => 'required|exists:question_versions,id',
-            'number' => 'required|integer|min:1|max:30',
-            'statement' => 'required|string|max:500',
+            'version_id'    => 'required|exists:question_versions,id',
+            'number'        => 'required|integer|min:1|max:30',
+            'statement'     => 'required|string|max:500',
             'typology_code' => 'required|exists:typology_descriptions,typology_code',
         ]);
 
-        // Check if number already exists in this version
         $exists = ST30Question::where('version_id', $request->version_id)
             ->where('number', $request->number)
             ->exists();
@@ -118,16 +106,16 @@ class ST30QuestionController extends Controller
             ])->withInput();
         }
 
-        $question = ST30Question::create([
-            'version_id' => $request->version_id,
-            'number' => $request->number,
-            'statement' => $request->statement,
+        ST30Question::create([
+            'version_id'    => $request->version_id,
+            'number'        => $request->number,
+            'statement'     => $request->statement,
             'typology_code' => $request->typology_code,
         ]);
 
-        return redirect()->route('admin.st30.index', ['version' => $request->version_id])
+        return redirect()->route('admin.questions.st30.index', ['version' => $request->version_id])
             ->with('success', 'ST-30 question created successfully.');
-    }
+        }
 
     /**
      * Display the specified ST-30 question
@@ -135,7 +123,6 @@ class ST30QuestionController extends Controller
     public function show(ST30Question $st30Question)
     {
         $st30Question->load(['questionVersion', 'typologyDescription']);
-
         return view('admin.questions.st30.show', compact('st30Question'));
     }
 
@@ -146,7 +133,7 @@ class ST30QuestionController extends Controller
     {
         $st30Question->load(['questionVersion']);
         $typologies = TypologyDescription::orderBy('typology_name')->get();
-        $versions = QuestionVersion::where('type', 'st30')->orderBy('version', 'desc')->get();
+        $versions   = QuestionVersion::where('type', 'st30')->orderBy('version', 'desc')->get();
 
         return view('admin.questions.st30.edit', compact('st30Question', 'typologies', 'versions'));
     }
@@ -157,12 +144,11 @@ class ST30QuestionController extends Controller
     public function update(Request $request, ST30Question $st30Question)
     {
         $request->validate([
-            'number' => 'required|integer|min:1|max:30',
-            'statement' => 'required|string|max:500',
+            'number'        => 'required|integer|min:1|max:30',
+            'statement'     => 'required|string|max:500',
             'typology_code' => 'required|exists:typology_descriptions,typology_code',
         ]);
 
-        // Check if number already exists in this version (excluding current question)
         $exists = ST30Question::where('version_id', $st30Question->version_id)
             ->where('number', $request->number)
             ->where('id', '!=', $st30Question->id)
@@ -175,12 +161,12 @@ class ST30QuestionController extends Controller
         }
 
         $st30Question->update([
-            'number' => $request->number,
-            'statement' => $request->statement,
+            'number'        => $request->number,
+            'statement'     => $request->statement,
             'typology_code' => $request->typology_code,
         ]);
 
-        return redirect()->route('admin.st30.index', ['version' => $st30Question->version_id])
+        return redirect()->route('admin.questions.st30.index', ['version' => $st30Question->version_id])
             ->with('success', 'ST-30 question updated successfully.');
     }
 
@@ -189,16 +175,15 @@ class ST30QuestionController extends Controller
      */
     public function destroy(ST30Question $st30Question)
     {
-        // Check if question is used in responses
-        if ($st30Question->hasResponses()) {
-            return redirect()->route('admin.st30.index', ['version' => $st30Question->version_id])
+        if (method_exists($st30Question, 'hasResponses') && $st30Question->hasResponses()) {
+            return redirect()->route('admin.questions.st30.index', ['version' => $st30Question->version_id])
                 ->with('error', 'Cannot delete question that has been used in tests.');
         }
 
         $versionId = $st30Question->version_id;
         $st30Question->delete();
 
-        return redirect()->route('admin.st30.index', ['version' => $versionId])
+        return redirect()->route('admin.questions.st30.index', ['version' => $versionId])
             ->with('success', 'ST-30 question deleted successfully.');
     }
 
@@ -208,13 +193,13 @@ class ST30QuestionController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'version_id' => 'required|exists:question_versions,id',
+            'version_id'  => 'required|exists:question_versions,id',
             'import_file' => 'required|file|mimes:csv,xlsx'
         ]);
 
         // TODO: Implement CSV/Excel import functionality
 
-        return redirect()->route('admin.st30.index', ['version' => $request->version_id])
+        return redirect()->route('admin.questions.st30.index', ['version' => $request->version_id])
             ->with('info', 'Import functionality will be implemented soon.');
     }
 
@@ -224,15 +209,14 @@ class ST30QuestionController extends Controller
     public function export(Request $request)
     {
         $versionId = $request->get('version');
-
         if (!$versionId) {
-            return redirect()->route('admin.st30.index')
+            return redirect()->route('admin.questions.st30.index')
                 ->with('error', 'Please select a version to export.');
         }
 
         // TODO: Implement export functionality
 
-        return redirect()->route('admin.st30.index', ['version' => $versionId])
+        return redirect()->route('admin.questions.st30.index', ['version' => $versionId])
             ->with('info', 'Export functionality will be implemented soon.');
     }
 
@@ -242,15 +226,14 @@ class ST30QuestionController extends Controller
     public function reorder(Request $request)
     {
         $request->validate([
-            'version_id' => 'required|exists:question_versions,id',
-            'questions' => 'required|array',
-            'questions.*.id' => 'required|exists:st30_questions,id',
+            'version_id'         => 'required|exists:question_versions,id',
+            'questions'          => 'required|array',
+            'questions.*.id'     => 'required|exists:st30_questions,id',
             'questions.*.number' => 'required|integer|min:1|max:30',
         ]);
 
-        foreach ($request->questions as $questionData) {
-            ST30Question::where('id', $questionData['id'])
-                ->update(['number' => $questionData['number']]);
+        foreach ($request->questions as $q) {
+            ST30Question::where('id', $q['id'])->update(['number' => $q['number']]);
         }
 
         return response()->json(['success' => true]);

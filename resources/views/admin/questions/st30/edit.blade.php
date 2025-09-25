@@ -5,7 +5,7 @@
 
 @section('breadcrumbs')
     <li class="breadcrumb-item"><a href="{{ route('admin.questions.index') }}">Question Bank</a></li>
-    <li class="breadcrumb-item"><a href="{{ route('admin.st30.index') }}">ST-30 Questions</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('admin.questions.st30.index') }}">ST-30 Questions</a></li>
     <li class="breadcrumb-item active">Edit Question</li>
 @endsection
 
@@ -19,7 +19,7 @@
                     Edit ST-30 Question #{{ $st30Question->number }}
                 </h3>
             </div>
-            <form action="{{ route('admin.st30.update', $st30Question) }}" method="POST" id="st30EditForm">
+            <form action="{{ route('admin.questions.st30.update', $st30Question) }}" method="POST" id="st30EditForm">
                 @csrf
                 @method('PUT')
                 <div class="card-body">
@@ -83,10 +83,10 @@
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save mr-1"></i> Update Question
                     </button>
-                    <a href="{{ route('admin.st30.index', ['version' => $st30Question->version_id]) }}" class="btn btn-secondary">
+                    <a href="{{ route('admin.questions.st30.index', ['version' => $st30Question->version_id]) }}" class="btn btn-secondary">
                         <i class="fas fa-times mr-1"></i> Cancel
                     </a>
-                    <a href="{{ route('admin.st30.show', $st30Question) }}" class="btn btn-info">
+                    <a href="{{ route('admin.questions.st30.show', $st30Question) }}" class="btn btn-info">
                         <i class="fas fa-eye mr-1"></i> View
                     </a>
                 </div>

@@ -5,7 +5,7 @@
 
 @section('breadcrumbs')
 <li class="breadcrumb-item"><a href="{{ route('admin.questions.index') }}">Question Bank</a></li>
-<li class="breadcrumb-item"><a href="{{ route('admin.typologies.index') }}">Typologies</a></li>
+<li class="breadcrumb-item"><a href="{{ route('admin.questions.typologies.index') }}">Typologies</a></li>
 <li class="breadcrumb-item active">Create New</li>
 @endsection
 
@@ -19,13 +19,13 @@
                         <i class="fas fa-plus-circle"></i> Create New Typology
                     </h3>
                     <div class="card-tools">
-                        <a href="{{ route('admin.typologies.index') }}" class="btn btn-secondary btn-sm">
+                        <a href="{{ route('admin.questions.typologies.index') }}" class="btn btn-secondary btn-sm">
                             <i class="fas fa-arrow-left"></i> Back to List
                         </a>
                     </div>
                 </div>
 
-                <form action="{{ route('admin.typologies.store') }}" method="POST">
+                <form action="{{ route('admin.questions.typologies.store') }}" method="POST">
                     @csrf
                     <div class="card-body">
                         <div class="row">
@@ -211,7 +211,7 @@
                                 </button>
                             </div>
                             <div class="col-md-6 text-right">
-                                <a href="{{ route('admin.typologies.index') }}" class="btn btn-outline-secondary">
+                                <a href="{{ route('admin.questions.typologies.index') }}" class="btn btn-outline-secondary">
                                     <i class="fas fa-times"></i> Cancel
                                 </a>
                             </div>

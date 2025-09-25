@@ -5,7 +5,7 @@
 
 @section('breadcrumbs')
     <li class="breadcrumb-item"><a href="{{ route('admin.questions.index') }}">Question Bank</a></li>
-    <li class="breadcrumb-item"><a href="{{ route('admin.sjt.index') }}">SJT Questions</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('admin.questions.sjt.index') }}">SJT Questions</a></li>
     <li class="breadcrumb-item active">Edit Question</li>
 @endsection
 
@@ -19,7 +19,7 @@
                     Edit SJT Question #{{ $sjtQuestion->number }}
                 </h3>
             </div>
-            <form action="{{ route('admin.sjt.update', $sjtQuestion) }}" method="POST" id="sjtEditForm">
+            <form action="{{ route('admin.questions.sjt.update', $sjtQuestion) }}" method="POST" id="sjtEditForm">
                 @csrf
                 @method('PUT')
                 <div class="card-body">
@@ -126,10 +126,10 @@
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save mr-1"></i> Update Question
                     </button>
-                    <a href="{{ route('admin.sjt.index', ['version' => $sjtQuestion->version_id]) }}" class="btn btn-secondary">
+                    <a href="{{ route('admin.questions.sjt.index', ['version' => $sjtQuestion->version_id]) }}" class="btn btn-secondary">
                         <i class="fas fa-times mr-1"></i> Cancel
                     </a>
-                    <a href="{{ route('admin.sjt.show', $sjtQuestion) }}" class="btn btn-info">
+                    <a href="{{ route('admin.questions.sjt.show', $sjtQuestion) }}" class="btn btn-info">
                         <i class="fas fa-eye mr-1"></i> View
                     </a>
                 </div>

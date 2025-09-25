@@ -14,123 +14,84 @@ class ST30Question extends Model
     use HasFactory, HasCustomId;
 
     protected $table = 'st30_questions';
-    protected $keyType = 'string';
-    public $incrementing = false;
 
-    /**
-     * The attributes that are mass assignable.
-     */
+    // PK string seperti "ST01"
+    protected $primaryKey  = 'id';
+    public    $incrementing = false;
+    protected $keyType      = 'string';
+
     protected $fillable = [
+        // kalau generate id otomatis via trait, 'id' tak perlu diisi manual
         'version_id',
         'number',
         'statement',
         'typology_code',
     ];
 
-    /**
-     * The attributes that should be cast.
-     */
     protected $casts = [
         'number' => 'integer',
     ];
 
-    /**
-     * Custom ID prefix for generation
-     */
+    // prefix id kustom
     protected $customIdPrefix = 'ST';
 
-    /**
-     * Generate custom ID
-     */
     public function generateCustomId(): string
     {
-        $lastId = static::where('id', 'like', $this->customIdPrefix . '%')
-            ->orderBy('id', 'desc')
-            ->first();
+        $last = static::where('id', 'like', $this->customIdPrefix.'%')
+            ->orderBy('id', 'desc')->first();
 
-        if (!$lastId) {
-            return $this->customIdPrefix . '001';
-        }
+        if (!$last) return $this->customIdPrefix.'001';
 
-        $lastNumber = (int) substr($lastId->id, strlen($this->customIdPrefix));
-        $newNumber = $lastNumber + 1;
-
-        return $this->customIdPrefix . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
+        $num = (int) substr($last->id, strlen($this->customIdPrefix));
+        return $this->customIdPrefix . str_pad($num + 1, 3, '0', STR_PAD_LEFT);
     }
 
-    /**
-     * Question version this question belongs to
-     */
     public function questionVersion(): BelongsTo
     {
         return $this->belongsTo(QuestionVersion::class, 'version_id');
     }
 
-    /**
-     * Typology description for this question
-     */
     public function typologyDescription(): BelongsTo
     {
         return $this->belongsTo(TypologyDescription::class, 'typology_code', 'typology_code');
     }
 
-    /**
-     * Get responses where this question was selected
-     */
     public function selectedInResponses(): HasMany
     {
         return $this->hasMany(ST30Response::class, 'question_version_id', 'version_id')
             ->whereJsonContains('selected_items', $this->number);
     }
 
-    /**
-     * Get responses where this question was excluded
-     */
     public function excludedInResponses(): HasMany
     {
         return $this->hasMany(ST30Response::class, 'question_version_id', 'version_id')
             ->whereJsonContains('excluded_items', $this->number);
     }
 
-    /**
-     * Get all responses that include this question (selected or excluded)
-     */
     public function allResponses()
     {
         return ST30Response::where('question_version_id', $this->version_id)
-            ->where(function($query) {
-                $query->whereJsonContains('selected_items', $this->number)
-                      ->orWhereJsonContains('excluded_items', $this->number);
+            ->where(function($q){
+                $q->whereJsonContains('selected_items', $this->number)
+                  ->orWhereJsonContains('excluded_items', $this->number);
             });
     }
 
-    /**
-     * Get typology name
-     */
     public function getTypologyNameAttribute(): string
     {
         return $this->typologyDescription?->typology_name ?? $this->typology_code;
     }
 
-    /**
-     * Get statement preview (truncated)
-     */
     public function getStatementPreviewAttribute(): string
     {
         return Str::limit($this->statement, 100);
     }
 
-    /**
-     * Get usage count in responses
-     */
     public function getUsageCountAttribute(): int
     {
         return $this->allResponses()->count();
     }
 
-    /**
-     * Get count of times this question was selected
-     */
     public function getSelectedCountAttribute(): int
     {
         return ST30Response::where('question_version_id', $this->version_id)
@@ -138,9 +99,6 @@ class ST30Question extends Model
             ->count();
     }
 
-    /**
-     * Get count of times this question was excluded
-     */
     public function getExcludedCountAttribute(): int
     {
         return ST30Response::where('question_version_id', $this->version_id)
@@ -148,145 +106,65 @@ class ST30Question extends Model
             ->count();
     }
 
-    /**
-     * Get selection ratio (selected vs excluded)
-     */
     public function getSelectionRatioAttribute(): float
     {
-        $selected = $this->selected_count;
-        $excluded = $this->excluded_count;
-        $total = $selected + $excluded;
-
-        return $total > 0 ? $selected / $total : 0;
+        $s = $this->selected_count;
+        $e = $this->excluded_count;
+        $t = $s + $e;
+        return $t > 0 ? $s / $t : 0;
     }
 
-    /**
-     * Check if question is used in any responses
-     */
     public function hasResponses(): bool
     {
         return $this->allResponses()->exists();
     }
 
-    /**
-     * Scope for active questions
-     */
-    public function scopeActive($query)
+    // scopes util
+    public function scopeByVersion($q, string $versionId)  { return $q->where('version_id', $versionId); }
+    public function scopeByTypology($q, string $code)      { return $q->where('typology_code', $code); }
+    public function scopeByNumberRange($q, int $a, int $b) { return $q->whereBetween('number', [$a,$b]); }
+
+    public static function getActiveQuestions()
     {
-        return $query->where('is_active', true);
+        $active = QuestionVersion::getActive('st30');
+        if (!$active) return collect();
+        return static::where('version_id', $active->id)->orderBy('number')->get();
     }
 
-    /**
-     * Scope for questions by version
-     */
-    public function scopeByVersion($query, string $versionId)
-    {
-        return $query->where('version_id', $versionId);
-    }
-
-    /**
-     * Scope for questions by typology
-     */
-    public function scopeByTypology($query, string $typologyCode)
-    {
-        return $query->where('typology_code', $typologyCode);
-    }
-
-    /**
-     * Scope for questions by number range
-     */
-    public function scopeByNumberRange($query, int $start, int $end)
-    {
-        return $query->whereBetween('number', [$start, $end]);
-    }
-
-    /**
-     * Get questions for active version
-     */
-    public static function getActiveQuestions(): \Illuminate\Database\Eloquent\Collection
-    {
-        $activeVersion = QuestionVersion::getActive('st30');
-
-        if (!$activeVersion) {
-            return collect();
-        }
-
-        return static::where('version_id', $activeVersion->id)
-            ->where('is_active', true)
-            ->orderBy('number')
-            ->get();
-    }
-
-    /**
-     * Validate question number uniqueness within version
-     */
     public function validateUniqueNumber(): bool
     {
-        $exists = static::where('version_id', $this->version_id)
+        return ! static::where('version_id', $this->version_id)
             ->where('number', $this->number)
             ->where('id', '!=', $this->id)
             ->exists();
-
-        return !$exists;
     }
 
-    /**
-     * Get popularity score based on selection frequency
-     */
     public function getPopularityScoreAttribute(): float
     {
-        $totalResponses = ST30Response::where('question_version_id', $this->version_id)->count();
-
-        if ($totalResponses === 0) {
-            return 0;
-        }
-
-        return $this->selected_count / $totalResponses;
+        $total = ST30Response::where('question_version_id', $this->version_id)->count();
+        return $total === 0 ? 0 : ($this->selected_count / $total);
     }
 
-    /**
-     * Check if this question is frequently selected
-     */
-    public function isPopular(float $threshold = 0.5): bool
-    {
-        return $this->popularity_score >= $threshold;
-    }
+    public function isPopular(float $threshold = 0.5): bool    { return $this->popularity_score >= $threshold; }
+    public function isUnpopular(float $threshold = 0.2): bool  { return $this->popularity_score <= $threshold; }
 
-    /**
-     * Check if this question is rarely selected
-     */
-    public function isUnpopular(float $threshold = 0.2): bool
+    public function getSimilarQuestions(int $limit = 5)
     {
-        return $this->popularity_score <= $threshold;
-    }
-
-    /**
-     * Get questions with similar selection patterns
-     */
-    public function getSimilarQuestions(int $limit = 5): \Illuminate\Database\Eloquent\Collection
-    {
-        $currentRatio = $this->selection_ratio;
-
+        $ratio = $this->selection_ratio;
         return static::where('version_id', $this->version_id)
-            ->where('id', '!=', $this->id)
-            ->get()
-            ->filter(function($question) use ($currentRatio) {
-                return abs($question->selection_ratio - $currentRatio) <= 0.1;
-            })
+            ->where('id', '!=', $this->id)->get()
+            ->filter(fn($q) => abs($q->selection_ratio - $ratio) <= 0.1)
             ->take($limit);
     }
 
-    /**
-     * Get usage statistics for this question
-     */
     public function getUsageStatistics(): array
     {
         return [
-            'total_usage' => $this->usage_count,
-            'selected_count' => $this->selected_count,
-            'excluded_count' => $this->excluded_count,
+            'total_usage'     => $this->usage_count,
+            'selected_count'  => $this->selected_count,
+            'excluded_count'  => $this->excluded_count,
             'selection_ratio' => $this->selection_ratio,
-            'popularity_score' => $this->popularity_score,
+            'popularity_score'=> $this->popularity_score,
         ];
     }
 }

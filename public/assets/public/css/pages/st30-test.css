@@ -12,14 +12,19 @@
 
 /* Hero Section */
 .st30-hero {
-    background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('../../../images/test-bg.jpg');
-    background-size: cover;
-    background-position: center;
+    background: url('/assets/public/images/img-test1.jpg') top center / cover no-repeat;
     min-height: 400px;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 40px 20px;
+}
+
+.sjt-hero {
+    background: url('/assets/public/images/img-test1.jpg') top center / cover no-repeat;
+    padding: 120px 0 80px;
+    position: relative;
+    overflow: hidden;
 }
 
 .st30-hero-content {
@@ -54,40 +59,6 @@
     font-weight: 600;
 }
 
-/* Progress Section */
-.st30-progress-section {
-    background: white;
-    padding: 25px 40px;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.st30-progress-wrap {
-    max-width: 1000px;
-    margin: 0 auto;
-}
-
-.st30-progress-bar {
-    width: 100%;
-    height: 6px;
-    background: #e2e8f0;
-    border-radius: 10px;
-    overflow: hidden;
-    margin-bottom: 15px;
-}
-
-.st30-progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #3182ce, #2b6cb0);
-    border-radius: 10px;
-    transition: width 0.8s ease;
-}
-
-.st30-progress-steps {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 15px;
-}
-
 .st30-step {
     font-size: 12px;
     color: #a0aec0;
@@ -100,17 +71,40 @@
     font-weight: 600;
 }
 
-.st30-selection-note {
-    background: #e53e3e;
-    color: white;
-    padding: 8px 15px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 600;
-    text-align: center;
-    max-width: 400px;
-    margin: 0 auto;
+/* Center lalu geser kiri sedikit (fix di semua layar) */
+.st30-selection-note--inline{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  position: relative;
+  left: 50%;                         /* center anchor */
+  transform: translateX(calc(-50% - 320px));  /* 140px = geser kiri */
+  margin-top: 35px;
+  margin-bottom: 0;
+  white-space: nowrap;
 }
+
+/* di tablet: geser kiri lebih kecil */
+@media (max-width: 1024px){
+  .st30-selection-note--inline{
+    transform: translateX(calc(-50% - 90px));
+  }
+}
+
+/* di mobile: hampir di kiri */
+@media (max-width: 768px){
+  .st30-selection-note--inline{
+    left: 0;
+    transform: none;
+    margin-left: 16px;
+  }
+}
+
+/* warna bintang merah, teks hitam (tetap) */
+.st30-selection-note .note-star{ color:#ef4444; font-weight:800; }
+.st30-selection-note .note-text{ color:#111827; }
+
 
 .st30-counter {
     text-align: center;
@@ -195,6 +189,7 @@
     font-size: 14px;
 }
 
+
 /* Selected State */
 .st30-question-item.selected {
     border-color: #3182ce;
@@ -267,10 +262,6 @@
 
     .st30-instruction {
         font-size: 14px;
-    }
-
-    .st30-progress-section {
-        padding: 20px;
     }
 
     .st30-questions-section {

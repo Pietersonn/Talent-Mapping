@@ -5,7 +5,7 @@
 
 @section('breadcrumbs')
     <li class="breadcrumb-item"><a href="{{ route('admin.questions.index') }}">Question Bank</a></li>
-    <li class="breadcrumb-item"><a href="{{ route('admin.sjt.index') }}">SJT Questions</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('admin.questions.sjt.index') }}">SJT Questions</a></li>
     <li class="breadcrumb-item active">Question #{{ $sjtQuestion->number }}</li>
 @endsection
 
@@ -191,16 +191,16 @@
                     <div class="card-body">
                         <div class="d-grid gap-2">
                             @if(Auth::user()->role === 'admin')
-                                <a href="{{ route('admin.sjt.edit', $sjtQuestion) }}" class="btn btn-warning btn-block">
+                                <a href="{{ route('admin.questions.sjt.edit', $sjtQuestion) }}" class="btn btn-warning btn-block">
                                     <i class="fas fa-edit mr-2"></i> Edit Question
                                 </a>
                                 <button class="btn btn-danger btn-block"
-                                        onclick="confirmDelete('{{ $sjtQuestion->number }}', '{{ route('admin.sjt.destroy', $sjtQuestion) }}')">
+                                        onclick="confirmDelete('{{ $sjtQuestion->number }}', '{{ route('admin.questions.sjt.destroy', $sjtQuestion) }}')">
                                     <i class="fas fa-trash mr-2"></i> Delete Question
                                 </button>
                                 <hr>
                             @endif
-                            <a href="{{ route('admin.sjt.index', ['version' => $sjtQuestion->version_id]) }}" class="btn btn-secondary btn-block">
+                            <a href="{{ route('admin.questions.sjt.index', ['version' => $sjtQuestion->version_id]) }}" class="btn btn-secondary btn-block">
                                 <i class="fas fa-list mr-2"></i> Back to List
                             </a>
                             <button class="btn btn-info btn-block" onclick="copyAllOptions()">
@@ -288,11 +288,11 @@
 
         // Navigation helpers
         function goToEdit() {
-            window.location.href = '{{ route('admin.sjt.edit', $sjtQuestion) }}';
+            window.location.href = '{{ route('admin.questions.sjt.edit', $sjtQuestion) }}';
         }
 
         function goToIndex() {
-            window.location.href = '{{ route('admin.sjt.index', ['version' => $sjtQuestion->version_id]) }}';
+            window.location.href = '{{ route('admin.questions.sjt.index', ['version' => $sjtQuestion->version_id]) }}';
         }
 
         // Copy question to clipboard

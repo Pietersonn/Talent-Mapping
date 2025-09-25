@@ -12,19 +12,8 @@
                 </p>
             </div>
         </div>
-
-        <!-- Progress Section -->
-        <div class="sjt-progress-section">
-            <div class="sjt-progress-wrap">
-                <div class="sjt-progress-bar">
-                    <div class="sjt-progress-fill" style="width: {{ $progress }}%"></div>
-                </div>
-                <div class="sjt-progress-info">
-                    <span class="sjt-progress-text">{{ number_format($progress) }}% Complete</span>
-                    <span class="sjt-page-info">Halaman {{ $page }} dari 5 - Jawab semua pertanyaan</span>
-                </div>
-            </div>
-        </div>
+        {{-- PROGRESS: stepper pendek & seragam --}}
+        @include('public.test.partials.progress-stepper', ['progress' => $progress])
 
         <!-- Questions Section -->
         <div class="sjt-questions-section">
@@ -33,7 +22,7 @@
                 Lengkapi semua jawaban untuk melanjutkan (0/{{ $questions->count() }} dijawab)
             </div>
 
-            <form id="sjtForm" action="{{ route('test.sjt.page.store', $page) }}" method="POST">
+            <form id="sjtForm" action="{{ route('test.sjt.page.store', $page) }}" method="POST" class="js-loading-form">
                 @csrf
                 <div class="sjt-questions-list">
                     @foreach ($questions as $question)
@@ -41,7 +30,7 @@
                             <div class="sjt-question-header">
                                 {{ $question->number }}. {{ $question->question_text }}
                             </div>
-                            <div class="sjt-question-content">  
+                            <div class="sjt-question-content">
                                 <div class="sjt-options-list">
                                     @foreach ($question->options as $option)
                                         <label class="sjt-option-item" data-question="{{ $question->id }}">
@@ -49,8 +38,7 @@
                                                 value="{{ $option->option_letter }}" class="sjt-radio"
                                                 data-question="{{ $question->id }}"
                                                 {{ isset($existingResponses[$question->id]) && $existingResponses[$question->id]->selected_option === $option->option_letter ? 'checked' : '' }}>
-                                            <span
-                                                class="sjt-option-letter">{{ strtoupper($option->option_letter) }}.</span>
+                                            <span class="sjt-option-letter">{{ strtoupper($option->option_letter) }}.</span>
                                             <span class="sjt-option-text">{{ $option->option_text }}</span>
                                         </label>
                                     @endforeach
@@ -108,7 +96,7 @@
                     // Update status display
                     if (allAnswered) {
                         answerStatus.textContent =
-                        `Semua pertanyaan telah dijawab (${answeredCount}/${totalQuestions})`;
+                            `Semua pertanyaan telah dijawab (${answeredCount}/${totalQuestions})`;
                         answerStatus.className = 'sjt-answer-status complete';
                     } else {
                         answerStatus.textContent =
@@ -156,7 +144,8 @@
                     if (answeredQuestions.size !== totalQuestions) {
                         e.preventDefault();
                         alert(
-                            `Harap jawab semua pertanyaan. Saat ini: ${answeredQuestions.size}/${totalQuestions} pertanyaan telah dijawab.`);
+                            `Harap jawab semua pertanyaan. Saat ini: ${answeredQuestions.size}/${totalQuestions} pertanyaan telah dijawab.`
+                            );
                         return false;
                     }
 

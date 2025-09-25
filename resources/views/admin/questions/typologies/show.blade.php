@@ -5,7 +5,7 @@
 
 @section('breadcrumbs')
 <li class="breadcrumb-item"><a href="{{ route('admin.questions.index') }}">Question Bank</a></li>
-<li class="breadcrumb-item"><a href="{{ route('admin.typologies.index') }}">Typologies</a></li>
+<li class="breadcrumb-item"><a href="{{ route('admin.questions.typologies.index') }}">Typologies</a></li>
 <li class="breadcrumb-item active">{{ $typology->typology_code }}</li>
 @endsection
 
@@ -130,25 +130,16 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <a href="{{ route('admin.typologies.edit', $typology) }}" class="btn btn-warning btn-block mb-2">
+                    <a href="{{ route('admin.questions.typologies.edit', $typology) }}" class="btn btn-warning btn-block mb-2">
                         <i class="fas fa-edit mr-2"></i> Edit Typology
                     </a>
 
-                    <form action="{{ route('admin.typologies.toggle-status', $typology) }}" method="POST" class="mb-2">
-                        @csrf
-                        @method('PATCH')
-                        <button type="submit" class="btn btn-{{ $typology->is_active ? 'secondary' : 'success' }} btn-block">
-                            <i class="fas fa-{{ $typology->is_active ? 'pause' : 'play' }} mr-2"></i>
-                            {{ $typology->is_active ? 'Deactivate' : 'Activate' }}
-                        </button>
-                    </form>
-
                     <button type="button" class="btn btn-danger btn-block mb-2"
-                            onclick="confirmDelete('{{ $typology->typology_code }}', '{{ route('admin.typologies.destroy', $typology) }}')">
+                            onclick="confirmDelete('{{ $typology->typology_code }}', '{{ route('admin.questions.typologies.destroy', $typology) }}')">
                         <i class="fas fa-trash mr-2"></i> Delete Typology
                     </button>
 
-                    <a href="{{ route('admin.typologies.index') }}" class="btn btn-outline-secondary btn-block">
+                    <a href="{{ route('admin.questions.typologies.index') }}" class="btn btn-outline-secondary btn-block">
                         <i class="fas fa-arrow-left mr-2"></i> Back to List
                     </a>
                 </div>
@@ -327,7 +318,7 @@
                                         <span class="badge badge-secondary">{{ $question->number }}</span>
                                     </td>
                                     <td>
-                                        <a href="{{ route('admin.st30.show', $question) }}" class="text-decoration-none">
+                                        <a href="{{ route('admin.questions.st30.show', $question) }}" class="text-decoration-none">
                                             {{ Str::limit($question->statement, 80) }}
                                         </a>
                                     </td>
