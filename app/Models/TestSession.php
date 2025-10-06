@@ -18,6 +18,7 @@ class TestSession extends Model
         'st30_version_id',
         'participant_name',
         'participant_background',
+        'position',
         'is_completed',
         'completed_at'
     ];

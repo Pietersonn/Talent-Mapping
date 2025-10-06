@@ -1,182 +1,143 @@
-/* Thanks Page Styles - Final Merge (layout dari versi terbaru + font/warna versi awal) */
+/* assets/public/css/pages/thank-you.css
+   Complete, corrected version:
+   - illustration right on desktop, centered on small screens
+   - no negative transforms that hide the image
+   - clickable buttons (content above illustration)
+   - visible illustration on mobile
+   - small visual tweaks for neat spacing
+*/
 
 :root {
   --primary-color: #3b82f6;
   --secondary-color: #1e40af;
-  --accent-color: #06b6d4;
-  --green-light: #84cc16;
-  --green-dark: #65a30d;
   --text-dark: #1f2937;
   --text-light: #6b7280;
-  --background-light: #f8fafc;
   --white: #ffffff;
   --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
-  --gradient-green: linear-gradient(135deg, #84cc16 0%, #65a30d 100%);
-  --shadow-light: 0 4px 6px -1px rgba(0,0,0,0.1);
-  --shadow-medium: 0 10px 15px -3px rgba(0,0,0,0.1);
-  --border-radius: 0.75rem;
+  --btn-radius: 10px;
+  --footer-height: 88px;
 }
 
-/* Reset font */
-body, .thank-you-container {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  line-height: 1.6;
-}
-
-/* Container Background */
-.thank-you-container {
+/* Base reset */
+html, body { height: 100%; margin: 0; }
+body {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   background: linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 50%,#f8fafc 100%);
-  min-height:100vh;
-  position:relative;
-  overflow:hidden;
-}
-.thank-you-container::before {
-  content:"";
-  position:absolute; inset:0;
-  background:
-    radial-gradient(circle at 20% 80%,rgba(120,119,198,.1) 0%,transparent 50%),
-    radial-gradient(circle at 80% 20%,rgba(255,255,255,.8) 0%,transparent 50%),
-    radial-gradient(circle at 40% 40%,rgba(132,204,22,.05) 0%,transparent 50%);
-  pointer-events:none; z-index:1;
-}
-.thank-you-main { position:relative; z-index:2; padding:2rem 0; }
-
-/* Text */
-.thank-you-content { padding:2rem 0; animation: slideInLeft .8s ease-out; }
-.thank-you-title {
-  font-size: 3rem;
-  font-weight: 800;
   color: var(--text-dark);
-  margin-bottom: .25rem;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
 }
-.thank-you-subtitle {
-  font-size: 3.2rem;
-  font-weight: 800;
-  line-height: 1.2;
-  margin-bottom: 1.5rem;
+
+/* Page container */
+.thank-you-container {
+  min-height: calc(100vh - var(--footer-height));
+  padding-bottom: 1.5rem;
+  position: relative;
+  overflow: visible;
 }
+.thank-you-main { position: relative; z-index: 2; padding: 3rem 0; }
+
+/* Text column */
+.thank-you-content {
+  padding: 2rem 0;
+  animation: slideInLeft .7s ease-out;
+  position: relative;
+  z-index: 120; /* above illustration */
+}
+.thank-you-title { font-size: 2.4rem; font-weight: 800; margin: 0 0 .25rem; }
+.thank-you-subtitle { font-size: 2.2rem; font-weight: 800; margin: 0 0 1rem; line-height:1.05; }
 .thank-you-subtitle .highlight {
   background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 }
 .thank-you-description {
-  font-size: 1.125rem;
-  color: var(--text-light);
-  line-height: 1.7;
-  margin-bottom: 2.5rem;
-  text-align: justify;
-  max-width: 36ch;
+  font-size: 1.05rem; color: var(--text-light); line-height:1.7;
+  margin-bottom: 1.5rem; max-width: 58ch;
 }
 
-/* Button */
-.btn {
-  padding: 1rem 2.5rem;
-  font-size: 1.125rem;
-  font-weight: 600;
-  border-radius: var(--border-radius);
-  transition: all .3s ease;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  cursor: pointer;
+/* Action buttons */
+.thank-you-actions {
+  display:flex; gap: .75rem; align-items:center; flex-wrap:wrap;
+  position:relative; z-index:130; /* ensure buttons sit above everything */
 }
-.btn-primary {
-  background: var(--gradient-primary);
-  color: var(--white);
-  box-shadow: var(--shadow-medium);
+.btn { display:inline-flex; align-items:center; justify-content:center; border-radius:var(--btn-radius);
+  padding:.65rem 1.15rem; font-weight:600; text-decoration:none; cursor:pointer; }
+.btn-md { font-size:1rem; }
+.btn-secondary { background:#6b7280; color:#fff; border:none; box-shadow:none; }
+.btn-secondary:hover { filter:brightness(.96); text-decoration:none; }
+.learn-more-btn {
+  background: linear-gradient(135deg,#2563eb 0%,#1e40af 100%);
+  color:#fff !important; border:none; box-shadow:0 10px 24px rgba(30,64,175,0.12);
+  padding:.7rem 1.35rem; border-radius:10px; font-weight:700;
 }
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 20px 25px -5px rgba(59,130,246,0.3);
-  color: var(--white);
-  text-decoration: none;
-}
-.btn-lg { padding: 1.25rem 3rem; font-size: 1.25rem; }
+.learn-more-btn:hover { transform: translateY(-3px); box-shadow:0 20px 40px rgba(30,64,175,0.14); }
 
-/* Image + Animations */
+/* Illustration container - desktop: right aligned */
 .thank-you-image {
-  position: relative;
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-start;
-  padding: 0;
-  margin-top: -300px; /* tetap diangkat */
-  z-index: 2;
-  animation: slideInRight .8s ease-out;
-  transform: scale(1.15);   /* << besarkan keseluruhan blok */
-  transform-origin: top right; /* biar membesar dari pojok kanan atas */
+  display:flex; justify-content:flex-end; align-items:flex-start;
+  padding:0; margin:0; position:relative; z-index: 20; pointer-events: none; top: -350px;/* decorative */
 }
 
+/* Illustration element */
 .illustration {
-  max-width: 75%;     /* dari 65% -> lebih lebar */
-  max-height: 340px;  /* dari 260px -> lebih tinggi */
-  width: auto;
-  height: auto;
-  margin-top: -100px;
-  margin-left: auto;
-  filter: drop-shadow(0 20px 40px rgba(0,0,0,.1));
+  display:block; width:auto; height:auto;
+  max-width:82%; max-height:420px; object-fit:contain; margin:0;
+  filter: drop-shadow(0 18px 36px rgba(0,0,0,.08));
   animation: float 6s ease-in-out infinite;
+  pointer-events: none; /* ensure clicks pass through */
 }
 
-
-/* Floating / Orbit elements */
-.floating-elements { position:absolute; inset:0; pointer-events:none; }
-.orbit-lines {
-  position:absolute; top:8%; right:6%;
-  width:420px; height:420px;
-}
-.orbit-line {
-  position:absolute;
-  border:2px solid rgba(107,114,128,.12);
-  border-radius:50%;
-  animation: rotateOrbit 22s linear infinite;
-}
-.orbit-line:nth-child(1){ width:300px;height:300px;top:50px;right:60px; }
-.orbit-line:nth-child(2){ width:210px;height:210px;top:95px;right:105px;animation-duration:16s;animation-direction:reverse; }
-.orbit-line:nth-child(3){ width:360px;height:360px;top:30px;right:40px;animation-duration:28s; }
-
-/* Floating Icons */
-.floating-icon {
-  position:absolute; border-radius:50%;
-  display:flex; align-items:center; justify-content:center;
-  color:#fff; box-shadow:var(--shadow-medium);
-  font-size:1.25rem; animation: floatIcon 4.5s ease-in-out infinite;
-}
-.floating-icon.heart{ background:linear-gradient(135deg,#1f2937,#374151); top:26%; right:9%; width:60px; height:60px; }
-.floating-icon.share{ background:var(--gradient-green); top:22%; right:22%; width:56px; height:56px; }
-.floating-icon.play{ background:linear-gradient(135deg,#1f2937,#374151); top:64%; right:11%; width:60px; height:60px; }
-.floating-icon.location{ background:var(--gradient-green); top:50%; right:24%; width:50px; height:50px; }
+/* Orbit lines (decorative) */
+.floating-elements { position:absolute; inset:0; pointer-events:none; z-index:18; }
+.orbit-lines { position:absolute; top:6%; right:2%; width:320px; height:320px; pointer-events:none; }
+.orbit-line { position:absolute; border:2px solid rgba(107,114,128,.06); border-radius:50%; animation: rotateOrbit 24s linear infinite; pointer-events:none; }
+.orbit-line:nth-child(1){ width:260px;height:260px; top:40px; right:40px; }
+.orbit-line:nth-child(2){ width:190px;height:190px; top:90px; right:90px; animation-duration:18s; animation-direction:reverse; }
+.orbit-line:nth-child(3){ width:320px;height:320px; top:18px; right:20px; animation-duration:28s; }
 
 /* Animations */
-@keyframes slideInLeft { from{opacity:0;transform:translateX(-50px);} to{opacity:1;transform:translateX(0);} }
-@keyframes slideInRight { from{opacity:0;transform:translateX(50px);} to{opacity:1;transform:translateX(0);} }
-@keyframes float { 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-20px);} }
-@keyframes floatIcon {
-  0%,100%{ transform:translateY(0) rotate(0) scale(1); }
-  25%{ transform:translateY(-10px) rotate(3deg) scale(1.05); }
-  75%{ transform:translateY(8px) rotate(-3deg) scale(0.95); }
-}
-@keyframes rotateOrbit { from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+@keyframes slideInLeft { from{ opacity:0; transform:translateX(-28px); } to{ opacity:1; transform:none; } }
+@keyframes float { 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-14px); } }
+@keyframes rotateOrbit { from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
 
-/* Responsive */
-@media (max-width:1200px){
-  .thank-you-image{ margin-top:-160px; }
-  .illustration{ max-width:72%; max-height:300px; }
+/* Ensure interactive content remains above illustration */
+.thank-you-content, .thank-you-actions, .btn { position: relative; z-index: 120; }
+
+/* Responsive rules:
+   - >= 992px: keep image to the right (desktop)
+   - < 992px: center image and keep visible, stack nicely */
+@media (min-width: 992px) {
+  .thank-you-image { justify-content:flex-end; margin-top: 0; }
+  .illustration { max-width:82%; max-height:420px; margin-top: 0; }
+  .thank-you-content { text-align:left; }
 }
-@media (max-width:992px){
-  .thank-you-title,.thank-you-subtitle{ text-align:center; }
-  .thank-you-description{ max-width:100%; text-align:center; }
-  .thank-you-image{ justify-content:center; align-items:center; margin-top:0; }
-  .illustration{ max-width:80%; max-height:260px; }
-  .orbit-lines{ display:none; }
+
+@media (max-width: 991.98px) {
+  /* Mobile/tablet: stack and center illustration */
+  .thank-you-image { justify-content:center; margin-top: 0.75rem; }
+  .illustration { max-width:86%; max-height:320px; margin-top: 0; }
+  .thank-you-content { text-align:center; padding-top: 1rem; }
+  .thank-you-description { margin-left:auto; margin-right:auto; }
+  .thank-you-actions { justify-content:center; }
 }
-@media (max-width:768px){
-  .thank-you-title{ font-size:1.8rem; }
-  .thank-you-subtitle{ font-size:2.2rem; }
-  .thank-you-description{ font-size:1rem; }
-  .illustration{ max-width:85%; max-height:240px; }
+
+@media (max-width: 575.98px) {
+  .thank-you-title { font-size:1.6rem; }
+  .thank-you-subtitle { font-size:1.8rem; }
+  .illustration { max-width:92%; max-height:260px; }
+}
+
+/* Prevent white gap near footer */
+body .footer, footer { margin-top: 0 !important; }
+.site-wrapper, .main-wrapper { background: linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 50%,#f8fafc 100%); }
+
+/* Extra guard: if some other CSS set pointer-events or z-index unexpectedly,
+   these strong selectors keep interactive elements on top. Keep as last resort. */
+body .thank-you-content, body .thank-you-actions, body .thank-you-actions .btn {
+  z-index: 999 !important;
+  position: relative !important;
+}
+body .thank-you-image, body .thank-you-image .illustration, body .floating-elements {
+  z-index: 10 !important;
+  pointer-events: none !important;
 }

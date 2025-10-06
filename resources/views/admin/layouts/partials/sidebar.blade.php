@@ -99,7 +99,7 @@
                     <a href="#" class="nav-link {{ request()->routeIs('admin.results.*') || request()->routeIs('admin.resend.*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-chart-bar"></i>
                         <p>
-                            Results & Reports
+                            Results 
                             <i class="fas fa-angle-left right"></i>
                         </p>
                     </a>
@@ -138,73 +138,14 @@
                     </a>
                     <ul class="nav nav-treeview">
                         <li class="nav-item">
-                            <a href="{{ route('admin.reports.index') }}" class="nav-link {{ request()->routeIs('admin.reports.index') ? 'active' : '' }}">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Health Dashboard</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
                             <a href="{{ route('admin.reports.participants') }}" class="nav-link {{ request()->routeIs('admin.reports.participants') ? 'active' : '' }}">
                                 <i class="far fa-circle nav-icon"></i>
-                                <p>Peserta (Top Score)</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('admin.reports.events') }}" class="nav-link {{ request()->routeIs('admin.reports.events') ? 'active' : '' }}">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Event</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('admin.reports.delivery') }}" class="nav-link {{ request()->routeIs('admin.reports.delivery') ? 'active' : '' }}">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Delivery & SLA</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('admin.reports.resend') }}" class="nav-link {{ request()->routeIs('admin.reports.resend') ? 'active' : '' }}">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Resend Requests</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('admin.reports.data_quality') }}" class="nav-link {{ request()->routeIs('admin.reports.data_quality') ? 'active' : '' }}">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Data Quality</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('admin.reports.anomaly') }}" class="nav-link {{ request()->routeIs('admin.reports.anomaly') ? 'active' : '' }}">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Anomali</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('admin.reports.insight') }}" class="nav-link {{ request()->routeIs('admin.reports.insight') ? 'active' : '' }}">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Lite Insight</p>
+                                <p>participants</p>
                             </a>
                         </li>
                     </ul>
                 </li>
 
-                <!-- System Monitoring -->
-                <li class="nav-item">
-                    <a href="#" class="nav-link {{ request()->routeIs('admin.monitoring.*') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-desktop"></i>
-                        <p>System Monitoring</p>
-                    </a>
-                </li>
-
-                <!-- Settings (Admin Only) -->
-                @if (Auth::user()->role === 'admin')
-                    <li class="nav-item">
-                        <a href="{{ route('admin.settings.index') }}" class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-cogs"></i>
-                            <p>Settings</p>
-                        </a>
-                    </li>
-                @endif
 
                 <!-- Divider -->
                 <li class="nav-header">QUICK ACTIONS</li>

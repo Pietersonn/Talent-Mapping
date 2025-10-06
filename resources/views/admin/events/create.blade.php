@@ -68,6 +68,21 @@
                                 </div>
                             </div>
 
+                            <!-- ADD: Company -->
+                            <div class="form-group">
+                                <label for="company">Company / Organizer</label>
+                                <input type="text"
+                                       class="form-control @error('company') is-invalid @enderror"
+                                       id="company"
+                                       name="company"
+                                       value="{{ old('company') }}"
+                                       maxlength="100"
+                                       placeholder="e.g., Dispora Kalsel / BCTI">
+                                @error('company')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
                             <div class="form-group">
                                 <label for="description">Description</label>
                                 <textarea class="form-control @error('description') is-invalid @enderror"

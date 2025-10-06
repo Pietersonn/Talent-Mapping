@@ -11,7 +11,7 @@
 <div class="tm-stepper">
   <!-- garis dasar -->
   <div class="tm-stepper-line"></div>
-  <!-- garis terisi sesuai % -->
+  <!-- garis terisi sesuai % -->    
   <div class="tm-stepper-fill" style="width: {{ max(0, min(100, $progress)) }}%"></div>
 
   <div class="tm-stepper-nodes">

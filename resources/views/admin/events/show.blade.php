@@ -10,23 +10,32 @@
 
 @section('content')
     <div class="container-fluid">
-        <!-- Event Header Info -->
+        {{-- Header ringkas: nama + company + status + code --}}
         <div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-calendar-alt mr-1"></i>
-                            {{ $event->name }}
-                        </h3>
-                        <div class="card-tools">
-                            <span class="badge badge-{{ $event->status_badge }} mr-2">{{ $event->status_display }}</span>
-                            <span class="badge badge-secondary">{{ $event->event_code }}</span>
+                        <div class="d-flex justify-content-between align-items-start w-100">
+                            <div>
+                                <h3 class="card-title mb-0">
+                                    <i class="fas fa-calendar-alt mr-1"></i>
+                                    {{ $event->name }}
+                                </h3>
+                                <div class="text-muted small mt-1">
+                                    <i class="fas fa-building mr-1"></i>
+                                    {{ $event->company ?? '—' }}
+                                </div>
+                            </div>
+                            <div class="card-tools">
+                                <span class="badge badge-{{ $event->status_badge }} mr-2">{{ $event->status_display }}</span>
+                                <span class="badge badge-secondary">{{ $event->event_code }}</span>
+                            </div>
                         </div>
                     </div>
 
                     <div class="card-body">
                         <div class="row">
+                            {{-- Kiri: info singkat --}}
                             <div class="col-md-8">
                                 @if($event->description)
                                     <p class="text-muted">{{ $event->description }}</p>
@@ -70,7 +79,7 @@
                                 </div>
                             </div>
 
-                            <!-- Action Buttons -->
+                            {{-- Kanan: actions ringkas --}}
                             <div class="col-md-4">
                                 <div class="card bg-light">
                                     <div class="card-header">
@@ -112,61 +121,15 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div> {{-- row --}}
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Statistics Cards -->
-        <div class="row">
-            <div class="col-lg-3 col-6">
-                <div class="small-box bg-info">
-                    <div class="inner">
-                        <h3>{{ $stats['total_participants'] }}</h3>
-                        <p>Total Participants</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-6">
-                <div class="small-box bg-success">
-                    <div class="inner">
-                        <h3>{{ $stats['completed_tests'] }}</h3>
-                        <p>Completed Tests</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-6">
-                <div class="small-box bg-warning">
-                    <div class="inner">
-                        <h3>{{ $stats['pending_tests'] }}</h3>
-                        <p>Pending Tests</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-6">
-                <div class="small-box bg-primary">
-                    <div class="inner">
-                        <h3>{{ $stats['results_sent'] }}</h3>
-                        <p>Results Sent</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-paper-plane"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Participants List -->
+        {{-- =========================
+             Participants (tanpa cards warna)
+        ========================== --}}
         @if($stats['total_participants'] > 0)
             <div class="card">
                 <div class="card-header">
@@ -180,21 +143,19 @@
                         <table class="table table-bordered table-striped">
                             <thead>
                                 <tr>
-                                    <th>Participant</th>
-                                    <th>Email</th>
-                                    <th>Registered</th>
-                                    <th>Test Status</th>
-                                    <th>Results</th>
-                                    <th>Actions</th>
+                                    <th style="width:22%;">Participant</th>
+                                    <th style="width:24%;">Email</th>
+                                    <th style="width:18%;">Registered</th>
+                                    <th style="width:12%;">Test</th>
+                                    <th style="width:12%;">Result</th>
+                                    <th style="width:12%;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($event->participants as $participant)
                                     <tr>
-                                        <td>
-                                            <strong>{{ $participant->user->name }}</strong>
-                                        </td>
-                                        <td>{{ $participant->user->email }}</td>
+                                        <td><strong>{{ $participant->name }}</strong></td>
+                                        <td>{{ $participant->email }}</td>
                                         <td>
                                             <small>{{ $participant->pivot->created_at->format('d M Y, H:i') }}</small>
                                         </td>
@@ -254,7 +215,7 @@
                     <p class="text-muted">
                         This event doesn't have any participants registered yet.
                         @if(!$event->is_active)
-                            <br><span class="text-warning">Event is inactive - users cannot register.</span>
+                            <br><span class="text-warning">Event is inactive — users cannot register.</span>
                         @endif
                     </p>
                     @if(Auth::user()->role === 'admin' && !$event->is_active)
@@ -268,65 +229,14 @@
                 </div>
             </div>
         @endif
-
-        <!-- Event Timeline (if has participants) -->
-        @if($stats['total_participants'] > 0)
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-chart-line mr-1"></i>
-                        Event Progress
-                    </h3>
-                </div>
-                <div class="card-body">
-                    <div class="progress-group">
-                        Registration Progress
-                        <span class="float-right">
-                            <strong>{{ $stats['total_participants'] }}</strong>
-                            @if($event->max_participants)
-                                / {{ $event->max_participants }}
-                            @endif
-                        </span>
-                        <div class="progress progress-sm">
-                            <div class="progress-bar bg-info"
-                                 style="width: {{ $event->max_participants ? ($stats['total_participants'] / $event->max_participants) * 100 : 100 }}%"></div>
-                        </div>
-                    </div>
-
-                    <div class="progress-group">
-                        Test Completion
-                        <span class="float-right">
-                            <strong>{{ $stats['completed_tests'] }}</strong> / {{ $stats['total_participants'] }}
-                        </span>
-                        <div class="progress progress-sm">
-                            <div class="progress-bar bg-success"
-                                 style="width: {{ $stats['total_participants'] > 0 ? ($stats['completed_tests'] / $stats['total_participants']) * 100 : 0 }}%"></div>
-                        </div>
-                    </div>
-
-                    <div class="progress-group">
-                        Results Distribution
-                        <span class="float-right">
-                            <strong>{{ $stats['results_sent'] }}</strong> / {{ $stats['completed_tests'] }}
-                        </span>
-                        <div class="progress progress-sm">
-                            <div class="progress-bar bg-primary"
-                                 style="width: {{ $stats['completed_tests'] > 0 ? ($stats['results_sent'] / $stats['completed_tests']) * 100 : 0 }}%"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @endif
     </div>
 @endsection
 
 @push('scripts')
     <script>
-        // Toggle status confirmation
         function confirmToggleStatus(eventName, toggleUrl, currentStatus) {
             const action = currentStatus ? 'deactivate' : 'activate';
             const actionText = currentStatus ? 'Deactivate' : 'Activate';
-
             let warningText = `Are you sure you want to ${action} event "${eventName}"?`;
 
             @if($stats['total_participants'] > 0)
@@ -343,7 +253,6 @@
                 confirmButtonColor: currentStatus ? '#d33' : '#28a745'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Create form and submit
                     const form = document.createElement('form');
                     form.method = 'POST';
                     form.action = toggleUrl;
@@ -360,7 +269,6 @@
             });
         }
 
-        // Delete confirmation
         function confirmDelete(eventName, deleteUrl) {
             customConfirm({
                 title: 'Delete Event?',
@@ -370,7 +278,6 @@
                 confirmButtonColor: '#d33'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Create form and submit
                     const form = document.createElement('form');
                     form.method = 'POST';
                     form.action = deleteUrl;

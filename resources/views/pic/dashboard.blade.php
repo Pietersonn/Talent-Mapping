@@ -209,19 +209,5 @@
         </div>
     </div>
 
-    <div class="col-md-4">
-        <div class="quick-action-card">
-            <div class="quick-action-icon">
-                <i class="bi bi-file-earmark-text"></i>
-            </div>
-            <div class="quick-action-content">
-                <h6>View Results</h6>
-                <p class="text-muted">Check assessment results and reports</p>
-                <a href="{{ route('pic.results.index') }}" class="btn btn-primary btn-sm">
-                    View Reports
-                </a>
-            </div>
-        </div>
-    </div>
 </div>
 @endsection

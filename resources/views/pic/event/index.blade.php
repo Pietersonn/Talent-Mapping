@@ -1,56 +1,63 @@
 @extends('pic.layouts.app')
-@section('title','My Events — PIC Dashboard')
+@section('title','My Events')
 
 @section('content')
-<div class="page-header mb-3">
-  <h5 class="mb-1">My Events</h5>
-  <p class="text-muted mb-0">Daftar event yang kamu kelola sebagai PIC.</p>
-</div>
-
-<div class="card">
-  <div class="card-body table-responsive">
-    <table class="table table-hover align-middle">
-      <thead>
-        <tr>
-          <th>Event</th>
-          <th>Code</th>
-          <th>Period</th>
-          <th>Status</th>
-          <th>Quota</th>
-          <th class="text-end"></th>
-        </tr>
-      </thead>
-      <tbody>
-      @forelse($events ?? [] as $e)
-        <tr>
-          <td>{{ $e->name }}</td>
-          <td><span class="badge bg-dark">{{ $e->event_code }}</span></td>
-          <td>
-            {{ \Illuminate\Support\Carbon::parse($e->start_date)->format('d M Y') }}
-            –
-            {{ \Illuminate\Support\Carbon::parse($e->end_date)->format('d M Y') }}
-          </td>
-          <td>
-            {!! $e->is_active
-                ? '<span class="badge bg-success">Active</span>'
-                : '<span class="badge bg-secondary">Inactive</span>' !!}
-          </td>
-          <td>{{ $e->max_participants ?? '-' }}</td>
-          <td class="text-end">
-            <a class="btn btn-sm btn-primary" href="{{ route('pic.events.show', $e->id) }}">
-              Detail
-            </a>
-          </td>
-        </tr>
-      @empty
-        <tr><td colspan="6" class="text-center text-muted">No events.</td></tr>
-      @endforelse
-      </tbody>
-    </table>
-
-    @if(isset($events) && method_exists($events,'links'))
-      <div class="mt-3">{{ $events->links() }}</div>
+<div class="content-header">
+  <div class="container-fluid d-flex align-items-center justify-content-between">
+    <h1 class="m-0">My Events</h1>
+    @if(isset($events))
+      <span class="badge bg-secondary">Total: {{ $events->count() }}</span>
     @endif
   </div>
 </div>
+
+<section class="content">
+  <div class="container-fluid">
+
+    <div class="card">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th style="width:72px;">#</th>
+              <th>Event</th>
+              <th style="width:180px;">Code</th>
+              <th style="width:260px;">Period</th>
+              <th style="width:160px;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @forelse(($events ?? collect()) as $i => $e)
+              <tr>
+                <td class="text-muted">{{ $i+1 }}</td>
+                <td class="fw-semibold">{{ $e->name }}</td>
+                <td class="text-muted">{{ $e->event_code ?? '—' }}</td>
+                <td class="text-muted">
+                  @if($e->start_date || $e->end_date)
+                    {{ $e->start_date ?? '—' }} — {{ $e->end_date ?? '—' }}
+                  @else
+                    —
+                  @endif
+                </td>
+                <td>
+                  <a href="{{ route('pic.participants.index', ['event_id'=>$e->id, 'mode'=>'all']) }}"
+                     class="btn btn-sm btn-primary">
+                    View Participants
+                  </a>
+                </td>
+              </tr>
+            @empty
+              <tr>
+                <td colspan="5" class="text-center text-muted py-4">
+                  You don’t have any events yet.
+                </td>
+              </tr>
+            @endforelse
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</section>
 @endsection

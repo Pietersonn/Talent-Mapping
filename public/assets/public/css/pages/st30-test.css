@@ -106,26 +106,38 @@
 .st30-selection-note .note-text{ color:#111827; }
 
 
-.st30-counter {
-    text-align: center;
-    margin-top: 10px;
-    padding: 6px 12px;
-    border-radius: 15px;
-    font-size: 13px;
+.st30-counter{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 12px;
     font-weight: 600;
-    display: inline-block;
-    transition: all 0.3s ease;
-}
+    font-size: 13px;
+    border: 1px solid #d1d5db; /* neutral */
+    color: #111827;
+    user-select: none;
+    transition: border-color .15s ease, color .15s ease, transform .12s ease;
+    background: transparent; /* no background */
+  }
 
-.st30-counter.valid {
-    background: #48bb78;
-    color: white;
-}
+  .st30-counter:active{ transform: translateY(1px); }
 
-.st30-counter.invalid {
-    background: #f56565;
-    color: white;
-}
+  /* States — only border + text color (no gradient/background) */
+  .st30-counter.valid{
+    border-color: #16a34a;
+    color: #16a34a;
+  }
+  .st30-counter.invalid{
+    border-color: #dc2626;
+    color: #dc2626;
+  }
+  .st30-counter.almost{
+    border-color: #f59e0b;
+    color: #92400e;
+  }
+
+
 
 /* Questions Section */
 .st30-questions-section {

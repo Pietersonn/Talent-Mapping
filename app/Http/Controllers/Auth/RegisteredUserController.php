@@ -26,24 +26,24 @@ class RegisteredUserController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'  => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
-            // HAPUS 'confirmed' karena kita tidak pakai confirm password di form
-            'password' => ['required', Rules\Password::defaults()],
+            'name'         => ['required', 'string', 'max:255'],
+            'email'        => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
+            'phone_number' => ['required', 'string', 'max:15', 'unique:users,phone_number'],  // Validasi nomor telepon
+            'password'     => ['required', Rules\Password::defaults()],
         ]);
 
         $user = User::create([
-            'name'      => $validated['name'],
-            'email'     => $validated['email'],
-            'password'  => Hash::make($validated['password']),
-            // kolom khusus app kamu:
-            'role'      => 'user',
-            'is_active' => true,
+            'name'         => $validated['name'],
+            'email'        => $validated['email'],
+            'phone_number' => $validated['phone_number'],  // Simpan nomor telepon
+            'password'     => Hash::make($validated['password']),
+            'role'         => 'user',
+            'is_active'    => true,
         ]);
 
         event(new Registered($user));
 
-        // langsung login & redirect ke home (sesuai requirement kamu)
+        // Langsung login & redirect ke home
         Auth::login($user);
 
         return redirect()->route('home')->with('success', 'Account created successfully. Welcome!');

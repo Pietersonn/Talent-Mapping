@@ -4,16 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-
-use Barryvdh\DomPDF\Facade\Pdf; // <--- TAMBAH
-
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Event;
 use App\Models\TestSession;
 use App\Models\TestResult;
 use App\Models\ResendRequest;
+use Illuminate\Support\Facades\Auth;
 
 class ReportController extends Controller
 {
@@ -28,16 +26,65 @@ class ReportController extends Controller
             'search'    => trim((string) $r->query('search', '')),
         ];
     }
+
     private function applyDateRange($q, ?string $from, ?string $to, string $col = 'created_at')
     {
         if ($from) $q->whereDate($col, '>=', $from);
         if ($to)   $q->whereDate($col, '<=', $to);
         return $q;
     }
+
     private function commonData()
     {
         $events = Event::query()->orderBy('start_date', 'desc')->get(['id', 'name', 'start_date', 'end_date']);
         return compact('events');
+    }
+
+    /**
+     * Base query untuk laporan peserta (WEB/PDF).
+     * - Hanya select kolom yang dipakai.
+     * - Siapkan expression sum_top3 sekali.
+     */
+    private function baseParticipantsQuery(array $filters, bool $onlyWithResults = true)
+    {
+        // Hitung sum_top3 dari JSON (string -> cast numerik)
+        $sumExpr = "
+            COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(tr.sjt_results,'$.top3[0].score')) AS DECIMAL(10,2)),0) +
+            COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(tr.sjt_results,'$.top3[1].score')) AS DECIMAL(10,2)),0) +
+            COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(tr.sjt_results,'$.top3[2].score')) AS DECIMAL(10,2)),0)
+        ";
+
+        $q = DB::table('test_sessions as ts')
+            ->join('users as u', 'u.id', '=', 'ts.user_id')
+            ->leftJoin('events as e', 'e.id', '=', 'ts.event_id')
+            ->leftJoin('test_results as tr', 'tr.session_id', '=', 'ts.id')
+            ->selectRaw("
+                ts.id as session_id,
+                u.name, u.email,
+                ts.participant_background as instansi,
+                e.name as event_name, e.event_code,
+                {$sumExpr} as sum_top3
+            ");
+
+        if (!empty($filters['event_id'])) {
+            $q->where('ts.event_id', $filters['event_id']);
+        }
+        if (($filters['instansi'] ?? '') !== '') {
+            $q->where('ts.participant_background', 'like', '%' . $filters['instansi'] . '%');
+        }
+        if (($filters['q'] ?? '') !== '') {
+            $term = $filters['q'];
+            $q->where(function ($w) use ($term) {
+                $w->where('u.name', 'like', "%{$term}%")
+                    ->orWhere('u.email', 'like', "%{$term}%");
+            });
+        }
+        if ($onlyWithResults) {
+            // All/Top/Bottom perlu skor → wajib ada sjt_results
+            $q->whereNotNull('tr.sjt_results');
+        }
+
+        return [$q, $sumExpr];
     }
 
     /* ========================== 1) Health Dashboard ========================== */
@@ -67,7 +114,7 @@ class ReportController extends Controller
                 ->whereColumn('test_results.session_id', 'test_sessions.id');
         })->count();
 
-        // SLA proxy: test_results.created_at
+        // SLA proxy
         $resQ = TestResult::query()->with('session');
         if ($f['event_id']) $resQ->whereHas('session', fn($q) => $q->where('event_id', $f['event_id']));
         if ($f['instansi'] !== '') $resQ->whereHas('session', fn($q) => $q->where('participant_background', 'LIKE', '%' . $f['instansi'] . '%'));
@@ -107,50 +154,56 @@ class ReportController extends Controller
         return view('admin.reports.index', array_merge($this->commonData(), compact('metrics', 'f')));
     }
 
-    /* ========================== 2) Peserta ========================== */
-    public function participants(Request $request)
+    /* ========================== 2) Peserta (WEB) ========================== */
+    public function participants(Request $req)
     {
-        $f = $this->filters($request);
-
-        // Eager load: session (butuh user_id), lalu user (untuk email)
-        $q = TestResult::query()->with([
-            'session' => function ($s) {
-                $s->select('id', 'user_id', 'event_id', 'participant_name', 'participant_background', 'created_at', 'updated_at')
-                    ->with(['user:id,email']); // <-- ambil email dari users
-            }
+        $validated = $req->validate([
+            'mode'     => 'nullable|in:all,top,bottom',
+            'n'        => 'nullable|integer|min:1|max:5000',
+            'event_id' => 'nullable|string',
+            'instansi' => 'nullable|string|max:255',
+            'q'        => 'nullable|string|max:255',
         ]);
 
-        if ($f['event_id']) $q->whereHas('session', fn($s) => $s->where('event_id', $f['event_id']));
-        if ($f['instansi'] !== '') $q->whereHas('session', fn($s) => $s->where('participant_background', 'LIKE', '%' . $f['instansi'] . '%'));
-        if ($f['search'] !== '') {
-            $q->whereHas('session', fn($s) => $s->where('participant_name', 'LIKE', '%' . request('search') . '%'));
+        $mode = $validated['mode'] ?? 'all';
+        $n    = (int)($validated['n'] ?? 10);
+
+        $filters = [
+            'event_id' => $validated['event_id'] ?? null,
+            'instansi' => $validated['instansi'] ?? null,
+            'q'        => $validated['q'] ?? null,
+        ];
+
+        $events = Event::query()->orderBy('start_date', 'desc')->get(['id', 'name', 'event_code']);
+
+        // sesuai definisi: ALL = semua peserta yang punya skor, urut dari tertinggi
+        [$q, $sumExpr] = $this->baseParticipantsQuery($filters, true);
+
+        $rows = null;
+        $pagination = null;
+
+        if ($mode === 'all') {
+            $q->orderByRaw($sumExpr . ' DESC')->orderBy('u.name')->orderBy('ts.id');
+            $pagination = $q->paginate(25)->withQueryString();
+            $rows = collect($pagination->items());
+        } else {
+            if ($mode === 'top') {
+                $q->orderByRaw($sumExpr . ' DESC')->orderBy('u.name')->orderBy('ts.id');
+            } else {
+                $q->orderByRaw($sumExpr . ' ASC')->orderBy('u.name')->orderBy('ts.id');
+            }
+            $rows = $q->limit($n)->get();
         }
-        $this->applyDateRange($q, $f['date_from'], $f['date_to'], 'created_at');
 
-        $rows = $q->get(['id', 'session_id', 'sjt_results', 'created_at']);
-
-        // Map jadi baris ringkas untuk tabel Participants
-        $mapped = $rows->map(function ($r) {
-            $top3   = data_get($r, 'sjt_results.top3', []);
-            $sumTop = collect($top3)->sum('score');
-
-            return [
-                'name'     => data_get($r, 'session.participant_name'),
-                'email'    => data_get($r, 'session.user.email'), // <-- dari users
-                'instansi' => data_get($r, 'session.participant_background'),
-                'event_id' => data_get($r, 'session.event_id'),
-                'sum_top3' => $sumTop,
-            ];
-        })->sortByDesc('sum_top3')->values();
-
-        $eventMap = Event::query()->pluck('name', 'id')->toArray();
-
-        return view(
-            'admin.reports.participants',
-            array_merge($this->commonData(), compact('mapped', 'eventMap', 'f'))
-        );
+        return view('admin.reports.participants', [
+            'events'     => $events,
+            'mode'       => $mode,
+            'n'          => $n,
+            'rows'       => $rows,
+            'pagination' => $pagination,
+            'filters'    => $filters,
+        ]);
     }
-
 
     /* ========================== 3) Rekap Event ========================== */
     public function events(Request $request)
@@ -229,15 +282,15 @@ class ReportController extends Controller
                 ? Carbon::parse($completedAt)->diffInMinutes(Carbon::parse($r->email_sent_at)) : null;
 
             return [
-                'result_id'   => $r->id,
-                'name'        => data_get($r, 'session.participant_name'),
-                'email'       => null,
-                'event_id'    => data_get($r, 'session.event_id'),
-                'pdf_path'    => $r->pdf_path,
+                'result_id'    => $r->id,
+                'name'         => data_get($r, 'session.participant_name'),
+                'email'        => null,
+                'event_id'     => data_get($r, 'session.event_id'),
+                'pdf_path'     => $r->pdf_path,
                 'generated_at' => optional($r->report_generated_at)?->toDateTimeString(),
-                'sent_at'     => optional($r->email_sent_at)?->toDateTimeString(),
+                'sent_at'      => optional($r->email_sent_at)?->toDateTimeString(),
                 'sla_generate' => $slaGen,
-                'sla_send'    => $slaSend,
+                'sla_send'     => $slaSend,
             ];
         });
 
@@ -335,21 +388,127 @@ class ReportController extends Controller
         return view('admin.reports.anomaly', array_merge($this->commonData(), compact('flagged', 'eventMap', 'f', 'thresholdMin')));
     }
 
-    /* ========================== 8) Lite Insight ========================== */
-    public function insight(Request $request)
-    {
-        $f = $this->filters($request);
+    /* ========================== PDF EXPORTS ========================== */
 
+    public function exportHealthPdf(Request $request)
+    {
+        $request->merge($this->filters($request));
+        $view = $this->index($request);
+        $data = $view->getData();
+        $pdf = Pdf::loadView('admin.reports.pdf.health', $data)->setPaper('a4', 'portrait');
+        return $pdf->download('health-dashboard.pdf');
+    }
+
+    public function exportParticipantsPdf(Request $request)
+    {
+        // Ambil filter & mode yang sama dengan halaman web
+        $validated = $request->validate([
+            'mode'     => 'nullable|in:all,top,bottom',
+            'n'        => 'nullable|integer|min:1|max:5000',
+            'event_id' => 'nullable|string',
+            'instansi' => 'nullable|string|max:255',
+            'q'        => 'nullable|string|max:255',
+        ]);
+
+        $mode = $validated['mode'] ?? 'all';
+        $n    = (int)($validated['n'] ?? 10);
+
+        $filters = [
+            'event_id' => $validated['event_id'] ?? null,
+            'instansi' => $validated['instansi'] ?? null,
+            'q'        => $validated['q'] ?? null,
+        ];
+
+        // Query khusus PDF: no paginate, hanya kolom perlu, urut sesuai mode
+        [$q, $sumExpr] = $this->baseParticipantsQuery($filters, true);
+
+        if ($mode === 'top') {
+            $q->orderByRaw($sumExpr . ' DESC')->orderBy('u.name')->orderBy('ts.id')->limit($n);
+        } elseif ($mode === 'bottom') {
+            $q->orderByRaw($sumExpr . ' ASC')->orderBy('u.name')->orderBy('ts.id')->limit($n);
+        } else { // all = semua yang punya skor, urut tertinggi
+            $q->orderByRaw($sumExpr . ' DESC')->orderBy('u.name')->orderBy('ts.id');
+        }
+
+        $rows = $q->get();
+
+        // Opsi ringan DomPDF
+        @ini_set('memory_limit', '512M');
+        @set_time_limit(120);
+
+        $data = [
+            'rows'        => $rows,
+            'mode'        => $mode,
+            'n'           => $mode !== 'all' ? $n : null,
+            'reportTitle' => 'Laporan Peserta',
+            'generatedBy' => optional(Auth::user())->name ?? 'System',
+            'generatedAt' => now()->format('d M Y H:i') . ' WIB',
+        ];
+
+        // Gunakan portrait; ganti ke 'landscape' jika tabel sering melebar
+        $pdf = Pdf::loadView('admin.reports.pdf.participants', $data)
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->download('participants.pdf');
+    }
+
+    public function exportEventsPdf(Request $request)
+    {
+        $request->merge($this->filters($request));
+        $view = $this->events($request);
+        $data = $view->getData();
+        $pdf = Pdf::loadView('admin.reports.pdf.events', $data)->setPaper('a4', 'landscape');
+        return $pdf->download('events-summary.pdf');
+    }
+
+    public function exportDeliveryPdf(Request $request)
+    {
+        $request->merge($this->filters($request));
+        $view = $this->delivery($request);
+        $data = $view->getData();
+        $pdf = Pdf::loadView('admin.reports.pdf.delivery', $data)->setPaper('a4', 'landscape');
+        return $pdf->download('delivery-sla.pdf');
+    }
+
+    public function exportResendPdf(Request $request)
+    {
+        $request->merge($this->filters($request));
+        $view = $this->resend($request);
+        $data = $view->getData();
+        $pdf = Pdf::loadView('admin.reports.pdf.resend', $data)->setPaper('a4', 'portrait');
+        return $pdf->download('resend-requests.pdf');
+    }
+
+    public function exportDataQualityPdf(Request $request)
+    {
+        $request->merge($this->filters($request));
+        $view = $this->dataQuality($request);
+        $data = $view->getData();
+        $pdf = Pdf::loadView('admin.reports.pdf.data_quality', $data)->setPaper('a4', 'portrait');
+        return $pdf->download('data-quality.pdf');
+    }
+
+    public function exportAnomalyPdf(Request $request)
+    {
+        $request->merge($this->filters($request));
+        $view = $this->anomaly($request);
+        $data = $view->getData();
+        $pdf = Pdf::loadView('admin.reports.pdf.anomaly', $data)->setPaper('a4', 'landscape');
+        return $pdf->download('anomaly-fast-duration.pdf');
+    }
+
+    private function buildInsightData(array $f): array
+    {
         $q = TestResult::query()->with('session');
-        if ($f['event_id']) $q->whereHas('session', fn($s) => $s->where('event_id', $f['event_id']));
-        if ($f['instansi'] !== '') $q->whereHas('session', fn($s) => $s->where('participant_background', 'LIKE', '%' . $f['instansi'] . '%'));
-        $this->applyDateRange($q, $f['date_from'], $f['date_to'], 'created_at');
+        if (!empty($f['event_id'])) $q->whereHas('session', fn($s) => $s->where('event_id', $f['event_id']));
+        if (($f['instansi'] ?? '') !== '') $q->whereHas('session', fn($s) => $s->where('participant_background', 'LIKE', '%' . $f['instansi'] . '%'));
+        $this->applyDateRange($q, $f['date_from'] ?? null, $f['date_to'] ?? null, 'created_at');
 
         $results = $q->get(['id', 'sjt_results', 'st30_results', 'session_id']);
 
         $typoCount = [];
         $compScores = [];
-        $top3Freq   = [];
+        $top3Freq = [];
 
         foreach ($results as $r) {
             $dom = data_get($r, 'st30_results.dominant_typology');
@@ -366,6 +525,7 @@ class ReportController extends Controller
                     }
                 }
             }
+
             $top3 = data_get($r, 'sjt_results.top3', []);
             if (is_array($top3)) {
                 foreach ($top3 as $t) {
@@ -383,88 +543,9 @@ class ReportController extends Controller
         arsort($compAvg);
         arsort($top3Freq);
 
-        return view('admin.reports.insight', array_merge($this->commonData(), compact('typoCount', 'compAvg', 'top3Freq', 'f')));
-    }
+        // data untuk view
+        $events = $this->commonData()['events'];
 
-    /* ========================== PDF EXPORTS ========================== */
-    public function exportHealthPdf(Request $request)
-    {
-        // Reuse index() logic
-        $request->merge($this->filters($request));
-        $view = $this->index($request);
-        $data = $view->getData(); // metrics, events, f
-
-        $pdf = Pdf::loadView('admin.reports.pdf.health', $data)->setPaper('a4', 'portrait');
-        return $pdf->download('health-dashboard.pdf');
-    }
-
-    public function exportParticipantsPdf(Request $request)
-    {
-        $request->merge($this->filters($request));
-        $view = $this->participants($request);
-        $data = $view->getData(); // mapped, eventMap, events, f
-
-        $pdf = Pdf::loadView('admin.reports.pdf.participants', $data)->setPaper('a4', 'landscape');
-        return $pdf->download('participants-top-score.pdf');
-    }
-
-    public function exportEventsPdf(Request $request)
-    {
-        $request->merge($this->filters($request));
-        $view = $this->events($request);
-        $data = $view->getData(); // summary, events, f
-
-        $pdf = Pdf::loadView('admin.reports.pdf.events', $data)->setPaper('a4', 'landscape');
-        return $pdf->download('events-summary.pdf');
-    }
-
-    public function exportDeliveryPdf(Request $request)
-    {
-        $request->merge($this->filters($request));
-        $view = $this->delivery($request);
-        $data = $view->getData(); // mapped, eventMap, events, f
-
-        $pdf = Pdf::loadView('admin.reports.pdf.delivery', $data)->setPaper('a4', 'landscape');
-        return $pdf->download('delivery-sla.pdf');
-    }
-
-    public function exportResendPdf(Request $request)
-    {
-        $request->merge($this->filters($request));
-        $view = $this->resend($request);
-        $data = $view->getData(); // rows, eventMap, events, f
-
-        $pdf = Pdf::loadView('admin.reports.pdf.resend', $data)->setPaper('a4', 'portrait');
-        return $pdf->download('resend-requests.pdf');
-    }
-
-    public function exportDataQualityPdf(Request $request)
-    {
-        $request->merge($this->filters($request));
-        $view = $this->dataQuality($request);
-        $data = $view->getData(); // missingInstansi, noResult, invalidPdf, events, f
-
-        $pdf = Pdf::loadView('admin.reports.pdf.data_quality', $data)->setPaper('a4', 'portrait');
-        return $pdf->download('data-quality.pdf');
-    }
-
-    public function exportAnomalyPdf(Request $request)
-    {
-        $request->merge($this->filters($request));
-        $view = $this->anomaly($request);
-        $data = $view->getData(); // flagged, eventMap, events, f, thresholdMin
-
-        $pdf = Pdf::loadView('admin.reports.pdf.anomaly', $data)->setPaper('a4', 'landscape');
-        return $pdf->download('anomaly-fast-duration.pdf');
-    }
-
-    public function exportInsightPdf(Request $request)
-    {
-        $request->merge($this->filters($request));
-        $view = $this->insight($request);
-        $data = $view->getData(); // typoCount, compAvg, top3Freq, events, f
-
-        $pdf = Pdf::loadView('admin.reports.pdf.insight', $data)->setPaper('a4', 'portrait');
-        return $pdf->download('lite-insight.pdf');
+        return compact('typoCount', 'compAvg', 'top3Freq', 'events') + ['f' => $f];
     }
 }

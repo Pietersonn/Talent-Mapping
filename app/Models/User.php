@@ -20,10 +20,12 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'phone_number',  
         'role',
         'is_active',
-        'google_id', // SSO Google
+        'google_id',
     ];
+
 
     protected $hidden = [
         'password',
@@ -40,20 +42,59 @@ class User extends Authenticatable
     }
 
     // ===== Helpers (role/status) =====
-    public function hasRole(string $role): bool { return $this->role === $role; }
-    public function hasAnyRole(array $roles): bool { return in_array($this->role, $roles, true); }
-    public function isActive(): bool { return (bool) $this->is_active; }
-    public function isAdmin(): bool  { return $this->role === 'admin'; }
-    public function isStaff(): bool  { return $this->role === 'staff'; }
-    public function isPIC(): bool    { return $this->role === 'pic'; }
-    public function isUser(): bool   { return $this->role === 'user'; }
+    public function hasRole(string $role): bool
+    {
+        return $this->role === $role;
+    }
+    public function hasAnyRole(array $roles): bool
+    {
+        return in_array($this->role, $roles, true);
+    }
+    public function isActive(): bool
+    {
+        return (bool) $this->is_active;
+    }
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+    public function isStaff(): bool
+    {
+        return $this->role === 'staff';
+    }
+    public function isPIC(): bool
+    {
+        return $this->role === 'pic';
+    }
+    public function isUser(): bool
+    {
+        return $this->role === 'user';
+    }
 
-    public function scopeActive($q)               { return $q->where('is_active', true); }
-    public function scopeByRole($q, string $role) { return $q->where('role', $role); }
-    public function scopeAdmins($q)               { return $q->where('role', 'admin'); }
-    public function scopeStaff($q)                { return $q->where('role', 'staff'); }
-    public function scopePICs($q)                 { return $q->where('role', 'pic'); }
-    public function scopeUsers($q)                { return $q->where('role', 'user'); }
+    public function scopeActive($q)
+    {
+        return $q->where('is_active', true);
+    }
+    public function scopeByRole($q, string $role)
+    {
+        return $q->where('role', $role);
+    }
+    public function scopeAdmins($q)
+    {
+        return $q->where('role', 'admin');
+    }
+    public function scopeStaff($q)
+    {
+        return $q->where('role', 'staff');
+    }
+    public function scopePICs($q)
+    {
+        return $q->where('role', 'pic');
+    }
+    public function scopeUsers($q)
+    {
+        return $q->where('role', 'user');
+    }
 
     public function getRoleDisplayAttribute(): string
     {
@@ -119,5 +160,8 @@ class User extends Authenticatable
     }
 
     // ===== Scopes tambahan =====
-    public function scopeWithResults($q) { return $q->whereHas('testResults'); }
+    public function scopeWithResults($q)
+    {
+        return $q->whereHas('testResults');
+    }
 }

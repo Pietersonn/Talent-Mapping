@@ -65,6 +65,16 @@
                                 </div>
 
                                 <div class="form-group">
+                                    <label for="position">Position (Jabatan)</label>
+                                    <input id="position" type="text" name="position"
+                                        class="form-input @error('position') is-invalid @enderror"
+                                    placeholder="Your position" value="{{ old('position') }}" required>
+                                    @error('position')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="form-group">
                                     <label for="event_id">Event</label>
                                     <select id="event_id" name="event_id" required class="form-select">
                                         <option value="">Tidak ada</option>

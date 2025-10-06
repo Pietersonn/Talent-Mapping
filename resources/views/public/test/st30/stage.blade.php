@@ -45,8 +45,6 @@
         {{-- PROGRESS: stepper pendek & seragam --}}
         @include('public.test.partials.progress-stepper', ['progress' => $progress])
 
-        {{-- Instruksi “Pilih 5–7 …” kiri, tanpa background --}}
-        {{-- Instruksi “Pilih 5–7 …” agak ke kanan, bintang merah --}}
         <div class="st30-selection-note st30-selection-note--inline">
             <span class="note-star" aria-hidden="true">*</span>
             <span class="note-text">
@@ -65,7 +63,7 @@
         <!-- Questions Form -->
         <div class="st30-questions-section">
             <form id="st30Form" action="{{ route('test.st30.stage.store', $stage) }}" method="POST"
-                class="js-loading-form">>
+                class="js-loading-form">
                 @csrf
                 <div class="st30-questions-list">
                     @foreach ($availableQuestions as $question)
@@ -80,6 +78,9 @@
                             </label>
                         </div>
                     @endforeach
+                </div>
+                <div class="st30-counter" role="status" aria-live="polite" data-total="7">
+                    <span class="st30-count">0</span>/<span class="st30-total">7</span>
                 </div>
 
                 <!-- Action Buttons -->
@@ -173,6 +174,7 @@
                     });
                 }
 
+
                 updateSubmitButton();
 
                 // Backup manual click detection
@@ -182,6 +184,8 @@
                         setTimeout(updateSubmitButton, 10);
                     }
                 });
+
+
             });
         </script>
     @endpush

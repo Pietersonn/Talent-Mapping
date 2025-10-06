@@ -1,129 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'PIC Dashboard - TalentMapping')</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ asset('assets/pic/css/dashboard.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+
+
     @stack('styles')
 </head>
+
 <body>
+    @php
+        $isDashActive = request()->routeIs('pic.dashboard');
+        $isEventsActive = request()->routeIs('pic.events.*');
+        $isPartsActive = request()->routeIs('pic.participants.*');
+    @endphp
+
+    <!-- SIDEBAR -->
     <nav id="sidebar" class="sidebar">
-        <div class="sidebar-header">
-            <div class="sidebar-brand">
-                <i class="bi bi-person-badge"></i>
-                <span>PIC Panel</span>
+        <div class="sidebar-header d-flex align-items-center justify-content-between px-3 py-2">
+            <div class="sidebar-brand d-flex align-items-center gap-2">
+                <i class="bi bi-person-badge fs-5"></i>
+                <span class="fw-semibold">PIC Panel</span>
             </div>
-            <button class="sidebar-toggle d-lg-none" id="sidebarToggle">
+            <button class="btn btn-sm btn-light d-lg-none" id="sidebarToggle" aria-label="Toggle sidebar">
                 <i class="bi bi-x-lg"></i>
             </button>
         </div>
 
-        @php $reportsActive = request()->routeIs('pic.reports.*'); @endphp
-
-        <ul class="sidebar-nav">
-            <li class="nav-item">
-                <a href="{{ route('pic.dashboard') }}" class="nav-link {{ request()->routeIs('pic.dashboard') ? 'active' : '' }}">
-                    <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{{ route('pic.events.index') }}" class="nav-link {{ request()->routeIs('pic.events.*') ? 'active' : '' }}">
-                    <i class="bi bi-calendar-event"></i> <span>My Events</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{{ route('pic.participants.index') }}" class="nav-link {{ request()->routeIs('pic.participants.*') ? 'active' : '' }}">
-                    <i class="bi bi-people"></i> <span>Participants</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{{ route('pic.results.index') }}" class="nav-link {{ request()->routeIs('pic.results.*') ? 'active' : '' }}">
-                    <i class="bi bi-file-text"></i> <span>Results</span>
+        <ul class="sidebar-nav list-unstyled px-2 mb-0">
+            <li class="nav-item mb-1">
+                <a class="nav-link d-flex align-items-center gap-2 {{ $isDashActive ? 'active' : '' }}"
+                    href="{{ route('pic.dashboard') }}">
+                    <i class="bi bi-speedometer2"></i><span>Dashboard</span>
                 </a>
             </li>
 
-            <!-- Reports dropdown -->
-            <li class="nav-item">
-                <a class="nav-link d-flex justify-content-between align-items-center {{ $reportsActive ? 'active' : '' }}"
-                   data-bs-toggle="collapse" href="#menuReports" role="button"
-                   aria-expanded="{{ $reportsActive ? 'true' : 'false' }}" aria-controls="menuReports">
-                    <span><i class="bi bi-graph-up"></i> <span class="ms-1">Reports</span></span>
-                    <i class="bi {{ $reportsActive ? 'bi-chevron-up' : 'bi-chevron-down' }}"></i>
+            <li class="nav-item mb-1">
+                <a class="nav-link d-flex align-items-center gap-2 {{ $isEventsActive ? 'active' : '' }}"
+                    href="{{ route('pic.events.index') }}">
+                    <i class="bi bi-calendar-event"></i><span>My Events</span>
                 </a>
-                <div class="collapse {{ $reportsActive ? 'show' : '' }}" id="menuReports">
-                    <ul class="list-unstyled ms-4 my-1">
-                        <li class="mb-1">
-                            <a href="{{ route('pic.reports.participants') }}"
-                               class="nav-link {{ request()->routeIs('pic.reports.participants') ? 'active' : '' }}">
-                                <i class="bi bi-people me-1"></i> Participants
-                            </a>
-                        </li>
-                        <li class="mb-1">
-                            <a href="{{ route('pic.reports.top') }}"
-                               class="nav-link {{ request()->routeIs('pic.reports.top') ? 'active' : '' }}">
-                                <i class="bi bi-trophy me-1"></i> Top (Top 10)
-                            </a>
-                        </li>
-                    </ul>
-                </div>
             </li>
+
+            <li class="nav-item mb-1">
+                <a class="nav-link d-flex align-items-center gap-2 {{ $isPartsActive ? 'active' : '' }}"
+                    href="{{ route('pic.participants.index') }}">
+                    <i class="bi bi-people"></i><span>Participants</span>
+                </a>
+            </li>
+            {{-- Tidak ada menu Results / Reports --}}
         </ul>
 
-        <div class="sidebar-footer">
-            <div class="user-info">
-                <div class="user-avatar"><i class="bi bi-person-circle"></i></div>
-                <div class="user-details">
-                    <div class="user-name">{{ Auth::user()->name }}</div>
-                    <div class="user-role">PIC</div>
+        <div class="sidebar-footer mt-auto p-3">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <i class="bi bi-person-circle fs-4"></i>
+                <div>
+                    <div class="fw-semibold">{{ Auth::user()->name }}</div>
+                    <div class="text-muted small">PIC</div>
                 </div>
             </div>
-            <a href="{{ route('logout') }}" class="btn btn-outline-light btn-sm"
-               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+
+            <a href="{{ route('logout') }}" class="btn btn-outline-light btn-sm w-100"
+                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                 <i class="bi bi-box-arrow-right"></i> Logout
             </a>
-            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">@csrf</form>
+            <form id="logout-form" class="d-none" action="{{ route('logout') }}" method="POST">@csrf</form>
         </div>
     </nav>
 
+    <!-- MAIN -->
     <div class="main-content">
-        <nav class="topbar navbar navbar-expand navbar-light">
-            <button class="btn btn-link sidebar-toggle d-lg-none" id="sidebarToggleTop">
-                <i class="bi bi-list"></i>
+        <!-- TOPBAR -->
+        <nav class="topbar navbar navbar-expand navbar-light bg-white border-bottom px-3">
+            <button class="btn btn-link d-lg-none" id="sidebarToggleTop" aria-label="Toggle sidebar">
+                <i class="bi bi-list fs-4"></i>
             </button>
-            <div class="navbar-nav ms-auto">
+
+            <div class="ms-auto navbar-nav">
                 <div class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                        <i class="bi bi-person-circle"></i> {{ Auth::user()->name }}
+                    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle"></i> <span>{{ Auth::user()->name }}</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="{{ route('home') }}"><i class="bi bi-house"></i> Home</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{{ route('logout') }}"
-                               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                            <i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('home') }}">
+                                <i class="bi bi-house"></i><span>Home</span>
+                            </a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('logout') }}"
+                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                <i class="bi bi-box-arrow-right"></i><span>Logout</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
         </nav>
 
-        <div class="content-wrapper">
-            @if(session('success'))
+        <!-- CONTENT -->
+        <div class="content-wrapper p-3 p-lg-4">
+            @if (session('success'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif
-            @if(session('error'))
+            @if (session('error'))
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif
+
             @yield('content')
         </div>
     </div>
@@ -132,4 +132,5 @@
     <script src="{{ asset('assets/pic/js/dashboard.js') }}"></script>
     @stack('scripts')
 </body>
+
 </html>

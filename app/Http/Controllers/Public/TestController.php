@@ -49,6 +49,7 @@ class TestController extends BaseController
             'full_name'  => 'required|string|max:255',
             'email'      => 'required|email|max:255',
             'workplace'  => 'required|string|max:255',
+            'position'   => 'nullable|string|max:255',  // Validasi jabatan (position)
             'event_id'   => 'nullable|exists:events,id',
             'event_code' => 'nullable|string|max:50',
         ]);
@@ -96,6 +97,7 @@ class TestController extends BaseController
             'session_token'          => Str::random(32),
             'participant_name'       => $request->full_name,
             'participant_background' => $request->workplace,
+            'position'               => $request->position,
             'current_step'           => 'st30_stage1',
         ]);
 
@@ -127,7 +129,7 @@ class TestController extends BaseController
     {
         return $this->showSJTPage(request(), $page);
     }
-    public function storeSJTPage(Request $request, int $page): RedirectResponse
+    public function storeSJTPage(Request $request, int $page)
     {
         return $this->processSJTPage($request, $page);
     }
@@ -277,10 +279,19 @@ class TestController extends BaseController
     {
         $session = $this->getCurrentSession($request);
         if (!$session || !$session->canAccessStage("sjt_page{$page}")) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Sesi tidak valid / akses halaman tidak sah.'], 403);
+            }
             return redirect()->route('test.form')->with('error', 'Sesi tidak valid / akses halaman tidak sah.');
         }
 
         $activeVersion = QuestionVersion::where('type', 'sjt')->where('is_active', true)->first();
+        if (!$activeVersion) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Tidak ada versi SJT aktif.'], 500);
+            }
+            return redirect()->route('test.form')->with('error', 'Tidak ada versi SJT aktif.');
+        }
 
         $startNumber = (($page - 1) * 10) + 1;
         $endNumber   = $page * 10;
@@ -289,41 +300,87 @@ class TestController extends BaseController
             ->whereBetween('number', [$startNumber, $endNumber])
             ->get();
 
+        // Validation rules built dynamically per question
         $rules = [];
         foreach ($questions as $q) {
             $rules["responses.{$q->id}"] = ['required', 'in:a,b,c,d,e'];
         }
-        $request->validate($rules, [
+        $messages = [
             'responses.*.required' => 'Semua pertanyaan wajib dijawab.',
-            'responses.*.in'       => 'Pilihan tidak valid.',
-        ]);
+            'responses.*.in'       => 'Pilihan tidak valid.'
+        ];
 
+        $request->validate($rules, $messages);
+
+        $responsesInput = $request->input('responses', []);
+
+        // --- Efficient upsert (bulk) ---
+        $now = now();
+        $rows = [];
         foreach ($questions as $q) {
-            $opt = $request->input("responses.{$q->id}");
-            SJTResponse::updateOrCreate(
-                ['session_id' => $session->id, 'question_id' => $q->id],
-                [
-                    'question_version_id' => $activeVersion->id,
-                    'page_number'         => $page,
-                    'selected_option'     => $opt,
-                ]
-            );
+            $sel = $responsesInput[$q->id] ?? null;
+            $rows[] = [
+                'session_id' => $session->id,
+                'question_id' => $q->id,
+                'question_version_id' => $activeVersion->id,
+                'page_number' => $page,
+                'selected_option' => $sel,
+                'updated_at' => $now,
+                'created_at' => $now
+            ];
         }
 
-        if ($page < 5) {
+        // Note: requires unique index on (session_id, question_id)
+        try {
+            SJTResponse::upsert($rows, ['session_id', 'question_id'], ['question_version_id', 'page_number', 'selected_option', 'updated_at']);
+        } catch (\Throwable $e) {
+            // fallback ke updateOrCreate jika DB tidak support upsert pada versi laravel/mysql
+            foreach ($questions as $q) {
+                $opt = $responsesInput[$q->id] ?? null;
+                SJTResponse::updateOrCreate(
+                    ['session_id' => $session->id, 'question_id' => $q->id],
+                    [
+                        'question_version_id' => $activeVersion->id,
+                        'page_number'         => $page,
+                        'selected_option'     => $opt,
+                    ]
+                );
+            }
+        }
+
+        // next step / finalize
+        $lastPageNumber = 5;
+        if ($page < $lastPageNumber) {
             $next = $page + 1;
             $session->update(['current_step' => 'sjt_page' . $next]);
-            return redirect()->route('test.sjt.page', ['page' => $next])
-                ->with('success', "Halaman {$page} selesai!");
+
+            $nextUrl = route('test.sjt.page', ['page' => $next]);
+
+            if ($request->expectsJson()) {
+                return response()->json(['next' => $nextUrl], 200);
+            }
+            return redirect()->route('test.sjt.page', ['page' => $next])->with('success', "Halaman {$page} selesai!");
         }
 
-        // Halaman 5 selesai → kirim ke thank-you & jalankan job
-        $session->update(['current_step' => 'thanks']);
-        GenerateAssessmentReport::dispatch($session->id);
+        // halaman terakhir: mark completed & dispatch job ke queue
+        $session->update([
+            'current_step' => 'thanks',
+            'is_completed' => true,
+            'completed_at' => now(),
+        ]);
 
-        return redirect()->route('test.thank-you')
-            ->with('success', 'Terima kasih! Hasil kamu sedang diproses & akan dikirim ke email.');
+        // Pastikan GenerateAssessmentReport implements ShouldQueue
+        GenerateAssessmentReport::dispatch($session->id)->onQueue('emails');
+
+        $nextUrl = route('test.thank-you');
+
+        if ($request->expectsJson()) {
+            return response()->json(['next' => $nextUrl], 200);
+        }
+
+        return redirect()->route('test.thank-you')->with('success', 'Terima kasih! Hasil kamu sedang diproses & akan dikirim ke email.');
     }
+
 
     /** Completed page */
     public function completed(): View|RedirectResponse

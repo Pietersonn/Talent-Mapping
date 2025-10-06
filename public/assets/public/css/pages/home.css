@@ -2,8 +2,8 @@
 
 /* === HERO SECTION === */
 .hero-section {
-    padding: 40px 0 60px; /* Reduced top padding from 120px to 40px */
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    padding: 40px 0 60px;
+    background: linear-gradient(135deg, #ffffff 0%, #b9dcff 100%);
     overflow: hidden;
     position: relative;
     min-height: 75vh;
@@ -23,7 +23,7 @@
 .hero-content {
     display: grid;
     grid-template-columns: 40% 60%;
-    gap: 40px; /* Reduced gap */
+    gap: 40px;
     align-items: center;
     position: relative;
     z-index: 1;

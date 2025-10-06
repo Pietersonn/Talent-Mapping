@@ -126,6 +126,7 @@ Route::middleware(['auth', 'role:admin,staff'])
             Route::get('/', [AdminEventController::class, 'index'])->name('index');
             Route::get('/create', [AdminEventController::class, 'create'])->name('create')->middleware('role:admin');
             Route::post('/', [AdminEventController::class, 'store'])->name('store')->middleware('role:admin');
+            Route::get('/export/pdf', [AdminEventController::class, 'exportPdf'])->name('export.pdf'); // <— NEW
             Route::get('/{event}', [AdminEventController::class, 'show'])->name('show');
             Route::get('/{event}/edit', [AdminEventController::class, 'edit'])->name('edit')->middleware('role:admin');
             Route::put('/{event}', [AdminEventController::class, 'update'])->name('update')->middleware('role:admin');
@@ -154,7 +155,7 @@ Route::middleware(['auth', 'role:admin,staff'])
             Route::post('/bulk-approve', [ResendRequestController::class, 'bulkApprove'])->name('bulk-approve');
             Route::post('/bulk-reject', [ResendRequestController::class, 'bulkReject'])->name('bulk-reject');
             Route::delete('/cleanup', [ResendRequestController::class, 'cleanup'])->name('cleanup')->middleware('role:admin');
-        });                 
+        });
 
         // Monitoring
         Route::prefix('monitoring')->name('monitoring.')->group(function () {
