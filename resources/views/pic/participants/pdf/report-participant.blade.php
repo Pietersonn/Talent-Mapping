@@ -8,7 +8,7 @@
   $companyAddr2  = 'Gedung Nurhayati Kampus GIBS, Jl. Trans - Kalimantan Lantai 2, Sungai Lumbah, Kec. Alalak, Kabupaten Barito Kuala, Kalimantan Selatan, Indonesia 70582';
   $companyContact= 'Email : bcti@hasnurcentre.org | website: bcti.id';
 
-  $logoPath = public_path('assets/public/images/logo-bcti.png');
+  $logoPath = public_path('assets/public/images/logo-bcti1.png');
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -35,11 +35,11 @@
 
   table { width:100%; border-collapse: collapse; background:#fff; }
   thead th {
-    background:#ededed; border:1px solid #000; font-weight:700; font-size: 12px; padding:7px 8px; text-align:left;
+    background:#ededed; border:1px solid #000; font-weight:700; font-size: 12px; padding:7px 8px; text-align:center;
   }
-  tbody td { border:1px solid #000; padding:7px 8px; vertical-align: top; font-size: 12px; }
-  .text-right { text-align:right; }
-  .text-center{ text-align:center; }
+  tbody td { border:1px solid #000; padding:7px 8px; vertical-align: middle; font-size: 12px; text-align:center; }
+  tbody td.name { text-align:left; }
+
   .muted { color:#6b7280; }
 
   .footer { position: fixed; bottom: -10mm; left: 0; right: 0; text-align: right; font-size: 11px; color:#6b7280; }
@@ -80,30 +80,46 @@
   <table>
     <thead>
       <tr>
-        <th style="width:28px;" class="text-center">No.</th>
-        <th style="width:22%;">Name</th>
-        <th style="width:26%;">Email</th>
-        <th style="width:18%;">Organization</th>
-        <th>Event</th>
-        <th style="width:55px;" class="text-center">Score</th>
+        <th style="width:25px;">No.</th>
+        <th style="width:20%;">Nama</th>
+        <th style="width:12%;">No. Telepon</th>
+        <th>SM</th>
+        <th>CIA</th>
+        <th>TS</th>
+        <th>WWO</th>
+        <th>CA</th>
+        <th>L</th>
+        <th>SE</th>
+        <th>PS</th>
+        <th>PE</th>
+        <th>HD</th>
+        <th>Total</th>
       </tr>
     </thead>
     <tbody>
       @php $no = 1; @endphp
       @forelse(($rows ?? []) as $r)
         <tr>
-          <td class="text-center">{{ $no++ }}</td>
-          <td>{{ $r->name }}</td>
-          <td>{{ $r->email ?? '—' }}</td>
-          <td>{{ $r->instansi ?: '—' }}</td>
-          <td>
-            {{ $r->event_name ?: '—' }}
-          </td>
-          <td class="text-center"><strong>{{ (int)($r->sum_top3 ?? 0) }}</strong></td>
+          <td>{{ $no++ }}</td>
+          <td class="name">{{ $r->name ?? '—' }}</td>
+          <td>{{ $r->phone_number ?? '—' }}</td>
+
+          <td>{{ $r->SM ?? 0 }}</td>
+          <td>{{ $r->CIA ?? 0 }}</td>
+          <td>{{ $r->TS ?? 0 }}</td>
+          <td>{{ $r->WWO ?? 0 }}</td>
+          <td>{{ $r->CA ?? 0 }}</td>
+          <td>{{ $r->L ?? 0 }}</td>
+          <td>{{ $r->SE ?? 0 }}</td>
+          <td>{{ $r->PS ?? 0 }}</td>
+          <td>{{ $r->PE ?? 0 }}</td>
+          <td>{{ $r->GH ?? 0 }}</td>
+
+          <td><strong>{{ $r->total_score ?? 0 }}</strong></td>
         </tr>
       @empty
         <tr>
-          <td colspan="6" class="text-center muted" style="padding:14px;">No data.</td>
+          <td colspan="14" class="muted" style="padding:14px;">Tidak ada data.</td>
         </tr>
       @endforelse
     </tbody>

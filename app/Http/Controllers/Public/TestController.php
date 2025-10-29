@@ -12,11 +12,14 @@ use App\Models\QuestionVersion;
 use App\Models\Event;
 use App\Models\TestResult;
 use App\Helpers\QuestionHelper;
+use App\Helpers\ScoringHelper;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -49,12 +52,11 @@ class TestController extends BaseController
             'full_name'  => 'required|string|max:255',
             'email'      => 'required|email|max:255',
             'workplace'  => 'required|string|max:255',
-            'position'   => 'nullable|string|max:255',  // Validasi jabatan (position)
+            'position'   => 'nullable|string|max:255',
             'event_id'   => 'nullable|exists:events,id',
             'event_code' => 'nullable|string|max:50',
         ]);
 
-        // Pilih event → validasi aktif + cocokan kode (kode tidak di dropdown)
         $event = null;
         if ($request->filled('event_id')) {
             $event = Event::where('id', $request->event_id)
@@ -69,7 +71,6 @@ class TestController extends BaseController
                 return back()->withErrors(['event_code' => 'Event code tidak sesuai.'])->withInput();
             }
 
-            // Cegah daftar ulang event yang sama jika sudah selesai
             $alreadyFinishedSameEvent = TestSession::where('user_id', Auth::id())
                 ->where('event_id', $event->id)
                 ->where('is_completed', true)
@@ -80,7 +81,6 @@ class TestController extends BaseController
             }
         }
 
-        // Jika masih ada sesi aktif (event apa pun) → lanjutkan
         $existingActive = TestSession::where('user_id', Auth::id())
             ->where('is_completed', false)
             ->first();
@@ -89,7 +89,6 @@ class TestController extends BaseController
             return $this->redirectToCurrentStep($existingActive);
         }
 
-        // Buat sesi baru
         $testSession = TestSession::create([
             'id'                     => $this->generateTestSessionId(),
             'user_id'                => Auth::id(),
@@ -198,7 +197,7 @@ class TestController extends BaseController
 
         $payload = [
             'selected_items' => $request->selected_questions,
-            'for_scoring'    => in_array((int)$stage, [1, 2], true), // Stage 1 & 2 skoring
+            'for_scoring'    => in_array((int)$stage, [1, 2], true),
         ];
 
         if ($existingResponse) {
@@ -300,7 +299,6 @@ class TestController extends BaseController
             ->whereBetween('number', [$startNumber, $endNumber])
             ->get();
 
-        // Validation rules built dynamically per question
         $rules = [];
         foreach ($questions as $q) {
             $rules["responses.{$q->id}"] = ['required', 'in:a,b,c,d,e'];
@@ -314,7 +312,6 @@ class TestController extends BaseController
 
         $responsesInput = $request->input('responses', []);
 
-        // --- Efficient upsert (bulk) ---
         $now = now();
         $rows = [];
         foreach ($questions as $q) {
@@ -330,11 +327,9 @@ class TestController extends BaseController
             ];
         }
 
-        // Note: requires unique index on (session_id, question_id)
         try {
             SJTResponse::upsert($rows, ['session_id', 'question_id'], ['question_version_id', 'page_number', 'selected_option', 'updated_at']);
         } catch (\Throwable $e) {
-            // fallback ke updateOrCreate jika DB tidak support upsert pada versi laravel/mysql
             foreach ($questions as $q) {
                 $opt = $responsesInput[$q->id] ?? null;
                 SJTResponse::updateOrCreate(
@@ -348,7 +343,6 @@ class TestController extends BaseController
             }
         }
 
-        // next step / finalize
         $lastPageNumber = 5;
         if ($page < $lastPageNumber) {
             $next = $page + 1;
@@ -362,14 +356,22 @@ class TestController extends BaseController
             return redirect()->route('test.sjt.page', ['page' => $next])->with('success', "Halaman {$page} selesai!");
         }
 
-        // halaman terakhir: mark completed & dispatch job ke queue
+        // terakhir: update session completed
         $session->update([
             'current_step' => 'thanks',
             'is_completed' => true,
             'completed_at' => now(),
         ]);
 
-        // Pastikan GenerateAssessmentReport implements ShouldQueue
+        // → Hitung hasil cepat & simpan ke test_results (langsung)
+        try {
+            ScoringHelper::calculateAndSaveResults($session->id);
+        } catch (\Throwable $e) {
+            Log::error('ScoringHelper failed: ' . $e->getMessage(), ['session' => $session->id]);
+            // tetap lanjutkan job untuk PDF/email, tetapi beri tahu admin/log
+        }
+
+        // Dispatch job untuk membuat PDF + kirim email (asynchronous)
         GenerateAssessmentReport::dispatch($session->id)->onQueue('emails');
 
         $nextUrl = route('test.thank-you');
@@ -380,7 +382,6 @@ class TestController extends BaseController
 
         return redirect()->route('test.thank-you')->with('success', 'Terima kasih! Hasil kamu sedang diproses & akan dikirim ke email.');
     }
-
 
     /** Completed page */
     public function completed(): View|RedirectResponse
@@ -411,7 +412,6 @@ class TestController extends BaseController
     }
 
     /** Progress bar */
-    /** Progress bar */
     private function calculateProgress(string $currentStep): float
     {
         $progressMap = [
@@ -430,7 +430,6 @@ class TestController extends BaseController
         ];
         return $progressMap[$currentStep] ?? 0;
     }
-
 
     /** Get questions excluding previous picks */
     private function getQuestionsExcludingStages(string $versionId, TestSession $session, array $excludeStages): Collection

@@ -300,7 +300,7 @@ class SJTQuestionController extends Controller
                 SJTQuestion::where('id', $questionData['id'])
                     ->update([
                         'number' => $questionData['number'],
-                        'page_number' => ceil($questionData['number'] / 10) // Auto-recalculate page
+                        'page_number' => ceil($questionData['number'] / 10)
                     ]);
             }
         });

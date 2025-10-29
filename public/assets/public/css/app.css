@@ -5,6 +5,8 @@
     box-sizing: border-box;
 }
 
+
+
 html {
     scroll-behavior: smooth;
 }
@@ -84,7 +86,7 @@ body {
 }
 
 .btn-login {
-    background: white;
+    background: #01ea79;
     color: #1f2937;
     border: 2px solid #e5e7eb;
     padding: 8px 20px;
@@ -94,82 +96,6 @@ body {
 .btn-login:hover {
     background: #f9fafb;
     border-color: #d1d5db;
-}
-
-/* === NAVBAR STYLES === */
-.navbar {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(229, 231, 235, 0.5);
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000;
-    padding: 12px 0;
-}
-
-.navbar .container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-left: 12px;
-    padding-right: 16px;
-    gap: 12px;
-}
-
-
-.navbar-brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.navbar-brand .logo {
-    height: 50px;
-    width: auto;
-}
-
-.brand-text {
-    font-size: 24px;
-    font-weight: 700;
-    color: #1f2937;
-}
-
-.navbar-menu {
-    display: flex;
-    align-items: center;
-    gap: 40px;
-}
-
-.navbar-nav {
-    display: flex;
-    list-style: none;
-    gap: 32px;
-}
-
-.nav-link {
-    text-decoration: none;
-    color: #6b7280;
-    font-weight: 500;
-    transition: color 0.3s ease;
-    position: relative;
-}
-
-.nav-link:hover,
-.nav-link.active {
-    color: #1f2937;
-}
-
-.nav-link.active::after {
-    content: '';
-    position: absolute;
-    bottom: -8px;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(120deg, #84cc16, #65a30d);
-    border-radius: 1px;
 }
 
 /* === User avatar hover + animation === */
@@ -362,101 +288,41 @@ body {
 .mobile-menu-toggle {
     display: none;
     flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 40px;
+    height: 40px;
     background: none;
     border: none;
     cursor: pointer;
-    padding: 8px;
+    z-index: 1100;
+    position: relative;
 }
 
 .mobile-menu-toggle span {
-    width: 24px;
-    height: 2px;
+    display: block;
+    width: 25px;
+    height: 3px;
     background: #1f2937;
-    margin: 3px 0;
-    transition: 0.3s;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+/* Efek animasi saat toggle aktif (jadi X) */
+.mobile-menu-toggle.active span:nth-child(1) {
+    transform: rotate(45deg) translateY(8px);
+}
+.mobile-menu-toggle.active span:nth-child(2) {
+    opacity: 0;
+}
+.mobile-menu-toggle.active span:nth-child(3) {
+    transform: rotate(-45deg) translateY(-8px);
 }
 
 /* === MAIN CONTENT === */
 .main-content {
     margin-top: 70px; /* Reduced from 80px to 70px */
-}
-
-/* === FOOTER STYLES === */
-.footer {
-    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-    color: white;
-    padding: 60px 0 30px;
-    margin-top: 80px;
-}
-
-.footer-content {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 60px;
-    margin-bottom: 40px;
-}
-
-.footer-section h3 {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 16px;
-    color: white;
-}
-
-.footer-section h4 {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 16px;
-    color: #e2e8f0;
-}
-
-.footer-copyright {
-    color: #94a3b8;
-    font-size: 14px;
-    line-height: 1.5;
-    margin-bottom: 20px;
-}
-
-.social-links {
-    display: flex;
-    gap: 12px;
-}
-
-.social-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    color: white;
-    text-decoration: none;
-    transition: all 0.3s ease;
-}
-
-.social-link:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-2px);
-}
-
-.footer-links {
-    list-style: none;
-}
-
-.footer-links li {
-    margin-bottom: 8px;
-}
-
-.footer-links a {
-    color: #94a3b8;
-    text-decoration: none;
-    font-size: 14px;
-    transition: color 0.3s ease;
-}
-
-.footer-links a:hover {
-    color: white;
 }
 
 /* === RESPONSIVE DESIGN === */
@@ -465,23 +331,11 @@ body {
         padding: 0 16px;
     }
 
-    .navbar-menu {
-        display: none;
+    .main-content {
+        padding: 10px;
     }
 
-    .mobile-menu-toggle {
-        display: flex;
-    }
 
-    .footer-content {
-        grid-template-columns: 1fr;
-        gap: 40px;
-        text-align: center;
-    }
-
-    .social-links {
-        justify-content: center;
-    }
 }
 
 /* === ANIMATION CLASSES === */

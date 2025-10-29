@@ -2,9 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 
-// Admin Controllers
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
-use App\Http\Controllers\Admin\QuestionController as AdminQuestionController; // Versions
+use App\Http\Controllers\Admin\QuestionController as AdminQuestionController;
 use App\Http\Controllers\Admin\ST30QuestionController;
 use App\Http\Controllers\Admin\SJTQuestionController;
 use App\Http\Controllers\Admin\CompetencyController;
@@ -15,13 +14,11 @@ use App\Http\Controllers\Admin\ResultController as AdminResultController;
 use App\Http\Controllers\Admin\ReportController;
 
 
-
 use App\Http\Controllers\Admin\ResendRequestController;
 use App\Http\Controllers\Admin\MonitoringController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\ProfileController;
 
-// Semuanya di bawah /admin + role admin/staff
 Route::middleware(['auth', 'role:admin,staff'])
     ->prefix('admin')->name('admin.')
     ->group(function () {
@@ -34,7 +31,6 @@ Route::middleware(['auth', 'role:admin,staff'])
         // QUESTION BANK (VERSIONS + BANK)
         // ==========================
         Route::prefix('questions')->name('questions.')->group(function () {
-            // ------- Versions (Question Versions) -------
             Route::get('/', [AdminQuestionController::class, 'index'])->name('index');
             Route::get('/create', [AdminQuestionController::class, 'create'])->name('create')->middleware('role:admin');
             Route::post('/', [AdminQuestionController::class, 'store'])->name('store')->middleware('role:admin');
@@ -62,13 +58,9 @@ Route::middleware(['auth', 'role:admin,staff'])
                 Route::get('/', [ST30QuestionController::class, 'index'])->name('index');
                 Route::get('/create', [ST30QuestionController::class, 'create'])->name('create')->middleware('role:admin');
                 Route::post('/', [ST30QuestionController::class, 'store'])->name('store')->middleware('role:admin');
-
-                // STATIC lebih dulu biar nggak ketabrak param
                 Route::get('/export',  [ST30QuestionController::class, 'export'])->name('export');
                 Route::post('/import', [ST30QuestionController::class, 'import'])->name('import')->middleware('role:admin');
                 Route::post('/reorder', [ST30QuestionController::class, 'reorder'])->name('reorder')->middleware('role:admin');
-
-                // ID ST-30 itu STRING (contoh: ST01) → JANGAN pakai whereNumber
                 Route::get('/{st30Question}', [ST30QuestionController::class, 'show'])->name('show');
                 Route::get('/{st30Question}/edit', [ST30QuestionController::class, 'edit'])->name('edit')->middleware('role:admin');
                 Route::put('/{st30Question}', [ST30QuestionController::class, 'update'])->name('update')->middleware('role:admin');
@@ -80,7 +72,6 @@ Route::middleware(['auth', 'role:admin,staff'])
                 Route::get('/', [SJTQuestionController::class, 'index'])->name('index');
                 Route::get('/create', [SJTQuestionController::class, 'create'])->name('create')->middleware('role:admin');
                 Route::post('/', [SJTQuestionController::class, 'store'])->name('store')->middleware('role:admin');
-
                 Route::get('/{sjtQuestion}', [SJTQuestionController::class, 'show'])->name('show');
                 Route::get('/{sjtQuestion}/edit', [SJTQuestionController::class, 'edit'])->name('edit')->middleware('role:admin');
                 Route::put('/{sjtQuestion}', [SJTQuestionController::class, 'update'])->name('update')->middleware('role:admin');
@@ -134,7 +125,7 @@ Route::middleware(['auth', 'role:admin,staff'])
             Route::post('/{event}/toggle-status', [AdminEventController::class, 'toggleStatus'])->name('toggle-status')->middleware('role:admin');
         });
 
-        // Results (add these missing routes to existing results section)
+        // Results
         Route::prefix('results')->name('results.')->group(function () {
             Route::get('/', [AdminResultController::class, 'index'])->name('index');
             Route::get('/statistics', [AdminResultController::class, 'getStatistics'])->name('statistics');
@@ -146,7 +137,7 @@ Route::middleware(['auth', 'role:admin,staff'])
             Route::post('/bulk-action', [AdminResultController::class, 'bulkAction'])->name('bulk-action');
         });
 
-        // Resend Requests (add these missing routes to existing resend section)
+        // Resend Requests
         Route::prefix('resend')->name('resend.')->group(function () {
             Route::get('/', [ResendRequestController::class, 'index'])->name('index');
             Route::get('/{resendRequest}', [ResendRequestController::class, 'show'])->name('show');

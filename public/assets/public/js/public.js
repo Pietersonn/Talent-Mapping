@@ -2,74 +2,10 @@
 
 // DOM Ready
 document.addEventListener('DOMContentLoaded', function() {
-    initializeNavbar();
     initializeAnimations();
     initializeUtilities();
 });
 
-// === NAVBAR FUNCTIONS ===
-function initializeNavbar() {
-    const navbar = document.querySelector('.navbar');
-    const userDropdown = document.getElementById('userDropdown');
-
-    // Navbar scroll effect
-    let lastScrollY = window.scrollY;
-
-    window.addEventListener('scroll', () => {
-        const currentScrollY = window.scrollY;
-
-        if (currentScrollY > 100) {
-            navbar.classList.add('scrolled');
-        } else {
-            navbar.classList.remove('scrolled');
-        }
-
-        // Hide navbar on scroll down, show on scroll up
-        if (currentScrollY > lastScrollY && currentScrollY > 200) {
-            navbar.style.transform = 'translateY(-100%)';
-        } else {
-            navbar.style.transform = 'translateY(0)';
-        }
-
-        lastScrollY = currentScrollY;
-    });
-
-    // Close dropdowns when clicking outside
-    document.addEventListener('click', (e) => {
-        if (userDropdown && !e.target.closest('.user-menu')) {
-            userDropdown.classList.remove('show');
-        }
-    });
-}
-
-// Toggle user dropdown
-function toggleUserDropdown() {
-    const dropdown = document.getElementById('userDropdown');
-    if (dropdown) {
-        dropdown.classList.toggle('show');
-    }
-}
-
-// Mobile menu toggle
-function toggleMobileMenu() {
-    const navbar = document.querySelector('.navbar');
-    const mobileToggle = document.querySelector('.mobile-menu-toggle');
-
-    navbar.classList.toggle('mobile-open');
-    mobileToggle.classList.toggle('active');
-
-    // Animate hamburger menu
-    const spans = mobileToggle.querySelectorAll('span');
-    if (mobileToggle.classList.contains('active')) {
-        spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
-        spans[1].style.opacity = '0';
-        spans[2].style.transform = 'rotate(-45deg) translate(7px, -6px)';
-    } else {
-        spans[0].style.transform = 'none';
-        spans[1].style.opacity = '1';
-        spans[2].style.transform = 'none';
-    }
-}
 
 // === ANIMATIONS ===
 function initializeAnimations() {
@@ -333,7 +269,6 @@ document.addEventListener('keydown', function(e) {
 // === EXPORT GLOBAL FUNCTIONS ===
 window.TalentMapping = {
     toggleUserDropdown,
-    toggleMobileMenu,
     showToast,
     showLoading,
     hideLoading

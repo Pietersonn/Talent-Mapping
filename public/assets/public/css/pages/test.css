@@ -357,13 +357,8 @@
         gap: 40px;
     }
 
-    .illustration-column {
-        order: -1;
-    }
-
     .illustration {
-        width: 250px;
-        height: 250px;
+        display: none;
     }
 
     .form-container {

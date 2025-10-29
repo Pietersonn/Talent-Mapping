@@ -7,7 +7,7 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
-use App\Http\Controllers\Auth\GoogleController; // Google OAuth
+use App\Http\Controllers\Auth\GoogleController;
 
 Route::middleware('guest')->group(function () {
     // Register
@@ -49,7 +49,6 @@ Route::middleware('auth')->group(function () {
     | dibuat NO-OP supaya tidak error.
     */
 
-    // Notice → langsung lempar ke home (atau halaman apa pun)
     Route::get('/email/verify', function () {
         return redirect()->route('home'); // atau: return redirect('/');
     })->name('verification.notice');

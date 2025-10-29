@@ -1,0 +1,188 @@
+/* === FOOTER STYLES === */
+
+
+.footer {
+  background-color: #fff;
+  color: #0f172a;
+  position: relative;
+  padding-bottom: 40px;
+  font-family: 'Inter', sans-serif;
+  padding: 50px 0; /* Adjusted padding for balance */
+  border-top: 2px solid #0f172a10;
+  width: 100%;
+}
+
+.footer-container {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr; /* Adjusted for three equal sections */
+  gap: 0px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+.footer-logo {
+  width: 150px; /* Increased logo size */
+  margin-bottom: 20px; /* Increased margin to balance text */
+}
+
+.footer-left {
+  text-align: left; /* Ensures the left section stays aligned to the left */
+}
+
+.footer-left p {
+  margin: 6px 0;
+  line-height: 1.8; /* Adjusted for readability */
+  font-size: 16px; /* Increased font size */
+}
+
+.footer-contact p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+  font-size: 16px; /* Increased font size */
+}
+
+.footer-middle h4,
+.footer-right h4 {
+  color: #166534; /* Green color */
+  font-weight: 700;
+  margin-top: 15px;
+  font-size: 20px; /* Increased font size for better visibility */
+}
+
+.footer-middle ul,
+.footer-right ul {
+  margin-top: 25px;
+  list-style: none;
+  padding: 0;
+}
+
+.footer-middle li    {
+  margin-bottom: 12px; /* Increased margin for better spacing */
+}
+
+.footer-right li {
+    margin-bottom: 12px;
+    font-size: 20px; /* Increased font size for text */
+}
+
+.footer-middle a,
+.footer-right a {
+  color: #0f172a;
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+.footer-middle a:hover,
+.footer-right a:hover {
+  color: #166534;
+}
+
+.social-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+}
+
+.footer-middle, .footer-right {
+  text-align: left;
+  margin-left: 50%;
+  padding-left: 0
+}
+
+.footer-line {
+  max-width: 1200px;
+  width: 90;
+  border: none;
+  border-top: 3px solid #000000;
+  margin: 0 auto;
+  padding: 0;
+  margin-top: 20px;
+}
+.footer-bottom {
+    background-color: #79df7e; /* Green background color */
+    text-align: center;
+    padding: 15px 0;
+    font-size: 14px;
+    border-top: 3px solid #388E3C;
+    margin-top: 40px;
+    margin-bottom:-50px;
+
+}
+
+.footer-bottom p {
+    margin: 0;
+    font-weight: normal;
+    color: black;
+}
+
+/* === RESPONSIVE FOOTER STYLES === */
+@media (max-width: 768px) {
+
+    .footer {
+        /* Mengurangi padding atas di mobile, menghapus padding bawah */
+        padding: 40px 0 0;
+    }
+
+    .footer-container {
+        /* Mengubah grid dari 3 kolom menjadi 1 kolom (vertikal) */
+        grid-template-columns: 1fr;
+        /* Menambah jarak vertikal antar bagian yang ditumpuk */
+        gap: 40px;
+        /* Mengurangi padding samping di mobile */
+        padding: 0 20px;
+    }
+
+    .footer-left,
+    .footer-middle,
+    .footer-right {
+        /* Menengahkan semua teks di mobile */
+        text-align: center;
+
+        /* PENTING: Menghapus margin aneh dari style desktop */
+        margin-left: 0;
+        padding-left: 0;
+    }
+
+    .footer-logo {
+        /* Memastikan logo juga di tengah */
+        margin: 0 auto 20px auto;
+    }
+
+    .footer-contact p {
+        /* Menengahkan item kontak (ikon + teks) */
+        justify-content: center;
+    }
+
+    .footer-middle h4,
+    .footer-right h4 {
+        /* Menghapus margin-top, karena 'gap' sudah memberi jarak */
+        margin-top: 0;
+        font-size: 18px; /* Sedikit mengecilkan judul */
+    }
+
+    .footer-middle ul,
+    .footer-right ul {
+        margin-top: 15px; /* Mengurangi jarak dari judul */
+    }
+
+    .footer-right li {
+        /* Menyamakan font-size dengan bagian 'middle' */
+        font-size: 16px;
+    }
+
+    .footer-line {
+        /* Garis ini tidak lagi diperlukan karena layout berubah */
+        display: none;
+    }
+
+    .footer-bottom {
+        /* PENTING: Menghapus margin negatif dari style desktop */
+        margin-bottom: 0;
+        /* Menyesuaikan margin-top agar pas */
+        margin-top: 40px;
+    }
+}

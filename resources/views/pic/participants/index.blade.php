@@ -141,8 +141,7 @@
           @endphp
           @forelse(($rows ?? []) as $i => $r)
             @php
-              $score = (int)($r->sum_top3 ?? 0);
-              $tone  = $score >= 12 ? 'success' : ($score >= 8 ? 'warning' : 'secondary');
+
               $param = $r->session_id;
             @endphp
             <tr>
@@ -159,7 +158,7 @@
                 </div>
               </td>
               <td class="text-end">
-                <span class="badge rounded-pill bg-{{ $tone }}">{{ $score }}</span>
+                <span class="text-muted">{{ $total_score }}</span>
               </td>
               <td>
                 @if(!empty($r->pdf_path))

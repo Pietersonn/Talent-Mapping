@@ -34,7 +34,7 @@
                             </a>
 
                             {{-- Learn more button - adjust URL to your real page --}}
-                            <a href="{{ url('/learn-more') }}" class="btn btn-md mb-2 learn-more-btn" aria-label="Cari Lebih Tau">
+                            <a href="https://drive.google.com/file/d/1SVASrys3hk2kqBt4xLomPeozX8kZLbZw/view?usp=sharing" class="btn btn-md mb-2 learn-more-btn" aria-label="Cari Lebih Tau">
                                 Cari Lebih Tau
                             </a>
                         </div>

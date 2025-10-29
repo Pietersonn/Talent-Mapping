@@ -28,7 +28,7 @@
   padding: 0 18px 36px;
   color: var(--tm-text);
   isolation: isolate;
-  font-weight: 400; /* default: normal */
+  font-weight: 400;
 }
 
 /* Latar belakang lembut */

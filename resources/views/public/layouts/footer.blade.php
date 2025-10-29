@@ -1,49 +1,47 @@
 <footer class="footer">
-    <div class="container">
-        <div class="footer-content">
-            <div class="footer-section">
-                <h3>Business & Communication Training Institute</h3>
-                <p class="footer-copyright">
-                    Copyright © 2025 Muhammad Akmal<br>
-                    All rights reserved
-                </p>
-                <div class="social-links">
-                    <a href="#" class="social-link instagram" aria-label="Instagram">
-                        <i class="icon-instagram"></i>
-                    </a>
-                    <a href="#" class="social-link facebook" aria-label="Facebook">
-                        <i class="icon-facebook"></i>
-                    </a>
-                    <a href="#" class="social-link twitter" aria-label="Twitter">
-                        <i class="icon-twitter"></i>
-                    </a>
-                    <a href="#" class="social-link linkedin" aria-label="LinkedIn">
-                        <i class="icon-linkedin"></i>
-                    </a>
-                </div>
-            </div>
-
-            <div class="footer-section">
-                <h4>Company</h4>
-                <ul class="footer-links">
-                    <li><a href="#">About Us</a></li>
-                    <li><a href="#">Blog</a></li>
-                    <li><a href="#">Contact Us</a></li>
-                    <li><a href="#">Careers</a></li>
-                    <li><a href="#">Sistem</a></li>
-                </ul>
-            </div>
-
-            <div class="footer-section">
-                <h4>Talent Mapping</h4>
-                <ul class="footer-links">
-                    <li><a href="#">Panduan Membaca Hasil</a></li>
-                    <li><a href="#">SF-36</a></li>
-                    <li><a href="#">Untuk Siswa</a></li>
-                    <li><a href="#">Assessment</a></li>
-                    <li><a href="#">Sistem</a></li>
-                </ul>
-            </div>
+    <div class="footer-container">
+        <div class="footer-left">
+            <a href="{{ route('home') }}" aria-label="Go to Home">
+                <img src="{{ asset('assets/public/images/logo-bcti.png') }}" alt="BCTI Logo" class="footer-logo">
+            </a>
+            <p>
+                <i class="fa fa-map-marker-alt"></i> <strong>Kampus SMP–SMA GIBS, Gedung Nurhayati Lantai 1</strong><br>
+                <span>Jl. Trans Kalimantan, Sungai Lumbah, Alalak, Barito Kuala,<br>
+                    Kalimantan Selatan – Indonesia 70582</span>
+            </p>
+            <p>
+                <i class="fa fa-envelope"></i> bcti@hasnurcentre.org &nbsp;
+                <i class="fa fa-phone"></i> +6281255475700
+            </p>
         </div>
+
+        <div class="footer-middle">
+            <h4>Talent Mapping</h4>
+            <ul>
+                <li><a href="#">About</a></li>
+                <li><a href="#">Course & Event</a></li>
+                <li><a href="#">Self-Dev</a></li>
+                <li><a href="#">Corporate Service</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-right">
+            <h4>Our Social Media</h4>
+            <ul>
+                <li><a href="https://www.instagram.com/bcti.id" target="_blank"><i class="fa-brands fa-instagram"></i>
+                        bcti.id</a></li>
+                <li><a href="https://www.tiktok.com/@bcti.id" target="_blank"><i class="fa-brands fa-tiktok"></i>
+                        bcti.id</a></li>
+                <li><a href="https://www.linkedin.com/company/business-communication-training-institute/" target="_blank"><i
+                            class="fa-brands fa-linkedin"></i> bcti</a></li>
+            </ul>
+        </div>
+
+    </div>
+
+    <hr class="footer-line">
+
+    <div class="footer-bottom">
+        <p>Copyright © 2025 Business & Communication Training Institute (BCTI) | All rights reserved</p>
     </div>
 </footer>

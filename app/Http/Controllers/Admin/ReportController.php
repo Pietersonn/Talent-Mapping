@@ -176,8 +176,14 @@ class ReportController extends Controller
 
         $events = Event::query()->orderBy('start_date', 'desc')->get(['id', 'name', 'event_code']);
 
-        // sesuai definisi: ALL = semua peserta yang punya skor, urut dari tertinggi
+        // Query utama peserta
         [$q, $sumExpr] = $this->baseParticipantsQuery($filters, true);
+
+        // ✅ Ubah u.phone menjadi u.phone_number
+        $q->addSelect([
+            'u.phone_number',
+            DB::raw("JSON_UNQUOTE(JSON_EXTRACT(tr.sjt_results, '$.top3[0].name')) as top_competency")
+        ]);
 
         $rows = null;
         $pagination = null;
@@ -204,6 +210,8 @@ class ReportController extends Controller
             'filters'    => $filters,
         ]);
     }
+
+
 
     /* ========================== 3) Rekap Event ========================== */
     public function events(Request $request)
@@ -399,58 +407,90 @@ class ReportController extends Controller
         return $pdf->download('health-dashboard.pdf');
     }
 
-    public function exportParticipantsPdf(Request $request)
+    public function exportParticipantsPdf(Request $req)
     {
-        // Ambil filter & mode yang sama dengan halaman web
-        $validated = $request->validate([
-            'mode'     => 'nullable|in:all,top,bottom',
-            'n'        => 'nullable|integer|min:1|max:5000',
-            'event_id' => 'nullable|string',
-            'instansi' => 'nullable|string|max:255',
-            'q'        => 'nullable|string|max:255',
-        ]);
+        $mode     = $req->query('mode', 'all');
+        $n        = (int) $req->query('n', 10);
+        $eventId  = $req->query('event_id');
+        $instansi = trim((string) $req->query('instansi', ''));
+        $search   = trim((string) $req->query('q', ''));
 
-        $mode = $validated['mode'] ?? 'all';
-        $n    = (int)($validated['n'] ?? 10);
+        // Ambil semua event, tidak dibatasi karena admin
+        $query = DB::table('test_sessions as ts')
+            ->join('users as u', 'u.id', '=', 'ts.user_id')
+            ->leftJoin('events as e', 'e.id', '=', 'ts.event_id')
+            ->leftJoin('test_results as tr', 'tr.session_id', '=', 'ts.id')
+            ->select([
+                'ts.id as session_id',
+                'u.name',
+                'u.email',
+                'u.phone_number',
+                'ts.participant_background as instansi',
+                'e.name as event_name',
+                'tr.sjt_results',
+            ])
+            ->when($eventId, fn($q) => $q->where('ts.event_id', $eventId))
+            ->when($instansi !== '', fn($q) => $q->where('ts.participant_background', 'like', "%{$instansi}%"))
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($w) use ($search) {
+                    $w->where('u.name', 'like', "%{$search}%")
+                        ->orWhere('u.email', 'like', "%{$search}%");
+                });
+            });
 
-        $filters = [
-            'event_id' => $validated['event_id'] ?? null,
-            'instansi' => $validated['instansi'] ?? null,
-            'q'        => $validated['q'] ?? null,
-        ];
+        // Ambil data dan ubah JSON sjt_results → kolom kompetensi
+        $rows = $query->get()->map(function ($r) {
+            $data = json_decode($r->sjt_results, true);
+            $competencies = collect([]);
 
-        // Query khusus PDF: no paginate, hanya kolom perlu, urut sesuai mode
-        [$q, $sumExpr] = $this->baseParticipantsQuery($filters, true);
+            if (!empty($data['all'])) {
+                foreach ($data['all'] as $c) {
+                    if (isset($c['code'], $c['score'])) {
+                        $competencies->put($c['code'], $c['score']);
+                    }
+                }
+            }
 
+            $codes = ['SM', 'CIA', 'TS', 'WWO', 'CA', 'L', 'SE', 'PS', 'PE', 'GH'];
+            foreach ($codes as $code) {
+                $r->{$code} = round($competencies->get($code, 0), 1);
+            }
+
+            $r->total_score = $competencies->sum();
+            return $r;
+        });
+
+        // Urutkan sesuai mode
         if ($mode === 'top') {
-            $q->orderByRaw($sumExpr . ' DESC')->orderBy('u.name')->orderBy('ts.id')->limit($n);
+            $rows = $rows->sortByDesc('total_score')->take($n);
         } elseif ($mode === 'bottom') {
-            $q->orderByRaw($sumExpr . ' ASC')->orderBy('u.name')->orderBy('ts.id')->limit($n);
-        } else { // all = semua yang punya skor, urut tertinggi
-            $q->orderByRaw($sumExpr . ' DESC')->orderBy('u.name')->orderBy('ts.id');
+            $rows = $rows->sortBy('total_score')->take($n);
+        } else {
+            $rows = $rows->sortByDesc('total_score');
         }
 
-        $rows = $q->get();
-
-        // Opsi ringan DomPDF
-        @ini_set('memory_limit', '512M');
-        @set_time_limit(120);
+        $reportTitle = 'Participants Competency Report';
+        $modeText = match ($mode) {
+            'top' => "Top {$n} Participants by Total Score",
+            'bottom' => "Bottom {$n} Participants by Total Score",
+            default => "All Participants — Ordered by Highest Score",
+        };
 
         $data = [
             'rows'        => $rows,
-            'mode'        => $mode,
-            'n'           => $mode !== 'all' ? $n : null,
-            'reportTitle' => 'Laporan Peserta',
-            'generatedBy' => optional(Auth::user())->name ?? 'System',
-            'generatedAt' => now()->format('d M Y H:i') . ' WIB',
+            'reportTitle' => $reportTitle,
+            'modeText'    => $modeText,
+            'generatedBy' => Auth::user()->name ?? 'Admin',
+            'generatedAt' => now('Asia/Makassar')->format('d M Y H:i') . ' WITA',
         ];
 
-        // Gunakan portrait; ganti ke 'landscape' jika tabel sering melebar
         $pdf = Pdf::loadView('admin.reports.pdf.participants', $data)
-            ->setPaper('a4', 'portrait');
+            ->setPaper('a4', 'landscape');
 
-        return $pdf->download('participants.pdf');
+        return $pdf->stream('participants-report.pdf');
     }
+
+
 
     public function exportEventsPdf(Request $request)
     {

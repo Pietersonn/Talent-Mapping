@@ -68,14 +68,14 @@
                                     <label for="position">Position (Jabatan)</label>
                                     <input id="position" type="text" name="position"
                                         class="form-input @error('position') is-invalid @enderror"
-                                    placeholder="Your position" value="{{ old('position') }}" required>
+                                        placeholder="Your position" value="{{ old('position') }}" required>
                                     @error('position')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="event_id">Event</label>
+                                    <label for="event_id">Event/Program/Dll</label>
                                     <select id="event_id" name="event_id" required class="form-select">
                                         <option value="">Tidak ada</option>
                                         @foreach ($activeEvents as $event)
@@ -95,7 +95,7 @@
 
                                 <!-- Event Code Field - Show only if event selected -->
                                 <div class="form-group" id="eventCodeGroup" style="display: none;">
-                                    <label for="event_code">Kode Event</label>
+                                    <label for="event_code">Access Code</label>
                                     <input type="text" id="event_code" name="event_code" value="{{ old('event_code') }}"
                                         placeholder="Masukkan kode event" class="form-input">
                                     @error('event_code')
@@ -131,6 +131,7 @@
             </div>
         </div>
     </div>
+
 @endsection
 
 @section('scripts')
