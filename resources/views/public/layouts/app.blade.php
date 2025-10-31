@@ -10,8 +10,7 @@
     {{-- BARIS YANG PERLU DITAMBAHKAN --}}
     <link rel="icon" href="{{ asset('assets/public/images/tm-logo.png') }}" type="image/png">
 
-    {{-- ADD: load resources/js/app.js via Vite (Notiflix/Alpine) --}}
-    @vite(['resources/js/app.js'])
+    <script src="{{ asset('assets/public/js/app.js') }}" defer></script>
 
     {{-- App base CSS (override Bootstrap bila perlu) --}}
     <link rel="stylesheet" href="{{ asset('assets/public/css/app.css') }}">
