@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -11,52 +12,38 @@ use Laravel\Socialite\Facades\Socialite;
 
 class GoogleController extends Controller
 {
-    public function redirect()
+    public function redirectToGoogle()
     {
-        // Kalau ketemu "state mismatch", pakai ->stateless() di kedua method.
         return Socialite::driver('google')->redirect();
-        // return Socialite::driver('google')->stateless()->redirect();
     }
 
-    public function callback()
+    public function handleGoogleCallback()
     {
         try {
-            $googleUser = Socialite::driver('google')->user();
-            // $googleUser = Socialite::driver('google')->stateless()->user();
-        } catch (\Throwable $e) {
-            return redirect()->route('login')->with('error', 'Google login failed. Please try again.');
+            $user = Socialite::driver('google')->user();
+        } catch (\Exception $e) {
+            return redirect('/login')->with('error', 'Something went wrong or You have rejected the application.');
         }
 
-        if (!$googleUser->getEmail()) {
-            return redirect()->route('login')->with('error', 'Your Google account has no email.');
-        }
+        // Check if user already exists
+        $existingUser = User::where('email', $user->getEmail())->first();
 
-        // Temukan atau buat user baru
-        $user = User::where('email', $googleUser->getEmail())->first();
-
-        if (!$user) {
-            $user = User::create([
-                'name'              => $googleUser->getName() ?: $googleUser->getNickname() ?: 'User',
-                'email'             => $googleUser->getEmail(),
-                'password'          => Hash::make(Str::random(40)), // random, tidak dipakai
-                'role'              => 'user',
-                'is_active'         => true,
-                'email_verified_at' => now(), // kamu minta verifikasi email dimatikan
-            ]);
+        if ($existingUser) {
+            // Log in the existing user
+            Auth::login($existingUser, true);
         } else {
-            if (!$user->is_active) {
-                return redirect()->route('login')->with('error', 'Your account is inactive.');
-            }
-            // optional: isi nama kalau kosong
-            if (!$user->name && $googleUser->getName()) {
-                $user->name = $googleUser->getName();
-                $user->save();
-            }
+            // Create a new user
+            $newUser = User::create([
+                'name' => $user->getName(),
+                'email' => $user->getEmail(),
+                'google_id' => $user->getId(),
+                'password' => Hash::make(Str::random(24)), // Create a random password
+                'role' => 'user', // Set default role or adjust as needed
+            ]);
+
+            Auth::login($newUser, true);
         }
 
-        Auth::login($user, true);
-
-        // Sesuai permintaanmu: semua login redirect ke home
-        return redirect()->route('home');
+        return redirect()->intended('/');
     }
 }
