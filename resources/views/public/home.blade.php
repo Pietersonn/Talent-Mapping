@@ -76,8 +76,10 @@
                     </div>
                     <div class="feature-content">
                         <h3>ST-30!</h3>
-                        <p>membantu mengidentifikasi pola kekuatan dominan dalam diri Anda, mencakup kecenderungan berpikir, berperilaku, dan berinteraksi,
-                            sehingga Anda dapat memahami karakter unik serta potensi terbaik yang mendorong kinerja dan pertumbuhan diri.</p>
+                        <p>membantu mengidentifikasi pola kekuatan dominan dalam diri Anda, mencakup kecenderungan berpikir,
+                            berperilaku, dan berinteraksi,
+                            sehingga Anda dapat memahami karakter unik serta potensi terbaik yang mendorong kinerja dan
+                            pertumbuhan diri.</p>
                     </div>
                 </div>
 
@@ -88,7 +90,8 @@
                     <div class="feature-content">
                         <h3>Talent Mapping</h3>
                         <p>membantu mengidentifikasi kompetensi utama dan area pengembangan setiap individu,
-                            sehingga Anda dapat memahami kekuatan diri serta merancang langkah pengembangan yang lebih terarah.</p>
+                            sehingga Anda dapat memahami kekuatan diri serta merancang langkah pengembangan yang lebih
+                            terarah.</p>
                     </div>
                 </div>
 
@@ -196,7 +199,8 @@
             <div class="search-content">
                 <div class="search-card">
                     <p>
-                       Sudah banyak individu telah mempercayai Talent Mapping ini sebagai langkah awal yang efektif untuk mengenali dan mengembangkan kompetensi terbaik mereka.
+                        Sudah banyak individu telah mempercayai Talent Mapping ini sebagai langkah awal yang efektif untuk
+                        mengenali dan mengembangkan kompetensi terbaik mereka.
                     </p>
                     <div class="stats">
                         <div class="stat-number">300+</div>

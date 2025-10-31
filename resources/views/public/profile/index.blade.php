@@ -2,6 +2,7 @@
 
 @section('title', 'My Profile')
 
+
 @push('styles')
     <link rel="stylesheet" href="{{ asset('assets/public/css/profile.css') }}">
 @endpush
@@ -124,4 +125,3 @@
         </style>
     @endpush
 @endsection
-@endsec

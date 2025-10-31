@@ -1,242 +1,242 @@
 <!doctype html>
 <html lang="en">
-
-<head>
+  <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400&display=swap" rel="stylesheet">
 
-    {{-- Icomoon icons dari template --}}
-    <link rel="stylesheet" href="{{ asset('assets/login-form-05/fonts/icomoon/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/login-form-09/fonts/icomoon/style.css') }}">
 
-    {{-- CSS Template (harus ada di: public/assets/login-form-05/...) --}}
-    <link rel="stylesheet" href="{{ asset('assets/login-form-05/css/owl.carousel.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/login-form-05/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/login-form-05/css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/login-form-09/css/owl.carousel.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/login-form-09/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/login-form-09/css/style.css') }}">
 
-    {{-- SweetAlert2 --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
     <title>Register — TalentMapping</title>
 
     <style>
-        .progress {
-            height: 6px
-        }
+      .help-text {
+        font-size: 12px;
+        color: #6c757d;
+      }
+      .progress {
+        height: 6px;
+      }
+      .progress-bar {
+        transition: width .25s ease;
+      }
 
-        .progress-bar {
-            transition: width .25s ease
-        }
+      /* --- Style untuk Ikon Mata (Show/Hide Password) --- */
+      .password-wrapper {
+        position: relative;
+      }
+      #togglePassword {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #6c757d; /* Warna ikon */
+      }
+      /* Menambahkan padding kanan pada input password agar teks tidak tertimpa ikon */
+      .password-wrapper .form-control {
+        padding-right: 40px;
+      }
+      /* --- Akhir Style Ikon Mata --- */
 
-        .help-text {
-            font-size: 12px;
-            color: #6c757d
-        }
-
-        .control__indicator {
-            top: 2px
-        }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
+    <div class="content">
+      <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100">
 
-    <div class="d-md-flex half">
-        <div class="bg" style="background-image: url('{{ asset('assets/login-form-05/images/bg_1.jpg') }}');"></div>
+          <div class="col-md-6 contents">
+            <div class="form-block mx-auto">
+              <div class="mb-4 text-center">
+                <h3><strong>TalentMapping</strong></h3>
+                <p class="mb-4">Create your account and start your assessment journey.</p>
+              </div>
 
-        <div class="contents">
-            <div class="container">
-                <div class="row align-items-center justify-content-center">
-                    <div class="col-md-12">
-                        <div class="form-block mx-auto">
-                            <div class="text-center mb-5">
-                                <h3 class="text-uppercase">Create your <strong>TalentMapping</strong> account</h3>
-                                <p class="mb-0" style="opacity:.7;">Start your assessment journey</p>
-                            </div>
+              {{-- SweetAlert session success --}}
+              @if (session('status'))
+                <script>
+                  document.addEventListener("DOMContentLoaded", function() {
+                    Swal.fire({
+                      icon: 'success',
+                      title: 'Success',
+                      text: '{{ session('status') }}',
+                      confirmButtonColor: '#4CAF50'
+                    });
+                  });
+                </script>
+              @endif
 
-                            {{-- fallback alert --}}
-                            @if (session('status'))
-                                <div class="alert alert-success py-2">{{ session('status') }}</div>
-                            @endif
+              <form method="POST" action="{{ route('register') }}" id="registerForm">
+                @csrf
 
-                            <form method="POST" action="{{ route('register') }}" id="registerForm">
-                                @csrf
-
-                                {{-- Name --}}
-                                <div class="form-group first">
-                                    <label for="name">Full Name</label>
-                                    <input id="name" type="text" name="name"
-                                        class="form-control @error('name') is-invalid @enderror"
-                                        placeholder="Your full name" value="{{ old('name') }}" required autofocus>
-                                    @error('name')
-                                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                {{-- Email --}}
-                                <div class="form-group">
-                                    <label for="email">Email</label>
-                                    <input id="email" type="email" name="email"
-                                        class="form-control @error('email') is-invalid @enderror"
-                                        placeholder="your-email@gmail.com" value="{{ old('email') }}" required>
-                                    @error('email')
-                                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="phone_number">Phone Number</label>
-                                    <input id="phone_number" type="text" name="phone_number"
-                                        class="form-control @error('phone_number') is-invalid @enderror"
-                                        placeholder="Your phone number" value="{{ old('phone_number') }}" required>
-                                    @error('phone_number')
-                                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-
-                                {{-- Password (tanpa confirm) --}}
-                                <div class="form-group last mb-3">
-                                    <label for="password">Password</label>
-                                    <input id="password" type="password" name="password"
-                                        class="form-control @error('password') is-invalid @enderror"
-                                        placeholder="Minimum 8 characters" required>
-                                    @error('password')
-                                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                {{-- Strength indicator --}}
-                                <div class="mb-3">
-                                    <div class="progress">
-                                        <div class="progress-bar" id="password-strength" role="progressbar"
-                                            style="width:0%"></div>
-                                    </div>
-                                    <small id="password-help" class="help-text">Password must be at least 8
-                                        characters.</small>
-                                </div>
-
-                                {{-- Terms --}}
-                                <div class="d-sm-flex mb-4 align-items-center">
-                                    <label class="control control--checkbox mb-3 mb-sm-0">
-                                        <span class="caption">I agree to the Terms & Privacy</span>
-                                        <input type="checkbox" id="agreeTerms" required>
-                                        <div class="control__indicator"></div>
-                                    </label>
-
-                                    <span class="ml-auto">
-                                        <a href="{{ route('login') }}" class="forgot-pass">Already have an account?
-                                            Login</a>
-                                    </span>
-                                </div>
-
-                                {{-- Submit --}}
-                                <button type="submit" class="btn btn-block py-2 btn-primary" id="registerBtn">
-                                    Create Account
-                                </button>
-
-                            </form>
-                        </div>
-                    </div>
+                {{-- Full Name --}}
+                <div class="form-group first">
+                  <label for="name">Full Name</label>
+                  <input id="name" type="text" name="name"
+                    class="form-control @error('name') is-invalid @enderror"
+                    value="{{ old('name') }}" required autofocus>
+                  @error('name')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                  @enderror
                 </div>
+
+                {{-- Email --}}
+                <div class="form-group">
+                  <label for="email">Email</label>
+                  <input id="email" type="email" name="email"
+                    class="form-control @error('email') is-invalid @enderror"
+                    value="{{ old('email') }}" required>
+                  @error('email')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                  @enderror
+                </div>
+
+                {{-- Phone --}}
+                <div class="form-group">
+                  <label for="phone_number">Phone Number</label>
+                  <input id="phone_number" type="text" name="phone_number"
+                    class="form-control @error('phone_number') is-invalid @enderror"
+                    value="{{ old('phone_number') }}" required>
+                  @error('phone_number')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                  @enderror
+                </div>
+
+                {{-- Password --}}
+                <div class="form-group last mb-3">
+                  <label for="password">Password</label>
+
+                  <div class="password-wrapper">
+                    <input id="password" type="password" name="password"
+                      class="form-control @error('password') is-invalid @enderror"
+                      required>
+                    <span id="togglePassword">
+                      <span class="icon-eye" id="toggleIcon"></span>
+                    </span>
+                  </div>
+
+                  @error('password')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                  @enderror
+                </div>
+
+                {{-- Strength Indicator --}}
+                <div class="mb-3">
+                  <div class="progress">
+                    <div class="progress-bar" id="password-strength" role="progressbar" style="width:0%"></div>
+                  </div>
+                  <small id="password-help" class="help-text">Use at least 8 characters including uppercase, numbers, and symbols.</small>
+                </div>
+
+                {{-- Terms --}}
+                <div class="d-flex mb-4 align-items-center justify-content-between">
+                  <label class="control control--checkbox mb-0">
+                    <span class="caption">I agree to the Terms & Privacy</span>
+                    <input type="checkbox" id="agreeTerms" required>
+                    <div class="control__indicator"></div>
+                  </label>
+
+                  <a href="{{ route('login') }}" class="forgot-pass">Already have an account?</a>
+                </div>
+
+                {{-- Submit --}}
+                <button type="submit" class="btn btn-pill text-white btn-block btn-primary">
+                  Create Account
+                </button>
+
+                <span class="d-block text-center my-4 text-muted">or register with</span>
+
+                {{-- Social --}}
+                <div class="social-login text-center mb-4">
+                  <a href="#" class="facebook">
+                    <span class="icon-facebook mr-3"></span>
+                  </a>
+                  <a href="#" class="twitter">
+                    <span class="icon-twitter mr-3"></span>
+                  </a>
+                  <a href="{{ route('login.google.redirect') }}" class="google">
+                    <span class="icon-google mr-3"></span>
+                  </a>
+                </div>
+              </form>
             </div>
+          </div>
+
         </div>
+      </div>
     </div>
 
-    {{-- Template JS --}}
-    <script src="{{ asset('assets/login-form-05/js/jquery-3.3.1.min.js') }}"></script>
-    <script src="{{ asset('assets/login-form-05/js/popper.min.js') }}"></script>
-    <script src="{{ asset('assets/login-form-05/js/bootstrap.min.js') }}"></script>
-    <script src="{{ asset('assets/login-form-05/js/main.js') }}"></script>
+    <script src="{{ asset('assets/login-form-09/js/jquery-3.3.1.min.js') }}"></script>
+    <script src="{{ asset('assets/login-form-09/js/popper.min.js') }}"></script>
+    <script src="{{ asset('assets/login-form-09/js/bootstrap.min.js') }}"></script>
+    <script src="{{ asset('assets/login-form-09/js/main.js') }}"></script>
 
-    {{-- SweetAlert2 --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // Password strength
-        function scorePassword(pw) {
-            let s = 0;
-            if (!pw) return s;
-            if (pw.length >= 8) s += 25;
-            if (pw.length >= 12) s += 25;
-            if (/[a-z]/.test(pw)) s += 12.5;
-            if (/[A-Z]/.test(pw)) s += 12.5;
-            if (/[0-9]/.test(pw)) s += 12.5;
-            if (/[^A-Za-z0-9]/.test(pw)) s += 12.5;
-            return Math.min(100, s);
+      // Password Strength Indicator
+      const passwordInput = document.getElementById("password");
+      const progressBar = document.getElementById("password-strength");
+      const helpText = document.getElementById("password-help");
+
+      passwordInput.addEventListener("input", function() {
+        const val = passwordInput.value;
+        let strength = 0;
+
+        if (val.length >= 8) strength += 25;
+        if (/[A-Z]/.test(val)) strength += 25;
+        if (/[0-9]/.test(val)) strength += 25;
+        if (/[^A-Za-z0-9]/.test(val)) strength += 25;
+
+        progressBar.style.width = strength + "%";
+
+        if (strength < 50) {
+          progressBar.classList.add("bg-danger");
+          progressBar.classList.remove("bg-warning", "bg-success");
+        } else if (strength < 75) {
+          progressBar.classList.add("bg-warning");
+          progressBar.classList.remove("bg-danger", "bg-success");
+        } else {
+          progressBar.classList.add("bg-success");
+          progressBar.classList.remove("bg-danger", "bg-warning");
         }
+      });
 
-        function updateStrengthUI(v) {
-            const bar = $('#password-strength'),
-                help = $('#password-help');
-            let color = 'bg-danger',
-                text = 'Very weak';
-            if (v >= 75) {
-                color = 'bg-success';
-                text = 'Strong password';
-            } else if (v >= 50) {
-                color = 'bg-info';
-                text = 'Good password';
-            } else if (v >= 25) {
-                color = 'bg-warning';
-                text = 'Weak password';
-            }
-            bar.removeClass('bg-danger bg-warning bg-info bg-success').addClass(color).css('width', v + '%');
-            help.text(text);
-        }
-        $('#password').on('keyup', function() {
-            updateStrengthUI(scorePassword($(this).val()));
+      // --- SKRIP BARU UNTUK SHOW/HIDE PASSWORD ---
+      const toggleButton = document.getElementById("togglePassword");
+      const passwordField = document.getElementById("password"); // Sudah didefinisikan di atas, tapi kita ambil lagi untuk skop ini
+      const toggleIcon = document.getElementById("toggleIcon");
+
+      if (toggleButton) {
+        toggleButton.addEventListener("click", function() {
+          // Toggle tipe atribut
+          const type = passwordField.getAttribute("type") === "password" ? "text" : "password";
+          passwordField.setAttribute("type", type);
+
+          // Toggle kelas ikon
+          if (type === "text") {
+            // Ganti ke ikon "mata-tercoret".
+            // Pastikan kamu punya 'icon-eye-slash' di icomoon pack kamu.
+            toggleIcon.classList.remove("icon-eye");
+            toggleIcon.classList.add("icon-eye-slash");
+          } else {
+            toggleIcon.classList.remove("icon-eye-slash");
+            toggleIcon.classList.add("icon-eye");
+          }
         });
+      }
+      // --- AKHIR SKRIP BARU ---
 
-        // submit validate (terms only, confirm password tidak ada)
-        $('#registerForm').on('submit', function(e) {
-            if (!$('#agreeTerms').is(':checked')) {
-                e.preventDefault();
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Please agree to the Terms & Privacy',
-                    toast: true,
-                    position: 'top-end',
-                    timer: 4000,
-                    showConfirmButton: false
-                });
-                return false;
-            }
-            $('#registerBtn').prop('disabled', true).text('Creating Account...');
-        });
-
-        // SweetAlert hooks dari server
-        @if (session('success'))
-            Swal.fire({
-                icon: 'success',
-                title: @json(session('success')),
-                toast: true,
-                position: 'top-end',
-                timer: 4000,
-                showConfirmButton: false
-            });
-        @endif
-        @if (session('error'))
-            Swal.fire({
-                icon: 'error',
-                title: @json(session('error')),
-                toast: true,
-                position: 'top-end',
-                timer: 5000,
-                showConfirmButton: false
-            });
-        @endif
-        @if ($errors->any())
-            Swal.fire({
-                icon: 'error',
-                title: 'Registration failed',
-                html: `{!! '<ul class="text-left mb-0"><li>' . implode('</li><li>', $errors->all()) . '</li></ul>' !!}`,
-                confirmButtonText: 'OK'
-            });
-        @endif
     </script>
-</body>
-
+  </body>
 </html>

@@ -1,14 +1,20 @@
     @extends('public.layouts.app', ['hideFooter' => true])
     @section('content')
         <div class="sjt-test-container">
-            <!-- Hero Section -->
             <div class="sjt-hero">
                 <div class="sjt-hero-content">
-                    <h1 class="sjt-title">Situational Judgment Test (SJT)</h1>
+                    <h1 class="sjt-title">Talent Competency </h1>
                     <p class="sjt-instruction">
-                        Bacalah setiap situasi dengan cermat dan pilih respons yang paling tepat menurut Anda.
-                        Tidak ada jawaban yang benar atau salah, jawablah sesuai dengan cara Anda menangani situasi
-                        tersebut.
+                        Mohon mengisi dengan jujur dan sesuai keadaan Anda saat ini. Tidak ada jawaban yang benar atau
+                        salah, karena seluruh isian mencerminkan diri Anda secara pribadi.
+                    </p>
+                    {{-- Tambahkan class 'sjt-reminder-text' pada paragraf ini --}}
+                    <p class="sjt-reminder-text">
+                        {{-- Bungkus 'Harap diingat:' dengan span dan class 'highlight-red' --}}
+                        <strong class="highlight-red">Harap diingat:</strong>
+                        Jawaban yang Anda berikan akan mempengaruhi hasil akhir, sehingga penting untuk menjawab dengan
+                        reflektif dan apa adanya, agar hasil yang diperoleh benar-benar sesuai dengan karakter, kekuatan,
+                        dan area pengembangan diri Anda.
                     </p>
                 </div>
             </div>
@@ -17,7 +23,8 @@
 
             <!-- Questions Section -->
             <div class="sjt-questions-section">
-                <form id="sjtForm" action="{{ route('test.sjt.page.store', $page) }}" method="POST" class="js-loading-form">
+                <form id="sjtForm" action="{{ route('test.sjt.page.store', $page) }}" method="POST"
+                    class="js-loading-form">
                     @csrf
                     <input type="hidden" name="session_id" value="{{ $session->id ?? '' }}">
                     <div class="sjt-questions-list">

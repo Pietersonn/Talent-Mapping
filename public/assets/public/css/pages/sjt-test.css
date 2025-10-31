@@ -8,7 +8,6 @@
     min-height: 100vh;
     background: #f8fafc;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    padding-top: 72px;
 }
 /* Hero Section */
 .sjt-hero {
@@ -43,6 +42,20 @@
     font-size: 14px;
     color: #4a5568;
     line-height: 1.5;
+}
+
+.sjt-reminder-text {
+  font-size: 12px;
+  color: #4a5568;
+  line-height: 1.5;
+  margin-top: 15px;
+  text-align: left;
+}
+
+/* Styling untuk teks 'Harap diingat:' */
+.sjt-reminder-text .highlight-red {
+  color: #ff0015; /* Warna merah muda lembut (sesuaikan jika ingin merah lebih terang/gelap) */
+  font-weight: bold; /* Menjaga agar tetap tebal */
 }
 
 .sjt-page-info {

@@ -186,30 +186,34 @@
 }
 
 .feature-wrapper {
+    /* DIUBAH: Menjadi grid 2 kolom */
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: flex-start;
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto; /* Pusatkan wrapper */
+}
+
+.feature-item,
+.feature-item.feature-item--reverse {
+    /* DIUBAH: Paksa semua item jadi vertikal & tengah */
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 60px;
-}
-
-.feature-item {
-    display: flex;
-    align-items: center;
-    gap: 40px;
-    max-width: 1200px;
+    gap: 20px;
     width: 100%;
-    flex-direction: row;
-}
-
-.feature-item.feature-item--reverse {
-    flex-direction: row-reverse;
+    text-align: center; /* Teks jadi di tengah */
 }
 
 .feature-image img {
-    width: 180px;
+    /* DIUBAH: Gambar lebih besar untuk layout baru */
+    width: 100%;
+    max-width: 200px; /* Sesuaikan ukuran ini jika perlu */
     height: auto;
     object-fit: contain;
     flex-shrink: 0;
+    margin-bottom: 10px;
 }
 
 .feature-content {
@@ -218,16 +222,18 @@
 
 .feature-content h3 {
     font-family: 'Poppins', sans-serif;
-    font-size: 1.8rem;
+    font-size: 1.8rem; /* 28px */
     color: #1b263b;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     font-weight: 700;
 }
 
 .feature-content p {
-    font-size: 1rem;
+    font-size: 1rem; /* 16px */
     color: #4b5563;
     line-height: 1.6;
+    max-width: 480px; /* Batasi lebar paragraf */
+    margin: 0 auto; /* Pusatkan paragraf */
 }
 
 /* === HOW IT WORKS SECTION === */
@@ -613,34 +619,56 @@
     }
 
     .feature-wrapper {
-        gap: 30px;
-        padding: 0 20px;
+        /* DIUBAH: Kembali ke flex column untuk mobile */
+        display: flex;
+        flex-direction: column;
+        gap: 40px; /* Jarak vertikal antar item */
+        padding: 0 25px; /* Padding kiri-kanan */
     }
 
     .feature-item,
     .feature-item.feature-item--reverse {
+        /* DIUBAH: Layout horizontal di mobile */
+        display: flex;
+        flex-direction: row; /* Layout horizontal */
+        align-items: center; /* Pusatkan secara vertikal */
         gap: 20px;
-        text-align: left;
+        text-align: left; /* Teks rata kiri */
         padding: 0;
     }
 
     .feature-item.feature-item--reverse {
-        flex-direction: row-reverse;
+        flex-direction: row-reverse; /* Balik urutan untuk item kedua */
+    }
+
+    .feature-image {
+        flex: 0 0 100px; /* KUNCI: Beri lebar 100px */
     }
 
     .feature-image img {
-        width: 90px;
+        /* DIUBAH: Ukuran gambar mobile */
+        width: 100%;
+        max-width: none; /* Hapus batasan max-width */
+        height: auto;
+        margin-bottom: 0; /* Hapus margin bawah */
+    }
+
+    .feature-content {
+        flex: 1; /* Konten teks akan mengisi sisa ruang */
     }
 
     .feature-content h3 {
-        font-size: 1.25rem;
+        font-size: 1.25rem; /* 20px */
+        line-height: 1.3;
+        margin-bottom: 8px;
     }
 
     .feature-content p {
         font-size: 0.875rem; /* 14px */
         line-height: 1.5;
+        max-width: none; /* Hapus batasan lebar paragraf */
+        text-align: justify;
     }
-
 
     /* === How It Works Section === */
     .how-it-works {

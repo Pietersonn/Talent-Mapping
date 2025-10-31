@@ -7,6 +7,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'TalentMapping - Discover Your Potential')</title>
 
+    {{-- BARIS YANG PERLU DITAMBAHKAN --}}
+    <link rel="icon" href="{{ asset('assets/public/images/tm-logo.png') }}" type="image/png">
+
     {{-- ADD: load resources/js/app.js via Vite (Notiflix/Alpine) --}}
     @vite(['resources/js/app.js'])
 

@@ -26,12 +26,12 @@ class EventController extends Controller
             $search = trim($request->search);
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('company', 'like', "%{$search}%")
-                  ->orWhere('event_code', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhereHas('pic', function ($picQuery) use ($search) {
-                      $picQuery->where('name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('company', 'like', "%{$search}%")
+                    ->orWhere('event_code', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhereHas('pic', function ($picQuery) use ($search) {
+                        $picQuery->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -68,10 +68,10 @@ class EventController extends Controller
             'total'    => Event::count(),
             'active'   => Event::where('is_active', true)->count(),
             'ongoing'  => Event::where('is_active', true)
-                               ->where('start_date', '<=', now())
-                               ->where('end_date', '>=', now())->count(),
+                ->where('start_date', '<=', now())
+                ->where('end_date', '>=', now())->count(),
             'upcoming' => Event::where('is_active', true)
-                               ->where('start_date', '>', now())->count(),
+                ->where('start_date', '>', now())->count(),
         ];
 
         return view('admin.events.index', compact('events', 'pics', 'stats'));
@@ -109,7 +109,7 @@ class EventController extends Controller
             'start_date.required'    => 'Start date is required.',
             'start_date.after_or_equal' => 'Start date cannot be in the past.',
             'end_date.required'      => 'End date is required.',
-            'end_date.after_or_equal'=> 'End date must be after or equal to start date.',
+            'end_date.after_or_equal' => 'End date must be after or equal to start date.',
             'pic_id.exists'          => 'Selected PIC is invalid.',
             'max_participants.min'   => 'Maximum participants must be at least 1.',
             'max_participants.max'   => 'Maximum participants cannot exceed 1000.',
@@ -227,17 +227,19 @@ class EventController extends Controller
      */
     public function exportPdf(Request $request)
     {
-        $rows = Event::with(['pic'])
+        // Gunakan withCount untuk menghitung jumlah relasi 'participants'
+        // Hasilnya akan disimpan dalam properti 'participants_count' secara default
+        $query = Event::with(['pic'])->withCount('participants') // <-- TAMBAHKAN withCount INI
             ->when($request->filled('search'), function ($q) use ($request) {
                 $s = trim($request->search);
                 $q->where(function ($w) use ($s) {
                     $w->where('name', 'like', "%{$s}%")
-                      ->orWhere('company', 'like', "%{$s}%")
-                      ->orWhere('event_code', 'like', "%{$s}%")
-                      ->orWhere('description', 'like', "%{$s}%")
-                      ->orWhereHas('pic', function ($picQuery) use ($s) {
-                          $picQuery->where('name', 'like', "%{$s}%");
-                      });
+                        ->orWhere('company', 'like', "%{$s}%")
+                        ->orWhere('event_code', 'like', "%{$s}%")
+                        ->orWhere('description', 'like', "%{$s}%")
+                        ->orWhereHas('pic', function ($picQuery) use ($s) {
+                            $picQuery->where('name', 'like', "%{$s}%");
+                        });
                 });
             })
             ->when($request->filled('status'), function ($q) use ($request) {
@@ -251,17 +253,25 @@ class EventController extends Controller
             ->when($request->filled('date_from'), fn($q) => $q->where('start_date', '>=', request('date_from')))
             ->when($request->filled('date_to'),   fn($q) => $q->where('end_date',   '<=', request('date_to')))
             ->when($request->filled('pic_id'),    fn($q) => $q->where('pic_id', request('pic_id')))
-            ->orderBy('start_date', 'asc')
-            ->get();
+            ->orderBy('start_date', 'asc'); // Urutkan query jika perlu
 
-        $pdf = Pdf::loadView('admin.events.pdf.list', [
+        $rows = $query->get(); // Jalankan query
+
+        // Ubah nama properti 'participants_count' menjadi 'total_participants' agar sesuai view
+        // Jika Anda mau, bisa langsung pakai 'participants_count' di view
+        $rows->each(function ($row) {
+            $row->total_participants = $row->participants_count;
+        });
+
+
+        $pdf = Pdf::loadView('admin.events.pdf.list', [ // Pastikan nama view PDF sudah benar
             'reportTitle' => 'Events Report',
             'generatedBy' => $request->user()?->name ?? 'System',
-            'generatedAt' => now()->format('d M Y H:i') . ' WIB',
-            'rows'        => $rows,
+            'generatedAt' => now('Asia/Makassar')->format('d M Y H:i') . ' WITA', // Sesuaikan timezone
+            'rows'        => $rows, // Kirim data $rows yang sudah ada total pesertanya
         ])->setPaper('a4', 'landscape');
 
-        return $pdf->download('events_report_' . now()->format('Ymd_His') . '.pdf');
+        return $pdf->stream('Report Event.pdf');
     }
 
     /**
@@ -288,10 +298,10 @@ class EventController extends Controller
             'total_events'   => Event::count(),
             'active_events'  => Event::where('is_active', true)->count(),
             'ongoing_events' => Event::where('is_active', true)
-                                     ->where('start_date', '<=', now())
-                                     ->where('end_date', '>=', now())->count(),
-            'upcoming_events'=> Event::where('is_active', true)
-                                     ->where('start_date', '>', now())->count(),
+                ->where('start_date', '<=', now())
+                ->where('end_date', '>=', now())->count(),
+            'upcoming_events' => Event::where('is_active', true)
+                ->where('start_date', '>', now())->count(),
             'this_month'     => Event::whereRaw("DATE_FORMAT(created_at, '%Y-%m') = ?", [$currentMonth])->count(),
             'last_month'     => Event::whereRaw("DATE_FORMAT(created_at, '%Y-%m') = ?", [$lastMonth])->count(),
         ]);

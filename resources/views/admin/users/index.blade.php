@@ -146,17 +146,8 @@
                                         <tr>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <div class="user-avatar mr-2">
-                                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
-                                                             style="width: 35px; height: 35px; font-size: 14px; font-weight: bold;">
-                                                            {{ substr($user->name, 0, 1) }}
-                                                        </div>
-                                                    </div>
                                                     <div>
-                                                        <strong>{{ $user->name }}</strong>
-                                                        @if($user->id === Auth::id())
-                                                            <small class="badge badge-info ml-1">You</small>
-                                                        @endif
+                                                        <p>{{ $user->name }}</p>
                                                     </div>
                                                 </div>
                                             </td>

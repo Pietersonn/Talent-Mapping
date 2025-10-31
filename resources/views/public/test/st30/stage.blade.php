@@ -11,32 +11,25 @@
             <div class="st30-hero-content">
                 <h1 class="st30-title">
                     @if ($stage == 1)
-                        Kenali Sisi Terbaik dari Diri Anda
+                        ST-30 Paling Cocok (Section 1)
                     @elseif($stage == 2)
-                        Lepaskan Hal yang Bukan Milik Anda
+                        ST-30 Paling Tidak Cocok (Section 2)
                     @elseif($stage == 3)
-                        Pilih Hal yang Cukup Mewakili Diri Anda
+                        ST-30 Cocok (Section 3)
                     @else
-                        Identifikasi Area yang Perlu Pengembangan
+                        ST-30 Tidak Cocok (Section 4)
                     @endif
                 </h1>
 
                 <div class="st30-instruction">
                     @if ($stage == 1)
-                        Inilah saatnya melihat lebih dalam pada diri Anda. <strong>Pilih 5-7 pernyataan yang paling sesuai
-                            menggambarkan kemampuan, cara berpikir, dan karakter Anda</strong>, semakin jelas Anda menilai,
-                        semakin akurat hasil gambaran potensi yang akan tersaji.
+                        Dari pernyataan berikut, <strong>pilihlah 5 -7 pernyataan yang paling cocok </strong>dengan gambaran diri anda.
                     @elseif($stage == 2)
-                        Karena kelebihan diri untuk mencapai skill jadi. <strong>Pilih 5-7 pernyataan yang paling tidak
-                            sesuai</strong> dengan kemampuan dan karakter Anda. Dengan begitu, Anda akan bisa lebih
-                        mengetahui potensi sejati anda untuk berkembang menjadi yang terbaik.
+                        Dari pernyataan berikut, <strong>pilihlah 5 -7 pernyataan yang paling tidak cocok </strong>dengan gambaran diri anda.
                     @elseif($stage == 3)
-                        Tidak semua yang sesuai harus menjadi kekuatan utama, tapi setiap potongan tetap berperan dalam
-                        membentuk siapa Anda. <strong>Pilih 5-7 pernyataan yang cukup menggambarkan diri Anda</strong> dari
-                        sisa pernyataan yang belum terpilih.
+                       Dari pernyataan berikut, <strong>pilihlah 5 -7 pernyataan yang cocok </strong>dengan gambaran diri anda.
                     @else
-                        Langkah terakhir untuk melengkapi peta kompetensi Anda. <strong>Pilih 5-7 pernyataan yang kurang
-                            sesuai</strong> dari pilihan Stage 3 untuk memperjelas area pengembangan diri Anda.
+                       Dari pernyataan berikut, <strong>pilihlah 5 -7 pernyataan yang tidak cocok </strong>dengan gambaran diri anda.
                     @endif
                 </div>
             </div>

@@ -1,143 +1,158 @@
-/* assets/public/css/pages/thank-you.css
-   Complete, corrected version:
-   - illustration right on desktop, centered on small screens
-   - no negative transforms that hide the image
-   - clickable buttons (content above illustration)
-   - visible illustration on mobile
-   - small visual tweaks for neat spacing
-*/
-
 :root {
-  --primary-color: #3b82f6;
-  --secondary-color: #1e40af;
+  /* --- Warna Hijau Sage --- */
+  --primary-color: #6A994E;
+  --secondary-color: #386641;
+  --gradient-primary: linear-gradient(135deg, #A7C957 0%, #6A994E 100%);
+  /* --gradient-background: linear-gradient(135deg, #F2E8CF 0%, #EDF1D6 50%, #F8FAF0 100%); */ /* <-- Boleh dihapus/komentari */
+  /* ----------------------- */
   --text-dark: #1f2937;
   --text-light: #6b7280;
   --white: #ffffff;
-  --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
   --btn-radius: 10px;
-  --footer-height: 88px;
 }
 
 /* Base reset */
-html, body { height: 100%; margin: 0; }
+html, body {
+  margin: 0;
+  padding: 0;
+}
 body {
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  background: linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 50%,#f8fafc 100%);
+  /* --- GANTI BACKGROUND DI SINI --- */
+  background: #EFF5EC; /* Warna putih kehijauan (light sage) */
+  /* Atau coba warna lain seperti: #F0FFF0 (Honeydew), #F5FFFA (Mint Cream) */
+  /* ----------------------------- */
   color: var(--text-dark);
-  -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+  font-size: 16px;
 }
 
 /* Page container */
 .thank-you-container {
-  min-height: calc(100vh - var(--footer-height));
-  padding-bottom: 1.5rem;
-  position: relative;
-  overflow: visible;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 100px 15px; /* Padding desktop sebagai default */
+  display: flex;
+  align-items: center;
 }
-.thank-you-main { position: relative; z-index: 2; padding: 3rem 0; }
 
-/* Text column */
+/* Main content area */
+.thank-you-main {
+    width: 100%;
+}
+/* Memastikan row align items center secara default */
+.thank-you-main .row {
+    align-items: center;
+}
+
+/* Kolom Teks */
 .thank-you-content {
-  padding: 2rem 0;
+  text-align: left; /* DEFAULT: Teks rata kiri */
   animation: slideInLeft .7s ease-out;
+  z-index: 2;
   position: relative;
-  z-index: 120; /* above illustration */
-}
-.thank-you-title { font-size: 2.4rem; font-weight: 800; margin: 0 0 .25rem; }
-.thank-you-subtitle { font-size: 2.2rem; font-weight: 800; margin: 0 0 1rem; line-height:1.05; }
-.thank-you-subtitle .highlight {
-  background: var(--gradient-primary);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-}
-.thank-you-description {
-  font-size: 1.05rem; color: var(--text-light); line-height:1.7;
-  margin-bottom: 1.5rem; max-width: 58ch;
+  width: 100%;
+  padding-right: 30px; /* DEFAULT: Jarak kanan dari gambar */
+  padding-top: 70px;
 }
 
-/* Action buttons */
-.thank-you-actions {
-  display:flex; gap: .75rem; align-items:center; flex-wrap:wrap;
-  position:relative; z-index:130; /* ensure buttons sit above everything */
-}
-.btn { display:inline-flex; align-items:center; justify-content:center; border-radius:var(--btn-radius);
-  padding:.65rem 1.15rem; font-weight:600; text-decoration:none; cursor:pointer; }
-.btn-md { font-size:1rem; }
-.btn-secondary { background:#6b7280; color:#fff; border:none; box-shadow:none; }
-.btn-secondary:hover { filter:brightness(.96); text-decoration:none; }
-.learn-more-btn {
-  background: linear-gradient(135deg,#2563eb 0%,#1e40af 100%);
-  color:#fff !important; border:none; box-shadow:0 10px 24px rgba(30,64,175,0.12);
-  padding:.7rem 1.35rem; border-radius:10px; font-weight:700;
-}
-.learn-more-btn:hover { transform: translateY(-3px); box-shadow:0 20px 40px rgba(30,64,175,0.14); }
+/* ... (Style .thank-you-title, .thank-you-subtitle, .highlight, .thank-you-description, .thank-you-actions, .btn, .btn-secondary, .learn-more-btn tetap sama) ... */
+.thank-you-title { font-size: 35px; font-weight: 800; margin: 0 0 8px; color: var(--secondary-color); }
+.thank-you-subtitle { font-size: 32px; font-weight: 800; margin: 0 0 24px; line-height: 1.1; }
+.thank-you-subtitle .highlight { background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; padding: 0 4px; }
+.thank-you-description { font-size: 17px; color: var(--text-light); margin-bottom: 32px; max-width: 55ch; margin-left: 0; margin-right: 0; }
+.thank-you-description strong { color: var(--secondary-color); font-weight: 600; }
+.thank-you-actions { display: flex; gap: 16px; justify-content: flex-start; flex-wrap: wrap; z-index: 2; position: relative; }
+.btn { display: inline-flex; align-items: center; justify-content: center; border-radius: var(--btn-radius); padding: 12px 20px; font-weight: 600; font-size: 16px; text-decoration: none; cursor: pointer; border: none; transition: all 0.3s ease; }
+.btn-secondary { background: #A1A1AA; color: var(--white); }
+.btn-secondary:hover { background: #71717A; color: var(--white); text-decoration: none; }
+.learn-more-btn { background: linear-gradient(135deg, #84A98C 0%, #52796F 100%); color: var(--white) !important; box-shadow: 0 8px 15px rgba(56, 102, 65, 0.15); font-weight: 700; }
+.learn-more-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 20px rgba(56, 102, 65, 0.2); color: var(--white) !important; text-decoration: none; }
 
-/* Illustration container - desktop: right aligned */
+
+/* Kolom Gambar */
 .thank-you-image {
-  display:flex; justify-content:flex-end; align-items:flex-start;
-  padding:0; margin:0; position:relative; z-index: 20; pointer-events: none; top: -350px;/* decorative */
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding-left: 30px; /* DEFAULT: Jarak kiri dari teks */
+  transform: translateY(-300px); /* <<< DEFAULT: Naik 50px (Desktop) >>> */
 }
 
-/* Illustration element */
 .illustration {
-  display:block; width:auto; height:auto;
-  max-width:82%; max-height:420px; object-fit:contain; margin:0;
-  filter: drop-shadow(0 18px 36px rgba(0,0,0,.08));
+  display: block;
+  width: 100%;
+  max-width: 420px; /* DEFAULT: Ukuran gambar desktop */
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 15px 30px rgba(0,0,0,.1));
   animation: float 6s ease-in-out infinite;
-  pointer-events: none; /* ensure clicks pass through */
 }
 
-/* Orbit lines (decorative) */
-.floating-elements { position:absolute; inset:0; pointer-events:none; z-index:18; }
-.orbit-lines { position:absolute; top:6%; right:2%; width:320px; height:320px; pointer-events:none; }
-.orbit-line { position:absolute; border:2px solid rgba(107,114,128,.06); border-radius:50%; animation: rotateOrbit 24s linear infinite; pointer-events:none; }
-.orbit-line:nth-child(1){ width:260px;height:260px; top:40px; right:40px; }
-.orbit-line:nth-child(2){ width:190px;height:190px; top:90px; right:90px; animation-duration:18s; animation-direction:reverse; }
-.orbit-line:nth-child(3){ width:320px;height:320px; top:18px; right:20px; animation-duration:28s; }
-
-/* Animations */
-@keyframes slideInLeft { from{ opacity:0; transform:translateX(-28px); } to{ opacity:1; transform:none; } }
-@keyframes float { 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-14px); } }
-@keyframes rotateOrbit { from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
-
-/* Ensure interactive content remains above illustration */
-.thank-you-content, .thank-you-actions, .btn { position: relative; z-index: 120; }
-
-/* Responsive rules:
-   - >= 992px: keep image to the right (desktop)
-   - < 992px: center image and keep visible, stack nicely */
-@media (min-width: 992px) {
-  .thank-you-image { justify-content:flex-end; margin-top: 0; }
-  .illustration { max-width:82%; max-height:420px; margin-top: 0; }
-  .thank-you-content { text-align:left; }
+/* Animasi (Tetap Sama) */
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-25px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
 }
 
+/* === Responsive Rules (Sekarang untuk menimpa default di layar kecil) === */
+
+/* Tablet & Mobile (Layar <= 991.98px) */
 @media (max-width: 991.98px) {
-  /* Mobile/tablet: stack and center illustration */
-  .thank-you-image { justify-content:center; margin-top: 0.75rem; }
-  .illustration { max-width:86%; max-height:320px; margin-top: 0; }
-  .thank-you-content { text-align:center; padding-top: 1rem; }
-  .thank-you-description { margin-left:auto; margin-right:auto; }
-  .thank-you-actions { justify-content:center; }
+  .thank-you-container {
+      padding: 48px 15px;
+  }
+  .thank-you-content {
+    text-align: center; /* OVERRIDE: Teks kembali ke tengah */
+    padding-right: 0; /* Hapus padding antar kolom */
+  }
+  .thank-you-description {
+    margin-left: auto; /* OVERRIDE: Tengahkan lagi */
+    margin-right: auto;
+  }
+  .thank-you-actions {
+    justify-content: center; /* OVERRIDE: Tombol kembali ke tengah */
+  }
+  .thank-you-image {
+    justify-content: center; /* OVERRIDE: Gambar kembali ke tengah */
+    padding-left: 0; /* Hapus padding antar kolom */
+    margin-top: 32px; /* Beri jarak atas karena menumpuk */
+    transform: translateY(0); /* <<< OVERRIDE: Reset pergeseran vertikal >>> */
+    /* Atau bisa pakai: transform: none; */
+  }
 }
 
-@media (max-width: 575.98px) {
-  .thank-you-title { font-size:1.6rem; }
-  .thank-you-subtitle { font-size:1.8rem; }
-  .illustration { max-width:92%; max-height:260px; }
+/* Tablet (Spesifik ukuran gambar) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .illustration {
+      max-width: 350px; /* Ukuran gambar tablet */
+   }
 }
 
-/* Prevent white gap near footer */
-body .footer, footer { margin-top: 0 !important; }
-.site-wrapper, .main-wrapper { background: linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 50%,#f8fafc 100%); }
 
-/* Extra guard: if some other CSS set pointer-events or z-index unexpectedly,
-   these strong selectors keep interactive elements on top. Keep as last resort. */
-body .thank-you-content, body .thank-you-actions, body .thank-you-actions .btn {
-  z-index: 999 !important;
-  position: relative !important;
+/* Mobile (Spesifik ukuran font & gambar) */
+@media (max-width: 767.98px) {
+  .thank-you-container {
+      padding: 32px 15px;
+  }
+   .thank-you-title { font-size: 29px; }
+   .thank-you-subtitle { font-size: 26px; }
+   .thank-you-description { font-size: 15px; }
+   .illustration {
+      max-width: 280px; /* Ukuran gambar mobile */
+   }
 }
-body .thank-you-image, body .thank-you-image .illustration, body .floating-elements {
-  z-index: 10 !important;
-  pointer-events: none !important;
-}
+
+/* Menghapus elemen orbit (Tetap Sama) */
+.floating-elements, .orbit-lines, .orbit-line { display: none; }
+/* Menghapus background dari wrapper (Tetap Sama) */
+.site-wrapper, .main-wrapper { background: none; }
