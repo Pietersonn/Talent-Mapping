@@ -18,6 +18,7 @@ class GenerateAssessmentReport implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    /** Maks waktu job (detik) */
     public $timeout = 120;
 
     public function __construct(public string $sessionId) {}
@@ -44,23 +45,45 @@ class GenerateAssessmentReport implements ShouldQueue
                 return;
             }
 
-            // ... (Kode data Anda sudah benar) ...
-            $sjtResults = json_decode((string)$result->sjt_results, true) ?: [];
-            $st30Results = json_decode((string)$result->st30_results, true) ?: [];
+            // ---- 3) Susun data untuk view PDF
+            $sjtResults  = json_decode((string) $result->sjt_results, true) ?: [];
+            $st30Results = json_decode((string) $result->st30_results, true) ?: [];
+
             $top3    = $sjtResults['top3'] ?? [];
             $bottom3 = $sjtResults['bottom3'] ?? [];
-            $st1Ids = json_decode((string) DB::table('st30_responses')->where('session_id', $this->sessionId)->where('stage_number', 1)->where('for_scoring', 1)->value('selected_items'), true) ?: [];
-            $st2Ids = json_decode((string) DB::table('st30_responses')->where('session_id', $this->sessionId)->where('stage_number', 2)->where('for_scoring', 1)->value('selected_items'), true) ?: [];
+
+            $st1Ids = json_decode((string) DB::table('st30_responses')
+                ->where('session_id', $this->sessionId)
+                ->where('stage_number', 1)
+                ->where('for_scoring', 1)
+                ->value('selected_items'), true) ?: [];
+
+            $st2Ids = json_decode((string) DB::table('st30_responses')
+                ->where('session_id', $this->sessionId)
+                ->where('stage_number', 2)
+                ->where('for_scoring', 1)
+                ->value('selected_items'), true) ?: [];
+
             $st30Strengths = collect();
             if (!empty($st1Ids)) {
-                $st30Strengths = DB::table('st30_questions as q')->join('typology_descriptions as t', 't.typology_code', '=', 'q.typology_code')->whereIn('q.id', $st1Ids)->select('t.typology_code AS code', 't.typology_name AS name', 't.strength_description AS desc')->distinct()->get();
+                $st30Strengths = DB::table('st30_questions as q')
+                    ->join('typology_descriptions as t', 't.typology_code', '=', 'q.typology_code')
+                    ->whereIn('q.id', $st1Ids)
+                    ->select('t.typology_code AS code', 't.typology_name AS name', 't.strength_description AS desc')
+                    ->distinct()->get();
             }
+
             $st30Weakness = collect();
             if (!empty($st2Ids)) {
-                $st30Weakness = DB::table('st30_questions as q')->join('typology_descriptions as t', 't.typology_code', '=', 'q.typology_code')->whereIn('q.id', $st2Ids)->select('t.typology_code AS code', 't.typology_name AS name', 't.weakness_description AS desc')->distinct()->get();
+                $st30Weakness = DB::table('st30_questions as q')
+                    ->join('typology_descriptions as t', 't.typology_code', '=', 'q.typology_code')
+                    ->whereIn('q.id', $st2Ids)
+                    ->select('t.typology_code AS code', 't.typology_name AS name', 't.weakness_description AS desc')
+                    ->distinct()->get();
             }
+
             $toPointsSmart = function (?string $t, int $max = 5): array {
-                $t = trim((string)$t);
+                $t = trim((string) $t);
                 if ($t === '') return [];
                 $parts = preg_split('/\r\n|\r|\n|\s*\|\s*|(?<=[\.!?])\s+(?=\p{Lu})/u', $t);
                 $parts = array_values(array_filter(array_map('trim', $parts), fn($s) => $s !== ''));
@@ -68,21 +91,43 @@ class GenerateAssessmentReport implements ShouldQueue
                 return array_slice($parts, 0, $max);
             };
             $fmtDash = fn(array $lines) => implode("\n", array_map(fn($s) => '- ' . $s, $lines));
+
             $recoActivityBoxes = [];
             $recoTrainingBoxes = [];
             foreach (array_slice($bottom3, 0, 3) as $row) {
                 $recoActivityBoxes[] = $fmtDash($toPointsSmart($row['activity'] ?? '', 5));
                 $recoTrainingBoxes[] = $fmtDash($toPointsSmart($row['training'] ?? '', 5));
             }
+
             $data = [
                 'user'           => ['name' => $recipientName, 'email' => $recipientEmail],
-                'sjt_top3'       => $top3, 'sjt_bottom3'    => $bottom3,
-                'reco_activity'  => $recoActivityBoxes, 'reco_training'  => $recoTrainingBoxes,
-                'st30_strengths' => $st30Strengths, 'st30_weakness'  => $st30Weakness,
-                'pages'          => ['person', 'person 2', 'person 3', 'person 4', 'user', 'person 5', 'person 6', 'person 7', 'person 8', 'person 9', 'person 10', 'person 11', 'person 12', 'person 13', 'person 14', 'person 15'],
+                'sjt_top3'       => $top3,
+                'sjt_bottom3'    => $bottom3,
+                'reco_activity'  => $recoActivityBoxes,
+                'reco_training'  => $recoTrainingBoxes,
+                'st30_strengths' => $st30Strengths,
+                'st30_weakness'  => $st30Weakness,
+                'pages'          => [
+                    'person',
+                    'person 2',
+                    'person 3',
+                    'person 4',
+                    'user',
+                    'person 5',
+                    'person 6',
+                    'person 7',
+                    'person 8',
+                    'person 9',
+                    'person 10',
+                    'person 11',
+                    'person 12',
+                    'person 13',
+                    'person 14',
+                    'person 15'
+                ],
             ];
 
-            // ---- 5) Generate & simpan PDF ke Supabase (S3)
+            // ---- 4) Generate PDF
             $fileName     = Str::of($recipientName)->slug('-') . '-' . Str::random(8) . '.pdf';
             $relativePath = "reports/{$fileName}";
             Log::info("Membuat PDF: {$fileName} untuk session {$this->sessionId}");
@@ -90,13 +135,23 @@ class GenerateAssessmentReport implements ShouldQueue
             $pdf = Pdf::loadView('public.pdf.report', $data)->setPaper('a4', 'landscape');
             $pdfContent = $pdf->output();
 
-            Storage::disk('s3')->put($relativePath, $pdfContent, 'public');
-
-            // **PERBAIKAN: Cek apakah file BENAR-BENAR ada**
-            if (!Storage::disk('s3')->exists($relativePath)) {
-                throw new \Exception("Gagal meng-upload PDF ke Supabase. Kunci S3 atau Bucket mungkin salah.");
+            // ---- 5) Upload ke Supabase/S3 (visibility public)
+            $ok = Storage::disk('s3')->put($relativePath, $pdfContent, ['visibility' => 'public']);
+            if (!$ok) {
+                throw new \Exception("Gagal meng-upload PDF ke Supabase (put() return false).");
             }
-            Log::info("PDF berhasil DI-UPLOAD dan DIVERIFIKASI di Supabase: {$relativePath}");
+
+            // Optional: retry ringan untuk exists() (headObject kadang delay)
+            $confirmed = false;
+            for ($i = 0; $i < 3 && !$confirmed; $i++) {
+                $confirmed = Storage::disk('s3')->exists($relativePath);
+                if (!$confirmed) usleep(200000); // 200ms
+            }
+            if (!$confirmed) {
+                Log::warning("Upload selesai tapi exists() belum konfirm untuk {$relativePath}");
+            }
+
+            Log::info("PDF berhasil DI-UPLOAD (verifikasi sebagian) di Supabase: {$relativePath}");
 
             // ---- 6) Update test_results
             DB::table('test_results')->where('session_id', $this->sessionId)->update([
@@ -105,34 +160,67 @@ class GenerateAssessmentReport implements ShouldQueue
                 'updated_at'          => now(),
             ]);
 
-            // ---- 7) Kirim email (sekarang pakai SendGrid)
+            // ---- 7) Bangun public URL (jika bucket public)
+            $publicUrl = $this->buildSupabasePublicUrl($relativePath);
+
+            // ---- 8) Kirim email via mailer default (SendGrid API)
             if ($recipientEmail) {
-                Log::info("Mengirim email ke: {$recipientEmail} via SendGrid");
-                Mail::raw(
-                    "Halo {$recipientName},\n\nBerikut hasil Talent Assessment Anda terlampir.\n\nTerima kasih.",
-                    function ($m) use ($recipientEmail, $recipientName, $pdfContent, $fileName) {
+                try {
+                    $body = "Halo {$recipientName},\n\n"
+                        . "Berikut hasil Talent Assessment Anda terlampir (PDF).\n";
+                    if ($publicUrl) {
+                        $body .= "\nJika lampiran tidak terbaca, Anda juga bisa mengunduh di tautan berikut:\n{$publicUrl}\n";
+                    }
+                    $body .= "\nTerima kasih.";
+
+                    // Gunakan mailer default (di .env: MAIL_MAILER=sendgrid)
+                    Mail::raw($body, function ($m) use ($recipientEmail, $recipientName, $pdfContent, $fileName) {
                         $m->to($recipientEmail, $recipientName)
                             ->subject('Hasil Talent Assessment')
                             ->attachData($pdfContent, $fileName, ['mime' => 'application/pdf']);
-                    }
-                );
-                DB::table('test_results')->where('session_id', $this->sessionId)->update([
-                    'email_sent_at' => now(),
-                    'updated_at'    => now(),
-                ]);
-                Log::info("Email berhasil dikirim ke: {$recipientEmail}");
+                    });
+
+                    DB::table('test_results')->where('session_id', $this->sessionId)->update([
+                        'email_sent_at' => now(),
+                        'updated_at'    => now(),
+                    ]);
+
+                    Log::info("Email berhasil dikirim ke: {$recipientEmail}");
+                } catch (\Throwable $e) {
+                    // Jangan gagal total hanya karena email
+                    Log::error("Email gagal dikirim: " . $e->getMessage(), ['session' => $this->sessionId]);
+                    DB::table('test_results')->where('session_id', $this->sessionId)->update([
+                        'email_error' => substr($e->getMessage(), 0, 500),
+                        'updated_at'  => now(),
+                    ]);
+                }
+            } else {
+                Log::warning("Email penerima kosong untuk session {$this->sessionId}, lewati pengiriman email.");
             }
 
-            // ---- 8) Tandai sesi selesai
+            // ---- 9) Tandai sesi selesai
             DB::table('test_sessions')->where('id', $this->sessionId)->update([
                 'is_completed' => 1,
                 'updated_at'   => now(),
             ]);
-            Log::info("Job GenerateAssessmentReport SELESAI untuk session {$this->sessionId}");
 
-        } catch (\Exception $e) {
+            Log::info("Job GenerateAssessmentReport SELESAI untuk session {$this->sessionId}");
+        } catch (\Throwable $e) {
             Log::error("GAGAL memproses job GenerateAssessmentReport untuk session {$this->sessionId}: " . $e->getMessage());
             throw $e;
         }
+    }
+
+    /**
+     * Bangun public URL Supabase Storage (jika bucket public).
+     * Format: {AWS_URL}/storage/v1/object/public/{bucket}/{relativePath}
+     */
+    private function buildSupabasePublicUrl(string $relativePath): ?string
+    {
+        $base   = rtrim((string) env('AWS_URL'), '/');       // ex: https://xxxx.supabase.co
+        $bucket = trim((string) env('AWS_BUCKET', ''), '/'); // ex: report
+        if ($base === '' || $bucket === '') return null;
+
+        return "{$base}/storage/v1/object/public/{$bucket}/{$relativePath}";
     }
 }
