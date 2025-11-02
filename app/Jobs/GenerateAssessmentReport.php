@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Jobs; // <--- INI DIA PERBAIKANNYA
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -12,13 +12,13 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log; // Tambahkan ini untuk logging jika ada error
+use Illuminate\Support\Facades\Log; // Kita tambahkan Log untuk debugging
 
 class GenerateAssessmentReport implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $tries = 1;
+    // HAPUS 'public $tries = 1;' agar kita bisa pakai --tries=3 dari worker
     public $timeout = 120;
 
     public function __construct(public string $sessionId) {}
@@ -44,22 +44,19 @@ class GenerateAssessmentReport implements ShouldQueue
                 return;
             }
 
+            // ... (Kode Anda untuk mengambil sjtResults, st30Strengths, dll. sudah benar) ...
             $sjtResults = json_decode((string)$result->sjt_results, true) ?: [];
             $st30Results = json_decode((string)$result->st30_results, true) ?: [];
-
             $top3    = $sjtResults['top3'] ?? [];
             $bottom3 = $sjtResults['bottom3'] ?? [];
-            $dominantTypologyCode = $result->dominant_typology ?? null;
             $st1Ids = json_decode((string) DB::table('st30_responses')
                 ->where('session_id', $this->sessionId)
                 ->where('stage_number', 1)->where('for_scoring', 1)
                 ->value('selected_items'), true) ?: [];
-
             $st2Ids = json_decode((string) DB::table('st30_responses')
                 ->where('session_id', $this->sessionId)
                 ->where('stage_number', 2)->where('for_scoring', 1)
                 ->value('selected_items'), true) ?: [];
-
             $st30Strengths = collect();
             if (!empty($st1Ids)) {
                 $st30Strengths = DB::table('st30_questions as q')
@@ -68,7 +65,6 @@ class GenerateAssessmentReport implements ShouldQueue
                     ->select('t.typology_code AS code', 't.typology_name AS name', 't.strength_description AS desc')
                     ->distinct()->get();
             }
-
             $st30Weakness = collect();
             if (!empty($st2Ids)) {
                 $st30Weakness = DB::table('st30_questions as q')
@@ -78,30 +74,24 @@ class GenerateAssessmentReport implements ShouldQueue
                     ->distinct()->get();
             }
 
-            // ---- 3) Format rekomendasi dari bottom 3 kompetensi
+            // ---- 3) Format rekomendasi (Kode Anda sudah benar)
             $toPointsSmart = function (?string $t, int $max = 5): array {
                 $t = trim((string)$t);
                 if ($t === '') return [];
-                $parts = preg_split(
-                    '/\r\n|\r|\n|\s*\|\s*|(?<=[\.!?])\s+(?=\p{Lu})/u',
-                    $t
-                );
+                $parts = preg_split('/\r\n|\r|\n|\s*\|\s*|(?<=[\.!?])\s+(?=\p{Lu})/u', $t);
                 $parts = array_values(array_filter(array_map('trim', $parts), fn($s) => $s !== ''));
                 $parts = array_map(fn($s) => rtrim($s, ". \t\n\r\0\x0B"), $parts);
                 return array_slice($parts, 0, $max);
             };
-
             $fmtDash = fn(array $lines) => implode("\n", array_map(fn($s) => '- ' . $s, $lines));
-
             $recoActivityBoxes = [];
             $recoTrainingBoxes = [];
-
             foreach (array_slice($bottom3, 0, 3) as $row) {
                 $recoActivityBoxes[] = $fmtDash($toPointsSmart($row['activity'] ?? '', 5));
                 $recoTrainingBoxes[] = $fmtDash($toPointsSmart($row['training'] ?? '', 5));
             }
 
-            // ---- 4) Siapkan data ke view PDF
+            // ---- 4) Siapkan data ke view PDF (Kode Anda sudah benar)
             $data = [
                 'user'           => ['name' => $recipientName, 'email' => $recipientEmail],
                 'sjt_top3'       => $top3,
@@ -121,9 +111,11 @@ class GenerateAssessmentReport implements ShouldQueue
             // ---- 5) PERUBAHAN: Generate & simpan PDF ke Supabase (S3)
             // ==================================================================
 
-            // Buat nama file
+            // Buat nama file (tambahkan random string agar unik)
             $fileName     = Str::of($recipientName)->slug('-') . '-' . Str::random(8) . '.pdf';
             $relativePath = "reports/{$fileName}"; // Path di Supabase
+
+            Log::info("Membuat PDF: {$fileName} untuk session {$this->sessionId}");
 
             // Buat PDF
             $pdf = Pdf::loadView('public.pdf.report', $data)
@@ -135,6 +127,7 @@ class GenerateAssessmentReport implements ShouldQueue
             // **PERUBAHAN:** Simpan ke S3 (Supabase)
             // 'public' agar filenya bisa diakses lewat URL jika perlu
             Storage::disk('s3')->put($relativePath, $pdfContent, 'public');
+            Log::info("PDF berhasil di-upload ke Supabase: {$relativePath}");
 
             // HAPUS KODE LAMA INI:
             // Storage::disk('local')->makeDirectory('reports');
@@ -156,6 +149,7 @@ class GenerateAssessmentReport implements ShouldQueue
 
             // **PERUBAHAN:** Hapus cek 'is_file' dan gunakan $pdfContent
             if ($recipientEmail) {
+                Log::info("Mengirim email ke: {$recipientEmail}");
                 Mail::raw(
                     "Halo {$recipientName},\n\nBerikut hasil Talent Assessment Anda terlampir.\n\nTerima kasih.",
 
@@ -175,6 +169,7 @@ class GenerateAssessmentReport implements ShouldQueue
                     'email_sent_at' => now(),
                     'updated_at'    => now(),
                 ]);
+                Log::info("Email berhasil dikirim ke: {$recipientEmail}");
             }
             // ==================================================================
 
@@ -184,11 +179,13 @@ class GenerateAssessmentReport implements ShouldQueue
                 'updated_at'   => now(),
             ]);
 
+            Log::info("Job GenerateAssessmentReport SELESAI untuk session {$this->sessionId}");
+
         } catch (\Exception $e) {
             // Jika terjadi error di mana saja, catat di log
-            Log::error("Gagal memproses job GenerateAssessmentReport untuk session {$this->sessionId}: " . $e->getMessage());
-            // (Opsional) Lempar error lagi agar job-nya ditandai gagal
-            // throw $e;
+            Log::error("GAGAL memproses job GenerateAssessmentReport untuk session {$this->sessionId}: " . $e->getMessage());
+            // Lempar error lagi agar job-nya ditandai gagal oleh worker
+            throw $e;
         }
     }
 }
