@@ -187,10 +187,8 @@ class GenerateAssessmentReport implements ShouldQueue
 
                     Log::info("Email berhasil dikirim ke: {$recipientEmail}");
                 } catch (\Throwable $e) {
-                    // Jangan gagal total hanya karena email
                     Log::error("Email gagal dikirim: " . $e->getMessage(), ['session' => $this->sessionId]);
                     DB::table('test_results')->where('session_id', $this->sessionId)->update([
-                        'email_error' => substr($e->getMessage(), 0, 500),
                         'updated_at'  => now(),
                     ]);
                 }
