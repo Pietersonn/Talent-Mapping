@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Jobs; // <--- INI DIA PERBAIKANNYA
+namespace App\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -12,13 +12,12 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log; // Kita tambahkan Log untuk debugging
+use Illuminate\Support\Facades\Log;
 
 class GenerateAssessmentReport implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    // HAPUS 'public $tries = 1;' agar kita bisa pakai --tries=3 dari worker
     public $timeout = 120;
 
     public function __construct(public string $sessionId) {}
@@ -26,13 +25,14 @@ class GenerateAssessmentReport implements ShouldQueue
     public function handle(): void
     {
         try {
+            Log::info("Job GenerateAssessmentReport DIMULAI untuk session: {$this->sessionId}");
+
             // ---- 1) Ambil session & user
             $session = DB::table('test_sessions')->where('id', $this->sessionId)->first();
             if (!$session) {
                 Log::warning("GenerateAssessmentReport: Test session {$this->sessionId} tidak ditemukan.");
                 return;
             }
-
             $user = DB::table('users')->where('id', $session->user_id)->first();
             $recipientName  = $session->participant_name ?: ($user->name ?? 'Peserta');
             $recipientEmail = $user->email ?? null;
@@ -44,37 +44,21 @@ class GenerateAssessmentReport implements ShouldQueue
                 return;
             }
 
-            // ... (Kode Anda untuk mengambil sjtResults, st30Strengths, dll. sudah benar) ...
+            // ... (Kode data Anda sudah benar) ...
             $sjtResults = json_decode((string)$result->sjt_results, true) ?: [];
             $st30Results = json_decode((string)$result->st30_results, true) ?: [];
             $top3    = $sjtResults['top3'] ?? [];
             $bottom3 = $sjtResults['bottom3'] ?? [];
-            $st1Ids = json_decode((string) DB::table('st30_responses')
-                ->where('session_id', $this->sessionId)
-                ->where('stage_number', 1)->where('for_scoring', 1)
-                ->value('selected_items'), true) ?: [];
-            $st2Ids = json_decode((string) DB::table('st30_responses')
-                ->where('session_id', $this->sessionId)
-                ->where('stage_number', 2)->where('for_scoring', 1)
-                ->value('selected_items'), true) ?: [];
+            $st1Ids = json_decode((string) DB::table('st30_responses')->where('session_id', $this->sessionId)->where('stage_number', 1)->where('for_scoring', 1)->value('selected_items'), true) ?: [];
+            $st2Ids = json_decode((string) DB::table('st30_responses')->where('session_id', $this->sessionId)->where('stage_number', 2)->where('for_scoring', 1)->value('selected_items'), true) ?: [];
             $st30Strengths = collect();
             if (!empty($st1Ids)) {
-                $st30Strengths = DB::table('st30_questions as q')
-                    ->join('typology_descriptions as t', 't.typology_code', '=', 'q.typology_code')
-                    ->whereIn('q.id', $st1Ids)
-                    ->select('t.typology_code AS code', 't.typology_name AS name', 't.strength_description AS desc')
-                    ->distinct()->get();
+                $st30Strengths = DB::table('st30_questions as q')->join('typology_descriptions as t', 't.typology_code', '=', 'q.typology_code')->whereIn('q.id', $st1Ids)->select('t.typology_code AS code', 't.typology_name AS name', 't.strength_description AS desc')->distinct()->get();
             }
             $st30Weakness = collect();
             if (!empty($st2Ids)) {
-                $st30Weakness = DB::table('st30_questions as q')
-                    ->join('typology_descriptions as t', 't.typology_code', '=', 'q.typology_code')
-                    ->whereIn('q.id', $st2Ids)
-                    ->select('t.typology_code AS code', 't.typology_name AS name', 't.weakness_description AS desc')
-                    ->distinct()->get();
+                $st30Weakness = DB::table('st30_questions as q')->join('typology_descriptions as t', 't.typology_code', '=', 'q.typology_code')->whereIn('q.id', $st2Ids)->select('t.typology_code AS code', 't.typology_name AS name', 't.weakness_description AS desc')->distinct()->get();
             }
-
-            // ---- 3) Format rekomendasi (Kode Anda sudah benar)
             $toPointsSmart = function (?string $t, int $max = 5): array {
                 $t = trim((string)$t);
                 if ($t === '') return [];
@@ -90,101 +74,64 @@ class GenerateAssessmentReport implements ShouldQueue
                 $recoActivityBoxes[] = $fmtDash($toPointsSmart($row['activity'] ?? '', 5));
                 $recoTrainingBoxes[] = $fmtDash($toPointsSmart($row['training'] ?? '', 5));
             }
-
-            // ---- 4) Siapkan data ke view PDF (Kode Anda sudah benar)
             $data = [
                 'user'           => ['name' => $recipientName, 'email' => $recipientEmail],
-                'sjt_top3'       => $top3,
-                'sjt_bottom3'    => $bottom3,
-                'reco_activity'  => $recoActivityBoxes,
-                'reco_training'  => $recoTrainingBoxes,
-                'st30_strengths' => $st30Strengths,
-                'st30_weakness'  => $st30Weakness,
-                'pages'          => [
-                    'person', 'person 2', 'person 3', 'person 4', 'user', 'person 5', 'person 6',
-                    'person 7', 'person 8', 'person 9', 'person 10', 'person 11', 'person 12',
-                    'person 13', 'person 14', 'person 15',
-                ],
+                'sjt_top3'       => $top3, 'sjt_bottom3'    => $bottom3,
+                'reco_activity'  => $recoActivityBoxes, 'reco_training'  => $recoTrainingBoxes,
+                'st30_strengths' => $st30Strengths, 'st30_weakness'  => $st30Weakness,
+                'pages'          => ['person', 'person 2', 'person 3', 'person 4', 'user', 'person 5', 'person 6', 'person 7', 'person 8', 'person 9', 'person 10', 'person 11', 'person 12', 'person 13', 'person 14', 'person 15'],
             ];
 
-            // ==================================================================
-            // ---- 5) PERUBAHAN: Generate & simpan PDF ke Supabase (S3)
-            // ==================================================================
-
-            // Buat nama file (tambahkan random string agar unik)
+            // ---- 5) Generate & simpan PDF ke Supabase (S3)
             $fileName     = Str::of($recipientName)->slug('-') . '-' . Str::random(8) . '.pdf';
-            $relativePath = "reports/{$fileName}"; // Path di Supabase
-
+            $relativePath = "reports/{$fileName}";
             Log::info("Membuat PDF: {$fileName} untuk session {$this->sessionId}");
 
-            // Buat PDF
-            $pdf = Pdf::loadView('public.pdf.report', $data)
-                ->setPaper('a4', 'landscape');
-
-            // Ambil konten PDF mentah sebagai string
+            $pdf = Pdf::loadView('public.pdf.report', $data)->setPaper('a4', 'landscape');
             $pdfContent = $pdf->output();
 
-            // **PERUBAHAN:** Simpan ke S3 (Supabase)
-            // 'public' agar filenya bisa diakses lewat URL jika perlu
             Storage::disk('s3')->put($relativePath, $pdfContent, 'public');
-            Log::info("PDF berhasil di-upload ke Supabase: {$relativePath}");
 
-            // HAPUS KODE LAMA INI:
-            // Storage::disk('local')->makeDirectory('reports');
-            // Storage::disk('local')->put($relativePath, $pdf->output());
-            // $absolutePath = Storage::disk('local')->path($relativePath);
+            // **PERBAIKAN: Cek apakah file BENAR-BENAR ada**
+            if (!Storage::disk('s3')->exists($relativePath)) {
+                throw new \Exception("Gagal meng-upload PDF ke Supabase. Kunci S3 atau Bucket mungkin salah.");
+            }
+            Log::info("PDF berhasil DI-UPLOAD dan DIVERIFIKASI di Supabase: {$relativePath}");
 
-            // ==================================================================
-
-            // ---- 6) Update test_results dengan path PDF
+            // ---- 6) Update test_results
             DB::table('test_results')->where('session_id', $this->sessionId)->update([
                 'pdf_path'            => $relativePath,
                 'report_generated_at' => now(),
                 'updated_at'          => now(),
             ]);
 
-            // ==================================================================
-            // ---- 7) PERUBAHAN: Kirim email hasil (jika ada email user)
-            // ==================================================================
-
-            // **PERUBAHAN:** Hapus cek 'is_file' dan gunakan $pdfContent
+            // ---- 7) Kirim email (sekarang pakai SendGrid)
             if ($recipientEmail) {
-                Log::info("Mengirim email ke: {$recipientEmail}");
+                Log::info("Mengirim email ke: {$recipientEmail} via SendGrid");
                 Mail::raw(
                     "Halo {$recipientName},\n\nBerikut hasil Talent Assessment Anda terlampir.\n\nTerima kasih.",
-
-                    // **PERUBAHAN:** Gunakan $pdfContent dan $fileName dari atas
                     function ($m) use ($recipientEmail, $recipientName, $pdfContent, $fileName) {
                         $m->to($recipientEmail, $recipientName)
                             ->subject('Hasil Talent Assessment')
-
-                            // **PERUBAHAN:** Lampirkan data mentah dari memori
-                            ->attachData($pdfContent, $fileName, [
-                                'mime' => 'application/pdf',
-                            ]);
+                            ->attachData($pdfContent, $fileName, ['mime' => 'application/pdf']);
                     }
                 );
-
                 DB::table('test_results')->where('session_id', $this->sessionId)->update([
                     'email_sent_at' => now(),
                     'updated_at'    => now(),
                 ]);
                 Log::info("Email berhasil dikirim ke: {$recipientEmail}");
             }
-            // ==================================================================
 
-            // ---- 8) Tandai sesi selesai (recap, safety)
+            // ---- 8) Tandai sesi selesai
             DB::table('test_sessions')->where('id', $this->sessionId)->update([
                 'is_completed' => 1,
                 'updated_at'   => now(),
             ]);
-
             Log::info("Job GenerateAssessmentReport SELESAI untuk session {$this->sessionId}");
 
         } catch (\Exception $e) {
-            // Jika terjadi error di mana saja, catat di log
             Log::error("GAGAL memproses job GenerateAssessmentReport untuk session {$this->sessionId}: " . $e->getMessage());
-            // Lempar error lagi agar job-nya ditandai gagal oleh worker
             throw $e;
         }
     }
