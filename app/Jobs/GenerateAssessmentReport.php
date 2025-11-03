@@ -19,7 +19,7 @@ class GenerateAssessmentReport implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     /** Maks waktu job (detik) */
-    public $timeout = 120;
+    public $timeout = 0;
 
     public function __construct(public string $sessionId) {}
 
@@ -39,9 +39,10 @@ class GenerateAssessmentReport implements ShouldQueue
             $recipientEmail = $user->email ?? null;
 
             // ---- 2) Ambil hasil dari test_results
+            // Job ini MENGASUMSIKAN ScoringHelper sudah selesai dan TestResult sudah ADA.
             $result = DB::table('test_results')->where('session_id', $this->sessionId)->first();
             if (!$result) {
-                Log::warning("GenerateAssessmentReport: Test result untuk session {$this->sessionId} tidak ditemukan.");
+                Log::warning("GenerateAssessmentReport: Test result untuk session {$this->sessionId} tidak ditemukan (ScoringHelper mungkin gagal).");
                 return;
             }
 
@@ -128,7 +129,7 @@ class GenerateAssessmentReport implements ShouldQueue
             ];
 
             // ---- 4) Generate PDF
-            $fileName     = Str::of($recipientName)->slug('-') . '-' . Str::random(8) . '.pdf';
+            $fileName    = Str::of($recipientName)->slug('-') . '-' . Str::random(8) . '.pdf';
             $relativePath = "reports/{$fileName}";
             Log::info("Membuat PDF: {$fileName} untuk session {$this->sessionId}");
 
@@ -155,7 +156,7 @@ class GenerateAssessmentReport implements ShouldQueue
 
             // ---- 6) Update test_results
             DB::table('test_results')->where('session_id', $this->sessionId)->update([
-                'pdf_path'            => $relativePath,
+                'pdf_path'          => $relativePath,
                 'report_generated_at' => now(),
                 'updated_at'          => now(),
             ]);
@@ -215,7 +216,7 @@ class GenerateAssessmentReport implements ShouldQueue
      */
     private function buildSupabasePublicUrl(string $relativePath): ?string
     {
-        $base   = rtrim((string) env('AWS_URL'), '/');       // ex: https://xxxx.supabase.co
+        $base   = rtrim((string) env('AWS_URL'), '/');    // ex: https://xxxx.supabase.co
         $bucket = trim((string) env('AWS_BUCKET', ''), '/'); // ex: report
         if ($base === '' || $bucket === '') return null;
 

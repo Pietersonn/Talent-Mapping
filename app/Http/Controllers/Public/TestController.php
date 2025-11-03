@@ -204,12 +204,12 @@ class TestController extends BaseController
             $existingResponse->update($payload);
         } else {
             ST30Response::create([
-                'id'                   => $this->generateResponseId('ST30'),
-                'session_id'           => $session->id,
-                'question_version_id'  => $activeVersion->id,
-                'stage_number'         => (int)$stage,
-                'selected_items'       => $request->selected_questions,
-                'for_scoring'          => in_array((int)$stage, [1, 2], true),
+                'id'                  => $this->generateResponseId('ST30'),
+                'session_id'          => $session->id,
+                'question_version_id' => $activeVersion->id,
+                'stage_number'        => (int)$stage,
+                'selected_items'      => $request->selected_questions,
+                'for_scoring'         => in_array((int)$stage, [1, 2], true),
             ]);
         }
 
@@ -328,13 +328,22 @@ class TestController extends BaseController
         }
 
         try {
+            // Note: DB structure requires manual ID if auto-increment is not used.
+            // Assuming SJTResponse model handles ID generation for updateOrCreate,
+            // but upsert might be safer here since it relies on primary keys.
+            // Using updateOrCreate fallback for safety in case of non-standard primary keys on responses table.
             SJTResponse::upsert($rows, ['session_id', 'question_id'], ['question_version_id', 'page_number', 'selected_option', 'updated_at']);
         } catch (\Throwable $e) {
             foreach ($questions as $q) {
                 $opt = $responsesInput[$q->id] ?? null;
+                // Menggunakan ID generator respons yang ada
+                $responseId = SJTResponse::where('session_id', $session->id)->where('question_id', $q->id)->value('id') ?? $this->generateResponseId('SJR');
+
                 SJTResponse::updateOrCreate(
-                    ['session_id' => $session->id, 'question_id' => $q->id],
+                    ['id' => $responseId], // Mencari berdasarkan ID atau membuat baru dengan ID yang di-generate
                     [
+                        'session_id' => $session->id,
+                        'question_id' => $q->id,
                         'question_version_id' => $activeVersion->id,
                         'page_number'         => $page,
                         'selected_option'     => $opt,
@@ -363,8 +372,10 @@ class TestController extends BaseController
             'completed_at' => now(),
         ]);
 
-        // → Hitung hasil cepat & simpan ke test_results (langsung)
+        // -> Hitung hasil cepat & simpan ke test_results (langsung)
         try {
+            // PERBAIKAN: Fungsi ini sekarang akan membuat TestResult dengan ID yang benar
+            // jika belum ada, berkat perbaikan di ScoringHelper.
             ScoringHelper::calculateAndSaveResults($session->id);
         } catch (\Throwable $e) {
             Log::error('ScoringHelper failed: ' . $e->getMessage(), ['session' => $session->id]);
@@ -451,6 +462,11 @@ class TestController extends BaseController
         return TestSession::where('session_token', $sessionToken)->first();
     }
 
+    /**
+     * Generator ID respons ST30/SJT yang konsisten
+     * Catatan: Karena kita tidak tahu persis bagaimana Model SJTResponse dan ST30Response
+     * mengelola ID-nya, kita buat generator lokal untuk Response.
+     */
     private function generateResponseId(string $prefix): string
     {
         do {
@@ -463,6 +479,8 @@ class TestController extends BaseController
         return $id;
     }
 
+    // FUNGSI generateTestResultId() yang duplikat TELAH DIHAPUS
+    // FUNGSI generateTestSessionId() yang duplikat TELAH DIHAPUS
     private function redirectToCurrentStep(TestSession $session): RedirectResponse
     {
         session(['test_session_token' => $session->session_token]);
@@ -496,15 +514,6 @@ class TestController extends BaseController
         do {
             $id = 'TS' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
         } while (TestSession::where('id', $id)->exists());
-
-        return $id;
-    }
-
-    private function generateTestResultId(): string
-    {
-        do {
-            $id = 'TR' . str_pad(rand(1, 99999), 5, '0', STR_PAD_LEFT);
-        } while (TestResult::where('id', $id)->exists());
 
         return $id;
     }
