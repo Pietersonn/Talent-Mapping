@@ -144,9 +144,25 @@ class ScoringHelper
 
     private static int $resultCounter = 0;
 
-    private static function generateTestResultId(): string
+    public static function generateTestResultId(): string
     {
-        self::$resultCounter++;
-        return 'TR' . str_pad(self::$resultCounter, 3, '0', STR_PAD_LEFT);
+        return DB::transaction(function () {
+            // Lock tabel sementara agar tidak ada yang ambil ID bersamaan
+            $lastId = DB::table('test_results')
+                ->select('id')
+                ->orderByDesc('id')
+                ->lockForUpdate()
+                ->limit(1)
+                ->value('id');
+
+            if (!$lastId) {
+                $nextNumber = 1;
+            } else {
+                $numberPart = (int) preg_replace('/\D/', '', $lastId);
+                $nextNumber = $numberPart + 1;
+            }
+
+            return 'TR' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+        });
     }
 }
