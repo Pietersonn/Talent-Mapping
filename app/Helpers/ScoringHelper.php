@@ -23,6 +23,7 @@ class ScoringHelper
         }
 
         // ---------------- SJT aggregation ----------------
+        // Query ini menjumlahkan (SUM) skor mentah per kompetensi dan memberi alias 'score'.
         $agg = DB::table('sjt_responses as sr')
             ->join('sjt_options as so', function ($j) {
                 $j->on('sr.question_id', '=', 'so.question_id')
@@ -38,10 +39,21 @@ class ScoringHelper
 
         $ranked = collect($agg)->map(function ($row, $code) use ($comp) {
             $m = $comp[$code] ?? null;
+
+            // **PERBAIKAN KRITIS DI SINI:** // Mengganti $row->scaled yang tidak ada, menjadi $row->score
+            // yang berisi Total Skor Mentah (max 20 per kompetensi).
+            $totalScore = (int) $row->score;
+
+            // Opsi: Jika Anda ingin menampilkannya dalam persentase (0-100),
+            // ganti baris di atas dengan logika scaling di bawah.
+            // Skor Maksimum SJT adalah 20 (5 soal * max score 4).
+            // $maxScore = 20;
+            // $percentageScore = round(($totalScore / $maxScore) * 100, 1);
+
             return [
                 'code'     => $code,
                 'name'     => $m->competency_name ?? $code,
-                'score'    => round((float)$row->scaled, 1),
+                'score'    => $totalScore, // Menggunakan Total Skor Mentah yang sudah benar
                 'strength' => (string)($m->strength_description ?? ''),
                 'weakness' => (string)($m->weakness_description ?? ''),
                 'activity' => (string)($m->improvement_activity ?? ''),
