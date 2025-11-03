@@ -29,7 +29,7 @@ class ScoringHelper
                     ->on('sr.selected_option', '=', 'so.option_letter');
             })
             ->where('sr.session_id', $sessionId)
-            ->select('so.competency_target', DB::raw('AVG(so.score) * 5 as scaled'))
+            ->select('so.competency_target', DB::raw('SUM(so.score) as score'))
             ->groupBy('so.competency_target')
             ->get()
             ->keyBy('competency_target');
