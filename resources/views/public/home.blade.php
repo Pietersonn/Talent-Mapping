@@ -42,16 +42,13 @@
 
                 <div class="talent-competency-card">
                     <div class="card-header">
-                        <h3>Apa itu <br><span class="highlight">Talent Competency?</span></h3>
+                        <h3>Apa itu <br><span class="highlight">Talent Mapping?</span></h3>
                     </div>
                     <div class="card-content">
                         <p>
-                            Talent Competency menggunakan metodologi yang
-                            dikembangkan untuk mengekstraksi kompetensi yang
-                            dimiliki seseorang. Instrumen ini dikembangkan
-                            berdasarkan jawaban yang anda berikan. Laporan ini
-                            mengajukan gambaran kompetensi mengapai profil
-                            kompetensi Anda.
+                            Talent Mapping adalah metode yang dikembangkan untuk mengidentifikasi dan memetakan kompetensi
+                            serta potensi setiap individu secara sistematis, guna memastikan penempatan yang tepat dan
+                            pengembangan diri.
                         </p>
                     </div>
                     <div class="hero-buttons">
@@ -70,6 +67,18 @@
         <div class="container">
             <div class="feature-wrapper">
 
+                <div class="feature-item feature-item--reverse">
+                    <div class="feature-image">
+                        <img src="{{ asset('assets/public/images/icon2.png') }}" alt="Talent Mapping Illustration">
+                    </div>
+                    <div class="feature-content">
+                        <h3>Talent Competency</h3>
+                        <p>membantu mengidentifikasi kompetensi utama dan area pengembangan setiap individu,
+                            sehingga Anda dapat memahami kekuatan diri serta merancang langkah pengembangan yang lebih
+                            terarah.</p>
+                    </div>
+                </div>
+
                 <div class="feature-item">
                     <div class="feature-image">
                         <img src="{{ asset('assets/public/images/icon1.png') }}" alt="ST-30 Illustration">
@@ -80,18 +89,6 @@
                             berperilaku, dan berinteraksi,
                             sehingga Anda dapat memahami karakter unik serta potensi terbaik yang mendorong kinerja dan
                             pertumbuhan diri.</p>
-                    </div>
-                </div>
-
-                <div class="feature-item feature-item--reverse">
-                    <div class="feature-image">
-                        <img src="{{ asset('assets/public/images/icon2.png') }}" alt="Talent Mapping Illustration">
-                    </div>
-                    <div class="feature-content">
-                        <h3>Talent Mapping</h3>
-                        <p>membantu mengidentifikasi kompetensi utama dan area pengembangan setiap individu,
-                            sehingga Anda dapat memahami kekuatan diri serta merancang langkah pengembangan yang lebih
-                            terarah.</p>
                     </div>
                 </div>
 
@@ -107,33 +104,25 @@
                 <div class="step">
                     <div class="circle">1</div>
                     <div class="step-content">
-                        <h3>Prepare yourself</h3>
-                        <p>Ensure you're in a relaxed setting conducive to concentration for the test.</p>
+                        <h3>Persiapkan Dirimu</h3>
+                        <p>Pastikan kamu berada di tempat yang nyaman dan mendukung konsentrasi saat mengikuti tes.</p>
                     </div>
                 </div>
 
                 <div class="step">
                     <div class="circle">2</div>
                     <div class="step-content">
-                        <h3>Complete the test</h3>
-                        <p>Respond to 100 questions designed to reveal aspects of your personality.</p>
+                        <h3>Selesaikan Tes</h3>
+                        <p>Jawablah 50 pertanyaan ini dengan  jujur dan sesuai kondisi Anda saat ini.
+ Tidak ada jawaban benar atau salah — setiap jawaban mencerminkan diri Anda.</p>
                     </div>
                 </div>
 
                 <div class="step">
                     <div class="circle">3</div>
                     <div class="step-content">
-                        <h3>Receive your insights</h3>
-                        <p>Access your report to explore the various personality types and find out where you belong!</p>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <div class="circle">4</div>
-                    <div class="step-content">
-                        <h3>Explore & Grow</h3>
-                        <p>Use your personalized results to enhance your self-awareness, improve relationships, and achieve
-                            your goals.</p>
+                        <h3>Terima Hasilmu</h3>
+                        <p>Periksa hasil lengkapmu melalui email untuk melihat gambaran kepribadian, potensi, dan rekomendasi pengembangannya.!</p>
                     </div>
                 </div>
             </div>
@@ -154,8 +143,8 @@
                         <i class="fa fa-check-circle"></i>
                     </div>
                     <div class="item-text-content">
-                        <h3>Personality Report</h3>
-                        <p>A highly detailed and straightforward report that reveals your strengths and weaknesses.</p>
+                        <h3>Hasil Talent Mapping</h3>
+                        <p> Gambaran menyeluruh tentang potensi diri, kekuatan utama, serta area pengembangan yang perlu ditingkatkan.</p>
                     </div>
                 </div>
 
@@ -164,8 +153,8 @@
                         <i class="fa fa-book"></i>
                     </div>
                     <div class="item-text-content">
-                        <h3>Test Library</h3>
-                        <p>Access to over 20 assessment tests to help you evaluate your soft and hard skills.</p>
+                        <h3>Rekomendasi Pengembangan Diri</h3>
+                        <p>Saran aktivitas dan latihan personal untuk membantu Anda mengasah potensi sesuai hasil pemetaan.</p>
                     </div>
                 </div>
 
@@ -174,8 +163,8 @@
                         <i class="fa fa-graduation-cap"></i>
                     </div>
                     <div class="item-text-content">
-                        <h3>Course Library</h3>
-                        <p>Based on your test results, you can enroll in specific courses aimed at enhancing your skills.
+                        <h3>Rekomedasi Pelatihan</h3>
+                        <p> Daftar pelatihan yang disesuaikan dengan kebutuhan kompetensi dan rencana karier Anda.
                         </p>
                     </div>
                 </div>
@@ -185,8 +174,8 @@
                         <i class="fa fa-certificate"></i>
                     </div>
                     <div class="item-text-content">
-                        <h3>Certificates</h3>
-                        <p>Upon completing the courses and passing the tests, you will receive a downloadable certificate.
+                        <h3> ST-30</h3>
+                        <p> Pemahaman tentang gaya berpikir dan cara kerja alami Anda dalam menghadapi tugas, tantangan, dan kolaborasi.
                         </p>
                     </div>
                 </div>
