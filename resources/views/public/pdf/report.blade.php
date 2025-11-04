@@ -65,11 +65,11 @@
   .p5comp { color:#fff; font-weight:700; font-size:16px; text-align:center; }
   .p5desc { color:#fff; font-size:16px; line-height:1.35; width:150mm; left:125mm; font-weight:700 }
   .p5comp2{ top:81mm; left:45mm;  width:65mm; }
-  .p5comp1{ top:72mm; left:118mm; width:65mm; }
-  .p5comp3{ top:83mm; left:185mm; width:65mm; }
-  .p5desc1{ top:129mm; left:127mm; }
-  .p5desc2{ top:152mm; left:127mm; }
-  .p5desc3{ top:176mm; left:127mm; }
+  .p5comp1{ top:73mm; left:116mm; width:65mm; }
+  .p5comp3{ top:84mm; left:187mm; width:65mm; }
+  .p5desc1{ top:128mm; left:127mm; }
+  .p5desc2{ top:151mm; left:127mm; }
+  .p5desc3{ top:175mm; left:127mm; }
 
   /* ---------- PERSON (6) ---------- */
   .p6name { color:#0B3BBF; font-weight:700; font-size:17px; width:130mm; }
