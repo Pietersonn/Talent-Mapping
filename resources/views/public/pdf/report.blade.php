@@ -64,12 +64,12 @@
   /* ---------- PERSON (5) ---------- */
   .p5comp { color:#fff; font-weight:700; font-size:16px; text-align:center; }
   .p5desc { color:#fff; font-size:16px; line-height:1.35; width:150mm; left:125mm; font-weight:700 }
-  .p5comp2{ top:82mm; left:45mm;  width:65mm; }
-  .p5comp1{ top:75mm; left:123mm; width:50mm; }
-  .p5comp3{ top:87mm; left:184mm; width:65mm; }
-  .p5desc1{ top:132mm; left:127mm; }
+  .p5comp2{ top:81mm; left:45mm;  width:65mm; }
+  .p5comp1{ top:72mm; left:123mm; width:65mm; }
+  .p5comp3{ top:83mm; left:186mm; width:65mm; }
+  .p5desc1{ top:129mm; left:127mm; }
   .p5desc2{ top:152mm; left:127mm; }
-  .p5desc3{ top:177mm; left:127mm; }
+  .p5desc3{ top:176mm; left:127mm; }
 
   /* ---------- PERSON (6) ---------- */
   .p6name { color:#0B3BBF; font-weight:700; font-size:17px; width:130mm; }

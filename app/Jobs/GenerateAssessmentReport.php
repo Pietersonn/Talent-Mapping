@@ -38,6 +38,9 @@ class GenerateAssessmentReport implements ShouldQueue
             $recipientName  = $session->participant_name ?: ($user->name ?? 'Peserta');
             $recipientEmail = $user->email ?? null;
 
+            $event = DB::table('events')->where('id', $session->event_id)->first();
+            $eventName = $event->event_name ?? 'Talent Mapping'; // fallback kalau null
+
             // ---- 2) Ambil hasil dari test_results
             // Job ini MENGASUMSIKAN ScoringHelper sudah selesai dan TestResult sudah ADA.
             $result = DB::table('test_results')->where('session_id', $this->sessionId)->first();
@@ -129,7 +132,8 @@ class GenerateAssessmentReport implements ShouldQueue
             ];
 
             // ---- 4) Generate PDF
-            $fileName    = Str::of($recipientName)->slug('-') . '-' . Str::random(8) . '.pdf';
+            $cleanName = preg_replace('/[^\w\s\-]/u', '', $recipientName);
+            $fileName  = "{$cleanName} ({$eventName}).pdf";
             $relativePath = "reports/{$fileName}";
             Log::info("Membuat PDF: {$fileName} untuk session {$this->sessionId}");
 
