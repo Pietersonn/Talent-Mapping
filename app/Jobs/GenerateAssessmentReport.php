@@ -39,7 +39,7 @@ class GenerateAssessmentReport implements ShouldQueue
             $recipientEmail = $user->email ?? null;
 
             $event = DB::table('events')->where('id', $session->event_id)->first();
-            $eventName = $event->event_name ?? 'Talent Mapping'; // fallback kalau null
+            $eventName = $event->name ?? 'Talent Mapping'; // fallback kalau null
 
             // ---- 2) Ambil hasil dari test_results
             // Job ini MENGASUMSIKAN ScoringHelper sudah selesai dan TestResult sudah ADA.

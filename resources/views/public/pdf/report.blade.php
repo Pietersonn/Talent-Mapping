@@ -65,7 +65,7 @@
   .p5comp { color:#fff; font-weight:700; font-size:16px; text-align:center; }
   .p5desc { color:#fff; font-size:16px; line-height:1.35; width:150mm; left:125mm; font-weight:700 }
   .p5comp2{ top:81mm; left:45mm;  width:65mm; }
-  .p5comp1{ top:72mm; left:50%; width:65mm; }
+  .p5comp1{ top:72mm; left:118mm; width:65mm; }
   .p5comp3{ top:83mm; left:185mm; width:65mm; }
   .p5desc1{ top:129mm; left:127mm; }
   .p5desc2{ top:152mm; left:127mm; }
