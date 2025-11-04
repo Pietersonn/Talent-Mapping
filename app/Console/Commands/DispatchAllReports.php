@@ -26,3 +26,4 @@ class DispatchAllReports extends Command
         $this->info("✅ Semua job GenerateAssessmentReport berhasil dikirim ke queue!");
     }
 }
+
