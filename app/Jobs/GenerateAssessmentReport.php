@@ -172,16 +172,14 @@ class GenerateAssessmentReport implements ShouldQueue
             if ($recipientEmail) {
                 try {
                     $body = "Halo {$recipientName},\n\n"
-                        . "Berikut hasil Talent Assessment Anda terlampir (PDF).\n";
-                    if ($publicUrl) {
-                        $body .= "\nJika lampiran tidak terbaca, Anda juga bisa mengunduh di tautan berikut:\n{$publicUrl}\n";
-                    }
-                    $body .= "\nTerima kasih.";
+                        . "Terima kasih telah mengikuti program Talent Mapping.\n"
+                        . "Berikut hasil asesmen Anda terlampir dalam format PDF.\n\n"
+                        . "Semoga hasil ini dapat membantu Anda memahami potensi diri dengan lebih baik.\n\n"
+                        . "Salam hangat,\nTim Talent Mapping";
 
-                    // Gunakan mailer default (di .env: MAIL_MAILER=sendgrid)
                     Mail::raw($body, function ($m) use ($recipientEmail, $recipientName, $pdfContent, $fileName) {
                         $m->to($recipientEmail, $recipientName)
-                            ->subject('Hasil Talent Assessment')
+                            ->subject('Hasil Talent Mapping Anda')
                             ->attachData($pdfContent, $fileName, ['mime' => 'application/pdf']);
                     });
 
@@ -193,9 +191,6 @@ class GenerateAssessmentReport implements ShouldQueue
                     Log::info("Email berhasil dikirim ke: {$recipientEmail}");
                 } catch (\Throwable $e) {
                     Log::error("Email gagal dikirim: " . $e->getMessage(), ['session' => $this->sessionId]);
-                    DB::table('test_results')->where('session_id', $this->sessionId)->update([
-                        'updated_at'  => now(),
-                    ]);
                 }
             } else {
                 Log::warning("Email penerima kosong untuk session {$this->sessionId}, lewati pengiriman email.");
@@ -214,10 +209,6 @@ class GenerateAssessmentReport implements ShouldQueue
         }
     }
 
-    /**
-     * Bangun public URL Supabase Storage (jika bucket public).
-     * Format: {AWS_URL}/storage/v1/object/public/{bucket}/{relativePath}
-     */
     private function buildSupabasePublicUrl(string $relativePath): ?string
     {
         $base   = rtrim((string) env('AWS_URL'), '/');    // ex: https://xxxx.supabase.co
