@@ -29,13 +29,15 @@ class ParticipantController extends Controller
         return array_values(array_unique($ids));
     }
 
+    /** Base query untuk list participants (ambil score & pdf). */
     private function baseQuery(array $filters, array $allowedEventIds)
     {
+        // Query untuk menghitung total skor 3 kompetensi tertinggi (untuk ordering/sorting)
         $sumExpr = "
-        COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(tr.sjt_results,'$.top3[0].score')) AS DECIMAL(10,2)),0) +
-        COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(tr.sjt_results,'$.top3[1].score')) AS DECIMAL(10,2)),0) +
-        COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(tr.sjt_results,'$.top3[2].score')) AS DECIMAL(10,2)),0)
-    ";
+            COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(tr.sjt_results,'$.top3[0].score')) AS DECIMAL(10,2)),0) +
+            COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(tr.sjt_results,'$.top3[1].score')) AS DECIMAL(10,2)),0) +
+            COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(tr.sjt_results,'$.top3[2].score')) AS DECIMAL(10,2)),0)
+        ";
 
         $q = DB::table('test_sessions as ts')
             ->join('users as u', 'u.id', '=', 'ts.user_id')
@@ -43,17 +45,30 @@ class ParticipantController extends Controller
             ->leftJoin('test_results as tr', 'tr.session_id', '=', 'ts.id')
             ->when($allowedEventIds, fn($qq) => $qq->whereIn('ts.event_id', $allowedEventIds))
             ->selectRaw("
-            ts.id as session_id,
-            u.name, u.email,
-            ts.participant_background as instansi,
-            e.name as event_name, e.event_code,
-            tr.id as test_result_id,
-            tr.pdf_path,
-            tr.sjt_results, /* <-- BARIS BARU DITAMBAHKAN */
-            {$sumExpr} as sum_top3
-        ");
+                ts.id as session_id,
+                u.name, u.email,
+                ts.participant_background as instansi,
+                e.name as event_name, e.event_code,
+                tr.id as test_result_id,
+                tr.pdf_path,
+                tr.sjt_results, /* <-- DITAMBAHKAN: Data mentah untuk hitung total score */
+                {$sumExpr} as sum_top3
+            ");
 
-        // ... sisa baseQuery sama
+        if (!empty($filters['event_id'])) {
+            $q->where('ts.event_id', $filters['event_id']);
+        }
+        if (($filters['instansi'] ?? '') !== '') {
+            $q->where('ts.participant_background', 'like', '%' . $filters['instansi'] . '%');
+        }
+        if (($filters['q'] ?? '') !== '') {
+            $term = $filters['q'];
+            $q->where(function ($w) use ($term) {
+                $w->where('u.name', 'like', "%{$term}%")
+                    ->orWhere('u.email', 'like', "%{$term}%");
+            });
+        }
+
         return [$q, $sumExpr];
     }
 
@@ -102,34 +117,36 @@ class ParticipantController extends Controller
             $pagination = null;
         }
 
-        // === Hitung total_score & berhasil global ===
-       if ($pagination) {
-        $rows = collect($pagination->items());
-    }
-
-    $rows = $rows->map(function ($r) {
-        $r->total_score = null;
-        if (isset($r->sjt_results) && !empty($r->sjt_results)) {
-            $data = json_decode($r->sjt_results, true);
-            if (isset($data['all'])) {
-                // Hitung total skor dari semua kompetensi
-                $r->total_score = round(collect($data['all'])->sum('score'), 0);
-            }
+        // --- Perbaikan Logika Total Score ---
+        if ($pagination) {
+            $rows = collect($pagination->items());
         }
-        // Hapus data mentah JSON agar lebih ringan di view
-        unset($r->sjt_results);
-        return $r;
-    });
 
-    // === Perbarui return view (Hapus $total_score global) ===
-    return view('pic.participants.index', [
-        'events'   => $events,
-        'mode'    => $mode,
-        'n'     => $n,
-        'rows'    => $rows,
-        'pagination' => $pagination,
-        'filters'  => $filters,
-    ]);
+        $rows = $rows->map(function ($r) {
+            $r->total_score = null;
+            if (isset($r->sjt_results) && !empty($r->sjt_results)) {
+                $data = json_decode($r->sjt_results, true);
+                if (isset($data['all'])) {
+                    // Hitung total skor akumulasi dari semua kompetensi peserta
+                    $r->total_score = round(collect($data['all'])->sum('score'), 0);
+                }
+            }
+            // Hapus data JSON mentah untuk efisiensi
+            unset($r->sjt_results);
+            return $r;
+        });
+
+        // Hapus perhitungan global yang tidak terpakai
+
+        return view('pic.participants.index', [
+            'events'     => $events,
+            'mode'       => $mode,
+            'n'          => $n,
+            'rows'       => $rows,
+            'pagination' => $pagination,
+            'filters'    => $filters,
+            'total_score' => null, // Dikirim null karena skor per baris ada di $r->total_score
+        ]);
     }
 
     /** STREAM PDF hasil peserta */
@@ -152,14 +169,19 @@ class ParticipantController extends Controller
             ->first();
 
         if (!$row || empty($row->pdf_path)) {
+            // Jika tidak ditemukan atau path kosong, lempar 404
             abort(404, 'Result PDF tidak ditemukan atau akses ditolak.');
         }
 
         $path = $row->pdf_path;
 
+        // 1. Prioritas: Redirect ke URL Publik (Supabase/S3)
         if (preg_match('~^https?://~i', $path)) {
             return redirect()->away($path);
         }
+
+        // 2. Fallback: Streaming dari Storage Disk (lokal, s3)
+        $fileName = 'result-' . $row->session_id . '.pdf';
 
         foreach (['local', 'public', config('filesystems.default')] as $disk) {
             if (!$disk) continue;
@@ -167,20 +189,24 @@ class ParticipantController extends Controller
                 if (Storage::disk($disk)->exists($path)) {
                     return Response::make(Storage::disk($disk)->get($path), 200, [
                         'Content-Type'        => 'application/pdf',
-                        'Content-Disposition' => 'inline; filename="result-' . $row->session_id . '.pdf"',
+                        // Menggunakan 'inline' agar tampil di browser
+                        'Content-Disposition' => 'inline; filename="' . $fileName . '"',
                     ]);
                 }
             } catch (\Throwable $e) {
+                // Lanjut ke disk berikutnya jika terjadi error koneksi/I/O
             }
         }
 
+        // 3. Final Fallback: Coba path file langsung
         if (is_file($path)) {
             return Response::make(file_get_contents($path), 200, [
                 'Content-Type'        => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="result-' . $row->session_id . '.pdf"',
+                'Content-Disposition' => 'inline; filename="' . $fileName . '"',
             ]);
         }
 
+        // Jika semua gagal, lempar 404
         abort(404, 'File PDF tidak ditemukan.');
     }
 
@@ -232,12 +258,13 @@ class ParticipantController extends Controller
                 }
             }
 
-            // Pastikan 10 kode utama tetap muncul
+            // Pastikan 10 kode utama tetap muncul (untuk kolom SM, CIA, TS, dst di PDF)
             $codes = ['SM', 'CIA', 'TS', 'WWO', 'CA', 'L', 'SE', 'PS', 'PE', 'GH'];
             foreach ($codes as $code) {
                 $r->{$code} = round($competencies->get($code, 0), 1);
             }
 
+            // Hitung Grand Total Score
             $r->total_score = $competencies->sum();
             return $r;
         });
