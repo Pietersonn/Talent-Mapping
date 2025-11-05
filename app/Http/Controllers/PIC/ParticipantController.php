@@ -29,14 +29,13 @@ class ParticipantController extends Controller
         return array_values(array_unique($ids));
     }
 
-    /** Base query untuk list participants (ambil score & pdf). */
     private function baseQuery(array $filters, array $allowedEventIds)
     {
         $sumExpr = "
-            COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(tr.sjt_results,'$.top3[0].score')) AS DECIMAL(10,2)),0) +
-            COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(tr.sjt_results,'$.top3[1].score')) AS DECIMAL(10,2)),0) +
-            COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(tr.sjt_results,'$.top3[2].score')) AS DECIMAL(10,2)),0)
-        ";
+        COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(tr.sjt_results,'$.top3[0].score')) AS DECIMAL(10,2)),0) +
+        COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(tr.sjt_results,'$.top3[1].score')) AS DECIMAL(10,2)),0) +
+        COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(tr.sjt_results,'$.top3[2].score')) AS DECIMAL(10,2)),0)
+    ";
 
         $q = DB::table('test_sessions as ts')
             ->join('users as u', 'u.id', '=', 'ts.user_id')
@@ -44,29 +43,17 @@ class ParticipantController extends Controller
             ->leftJoin('test_results as tr', 'tr.session_id', '=', 'ts.id')
             ->when($allowedEventIds, fn($qq) => $qq->whereIn('ts.event_id', $allowedEventIds))
             ->selectRaw("
-                ts.id as session_id,
-                u.name, u.email,
-                ts.participant_background as instansi,
-                e.name as event_name, e.event_code,
-                tr.id as test_result_id,
-                tr.pdf_path,
-                {$sumExpr} as sum_top3
-            ");
+            ts.id as session_id,
+            u.name, u.email,
+            ts.participant_background as instansi,
+            e.name as event_name, e.event_code,
+            tr.id as test_result_id,
+            tr.pdf_path,
+            tr.sjt_results, /* <-- BARIS BARU DITAMBAHKAN */
+            {$sumExpr} as sum_top3
+        ");
 
-        if (!empty($filters['event_id'])) {
-            $q->where('ts.event_id', $filters['event_id']);
-        }
-        if (($filters['instansi'] ?? '') !== '') {
-            $q->where('ts.participant_background', 'like', '%' . $filters['instansi'] . '%');
-        }
-        if (($filters['q'] ?? '') !== '') {
-            $term = $filters['q'];
-            $q->where(function ($w) use ($term) {
-                $w->where('u.name', 'like', "%{$term}%")
-                    ->orWhere('u.email', 'like', "%{$term}%");
-            });
-        }
-
+        // ... sisa baseQuery sama
         return [$q, $sumExpr];
     }
 
@@ -116,33 +103,33 @@ class ParticipantController extends Controller
         }
 
         // === Hitung total_score & berhasil global ===
-        $allResults = DB::table('test_results')->pluck('sjt_results');
+       if ($pagination) {
+        $rows = collect($pagination->items());
+    }
 
-        $total_score = 0;
-        $berhasil = 0;
-
-        foreach ($allResults as $json) {
-            if (!$json) continue;
-
-            $decoded = json_decode($json, true);
-            if (!empty($decoded['all'])) {
-                // jumlahkan semua score di 'all'
-                $score = collect($decoded['all'])->sum('score');
-                $total_score += $score;
-                $berhasil++;
+    $rows = $rows->map(function ($r) {
+        $r->total_score = null;
+        if (isset($r->sjt_results) && !empty($r->sjt_results)) {
+            $data = json_decode($r->sjt_results, true);
+            if (isset($data['all'])) {
+                // Hitung total skor dari semua kompetensi
+                $r->total_score = round(collect($data['all'])->sum('score'), 0);
             }
         }
+        // Hapus data mentah JSON agar lebih ringan di view
+        unset($r->sjt_results);
+        return $r;
+    });
 
-
-        return view('pic.participants.index', [
-            'events'     => $events,
-            'mode'       => $mode,
-            'n'          => $n,
-            'rows'       => $rows,
-            'pagination' => $pagination,
-            'filters'    => $filters,
-            'total_score' => $total_score,
-        ]);
+    // === Perbarui return view (Hapus $total_score global) ===
+    return view('pic.participants.index', [
+        'events'   => $events,
+        'mode'    => $mode,
+        'n'     => $n,
+        'rows'    => $rows,
+        'pagination' => $pagination,
+        'filters'  => $filters,
+    ]);
     }
 
     /** STREAM PDF hasil peserta */

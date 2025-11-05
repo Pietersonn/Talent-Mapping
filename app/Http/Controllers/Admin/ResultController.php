@@ -12,6 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -156,23 +157,65 @@ class ResultController extends Controller
     }
 
     /** Download PDF */
-    public function downloadPdf(TestResult $testResult)
+public function downloadPdf(TestResult $testResult)
     {
-        if (empty($testResult->pdf_path) || !Storage::disk('local')->exists($testResult->pdf_path)) {
-            return back()->with('error', 'PDF file not found.');
+        // TestResult Model sudah memiliki relasi ke Session dan User
+        $testResult->load('session.user');
+
+        // Cek path PDF dari result
+        if (empty($testResult->pdf_path)) {
+            return back()->with('error', 'PDF file path is empty.');
         }
 
-        $absolutePath = Storage::disk('local')->path($testResult->pdf_path);
+        $path = $testResult->pdf_path;
+        $sessionId = optional($testResult->session)->id ?? $testResult->session_id;
 
-        $rawName = optional($testResult->session)->participant_name
-            ?? optional(optional($testResult->session)->user)->name
-            ?? 'participant';
+        // --- 1. Priority: External Public URL (Supabase/S3 Redirect) ---
+        // Jika path adalah URL, langsung redirect (atau jika kita konstruksi URL Supabase/S3)
+        if (preg_match('~^https?://~i', $path)) {
+            return redirect()->away($path);
+        }
 
-        $fileName = 'talent-assessment-' . Str::slug($rawName) . '.pdf';
+        // Coba konstruksi URL publik dari env (seperti di GenerateAssessmentReport)
+        $base = rtrim(config('filesystems.disks.s3.url') ?? env('AWS_URL', ''), '/');
+        $bucket = trim(config('filesystems.disks.s3.bucket') ?? env('AWS_BUCKET', ''), '/');
 
-        return response()->download($absolutePath, $fileName, [
-            'Content-Type' => 'application/pdf',
-        ]);
+        if (!empty($base) && !empty($bucket)) {
+             // Konstruksi URL publik Supabase/S3 (format: BASE/storage/v1/object/public/BUCKET/PATH)
+             $publicUrl = "{$base}/storage/v1/object/public/{$bucket}/{$path}";
+             return redirect()->away($publicUrl);
+        }
+
+        // --- 2. Fallback: Stream content from Disk ('s3' or 'local') ---
+        $fileName = 'result-' . $sessionId . '.pdf';
+
+        // Iterasi melalui disk yang mungkin (S3/Supabase default, local)
+        foreach ([config('filesystems.default'), 'local'] as $disk) {
+             if (!$disk) continue;
+             try {
+                 if (Storage::disk($disk)->exists($path)) {
+                     $content = Storage::disk($disk)->get($path);
+
+                     return Response::make($content, 200, [
+                         'Content-Type'=> 'application/pdf',
+                         'Content-Disposition' => 'inline; filename="' . $fileName . '"',
+                     ]);
+                 }
+             } catch (\Throwable $e) {
+                 // Log the error and continue to the next disk
+                 \Illuminate\Support\Facades\Log::warning("PDF Stream failed from disk {$disk}: " . $e->getMessage());
+             }
+        }
+
+        // --- 3. Final Fallback (Coba path langsung jika semua gagal) ---
+        if (is_file($path)) {
+             return Response::make(file_get_contents($path), 200, [
+                 'Content-Type'=> 'application/pdf',
+                 'Content-Disposition' => 'inline; filename="' . $fileName . '"',
+             ]);
+        }
+
+        abort(404, 'File PDF tidak ditemukan.');
     }
 
     /** Bulk action */

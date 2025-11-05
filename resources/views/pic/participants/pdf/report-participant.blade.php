@@ -8,7 +8,7 @@
   $companyAddr2  = 'Gedung Nurhayati Kampus GIBS, Jl. Trans - Kalimantan Lantai 2, Sungai Lumbah, Kec. Alalak, Kabupaten Barito Kuala, Kalimantan Selatan, Indonesia 70582';
   $companyContact= 'Email : bcti@hasnurcentre.org | website: bcti.id';
 
-  $logoPath = public_path('assets/public/images/logo-bcti1.png');
+  $logoPath = asset('assets/public/images/logo-bcti1.png');
 @endphp
 <!DOCTYPE html>
 <html lang="id">

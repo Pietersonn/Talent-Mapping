@@ -158,7 +158,7 @@
                 </div>
               </td>
               <td class="text-end">
-                <span class="text-muted">{{ $total_score }}</span>
+                <span class="text-muted">{{ $r->$total_score }}</span>
               </td>
               <td>
                 @if(!empty($r->pdf_path))

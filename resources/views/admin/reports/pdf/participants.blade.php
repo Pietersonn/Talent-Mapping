@@ -3,7 +3,7 @@
   $generatedBy = $generatedBy ?? (auth()->user()->name ?? 'Admin');
   $generatedAt = $generatedAt ?? now()->format('d M Y H:i') . ' WIB';
 
-  $logoPath       = public_path('assets/public/images/logo-bcti1.png');
+  $logoPath       = asset('assets/public/images/logo-bcti1.png');
   $companyName    = 'BUSINESS & COMMUNICATION TRAINING INSTITUTE';
   $companyAddr1   = 'kompleks sekolah Global Islamic Boarding School (GIBS)';
   $companyAddr2   = 'Gedung Nurhayati Kampus GIBS, Jl. Trans - Kalimantan Lantai 2, Sungai Lumbah, Kec. Alalak, Kabupaten Barito Kuala, Kalimantan Selatan, Indonesia 70582';
