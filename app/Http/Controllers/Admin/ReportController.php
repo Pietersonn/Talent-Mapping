@@ -168,38 +168,38 @@ class ReportController extends Controller
         $results = $q->orderBy('u.name')->orderBy('ts.id')->get();
 
         $processedRows = $results->map(function ($row) {
-             $totalScore = 0;
-             $sjtData = null; // Inisialisasi sjtData
-             if (!empty($row->sjt_results)) {
-                  $sjtData = json_decode($row->sjt_results, true);
-                  if (isset($sjtData['all']) && is_array($sjtData['all'])) {
-                      foreach ($sjtData['all'] as $competency) {
-                          if (isset($competency['score']) && is_numeric($competency['score'])) {
-                              $totalScore += (float) $competency['score'];
-                          }
-                      }
-                  }
-             }
-              $row->total_score = $totalScore;
+            $totalScore = 0;
+            $sjtData = null; // Inisialisasi sjtData
+            if (!empty($row->sjt_results)) {
+                $sjtData = json_decode($row->sjt_results, true);
+                if (isset($sjtData['all']) && is_array($sjtData['all'])) {
+                    foreach ($sjtData['all'] as $competency) {
+                        if (isset($competency['score']) && is_numeric($competency['score'])) {
+                            $totalScore += (float) $competency['score'];
+                        }
+                    }
+                }
+            }
+            $row->total_score = $totalScore;
 
-              // Parsing detail kompetensi untuk PDF
-              $codes = ['SM', 'CIA', 'TS', 'WWO', 'CA', 'L', 'SE', 'PS', 'PE', 'GH'];
-              $competencies = collect([]);
-              // Gunakan $sjtData yang sudah di-decode
-              if (isset($sjtData['all']) && is_array($sjtData['all'])) {
-                  foreach ($sjtData['all'] as $c) {
-                      if (isset($c['code'], $c['score'])) {
-                           $competencies->put($c['code'], $c['score']);
-                      }
-                  }
-              }
-              foreach ($codes as $code) {
-                   // Pastikan kolom ini memang dibutuhkan oleh view PDF ('admin.reports.pdf.participants')
-                   $row->{$code} = round($competencies->get($code, 0), 1);
-              }
+            // Parsing detail kompetensi untuk PDF
+            $codes = ['SM', 'CIA', 'TS', 'WWO', 'CA', 'L', 'SE', 'PS', 'PE', 'GH'];
+            $competencies = collect([]);
+            // Gunakan $sjtData yang sudah di-decode
+            if (isset($sjtData['all']) && is_array($sjtData['all'])) {
+                foreach ($sjtData['all'] as $c) {
+                    if (isset($c['code'], $c['score'])) {
+                        $competencies->put($c['code'], $c['score']);
+                    }
+                }
+            }
+            foreach ($codes as $code) {
+                // Pastikan kolom ini memang dibutuhkan oleh view PDF ('admin.reports.pdf.participants')
+                $row->{$code} = round($competencies->get($code, 0), 1);
+            }
 
-              return $row;
-          });
+            return $row;
+        });
 
         if ($mode === 'top') {
             $rows = $processedRows->sortByDesc('total_score')->take($n);
@@ -225,10 +225,10 @@ class ReportController extends Controller
         ];
 
         // Pastikan view PDF 'admin.reports.pdf.participants' ada dan sesuai
-        $pdf = Pdf::loadView('admin.reports.pdf.participants', $data)
-            ->setPaper('a4', 'landscape');
+        $pdf = Pdf::loadView('pic.participants.pdf.report-participant', $data)
+            ->setPaper('a4', 'landscape')
+            ->setOptions(['isRemoteEnabled' => true]); // WAJIB untuk membaca URL (asset())
 
         return $pdf->stream('participants-report.pdf');
     }
-
 }

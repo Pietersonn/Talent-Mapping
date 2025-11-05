@@ -295,7 +295,8 @@ class ParticipantController extends Controller
         ];
 
         $pdf = Pdf::loadView('pic.participants.pdf.report-participant', $data)
-            ->setPaper('a4', 'landscape');
+            ->setPaper('a4', 'landscape')
+            ->setOptions(['isRemoteEnabled' => true]); // WAJIB untuk membaca URL (asset())
 
         return $pdf->stream('participants-report.pdf');
     }

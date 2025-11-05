@@ -3,18 +3,7 @@
     $generatedBy = $generatedBy ?? (auth()->user()->name ?? 'Admin');
     $generatedAt = $generatedAt ?? now()->format('d M Y H:i') . ' WIB';
 
-    $logoPath = public_path('assets/public/images/logo-bcti1.png');
-    $logoBase64 = null;
-    if (file_exists($logoPath)) {
-        try {
-            $type = pathinfo($logoPath, PATHINFO_EXTENSION);
-            if (in_array($type, ['png', 'jpg', 'jpeg'])) {
-                $data = file_get_contents($logoPath);
-                $logoBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-            }
-        } catch (\Throwable $e) {
-        }
-    }
+    $logoPath = asset('assets/public/images/logo-bcti1.png');
 
     $companyName = 'BUSINESS & COMMUNICATION TRAINING INSTITUTE';
     $companyAddr1 = 'kompleks sekolah Global Islamic Boarding School (GIBS)';
@@ -152,12 +141,8 @@
 
     <div class="header clearfix">
         <div class="h-left">
-            @if ($logoBase64)
-                <img class="h-logo" src="{{ $logoBase64 }}" alt="BCTI">
-            @else
-                <strong class="company-name">BCTI</strong>
-            @endif
-            </div>
+            <img class="h-logo" src="{{ $logoPath }}" alt="BCTI">
+        </div>
         <div class="h-right">
             <div class="company-name">{{ $companyName }}</div>
             <div class="company-sub">
