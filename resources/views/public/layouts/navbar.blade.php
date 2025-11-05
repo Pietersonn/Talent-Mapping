@@ -3,7 +3,7 @@
     <!-- Brand -->
     <div class="navbar-brand">
       <a href="{{ route('home') }}" aria-label="Go to Home">
-        <img src="{{ asset('assets/public/images/logo-bcti.png') }}" alt="BCTI Logo" class="logo">
+        <img src="{{ asset('assets/public/images/logo-bcti1.png') }}" alt="BCTI Logo" class="logo">
       </a>
     </div>
 
