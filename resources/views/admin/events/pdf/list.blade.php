@@ -1,4 +1,12 @@
 @php
+    $logoFile = public_path('assets/public/images/logo-bcti1.png');
+    $logoBase64 = '';
+    if (file_exists($logoFile)) {
+        $logoBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($logoFile));
+    }
+@endphp
+
+@php
   // Default values disalin dari participants PDF
   $reportTitle    = $reportTitle ?? 'Events Report'; // Judul default tetap Events Report
   $generatedBy    = $generatedBy ?? (auth()->user()->name ?? 'Admin');
@@ -9,11 +17,8 @@
   $companyAddr1   = 'kompleks sekolah Global Islamic Boarding School (GIBS)';
   $companyAddr2   = 'Gedung Nurhayati Kampus GIBS, Jl. Trans - Kalimantan Lantai 2, Sungai Lumbah, Kec. Alalak, Kabupaten Barito Kuala, Kalimantan Selatan, Indonesia 70582';
   $companyContact = 'Email : bcti@hasnurcentre.org | website: bcti.id';
-  $logoPath       = public_path('assets/public/images/logo-bcti1.png');
 
-  // Asumsi data $rows berisi collection/array dari objek event,
-  // dan setiap objek $ev punya properti:
-  // name, company, pic->name, start_date, end_date, participants_count (dari withCount), is_active
+
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -63,7 +68,7 @@
   <div class="header clearfix">
     <div class="h-left">
       @if(file_exists($logoPath))
-        <img class="h-logo" src="{{ $logoPath }}" alt="BCTI">
+        <img class="h-logo" src="{{ $logoBase64 }}" alt="BCTI">
       @else
         <strong class="company-name">BCTI</strong>
       @endif

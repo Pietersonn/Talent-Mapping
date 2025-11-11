@@ -1,3 +1,11 @@
+
+@php
+    $logoFile = public_path('assets/public/images/logo-bcti1.png');
+    $logoBase64 = '';
+    if (file_exists($logoFile)) {
+        $logoBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($logoFile));
+    }
+@endphp
 @php
     $reportTitle = $reportTitle ?? 'Participants Report';
     $generatedBy = $generatedBy ?? 'PIC';
@@ -9,7 +17,9 @@
         'Gedung Nurhayati Kampus GIBS, Jl. Trans - Kalimantan Lantai 2, Sungai Lumbah, Kec. Alalak, Kabupaten Barito Kuala, Kalimantan Selatan, Indonesia 70582';
     $companyContact = 'Email : bcti@hasnurcentre.org | website: bcti.id';
 
-    $logoPath = asset('assets/public/images/logo-bcti1.png');
+
+
+
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -140,7 +150,8 @@
 
     <div class="header clearfix">
         <div class="h-left">
-            <img class="h-logo" src="{{ $logoPath }}" alt="BCTI">
+            <img class="h-logo" src="{{ $logoBase64 }}" alt="BCTI">
+
         </div>
         <div class="h-right">
             <div class="company-name">{{ $companyName }}</div>

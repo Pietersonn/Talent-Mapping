@@ -219,7 +219,6 @@ class ParticipantController extends Controller
         $instansi = trim((string) $req->query('instansi', ''));
         $search   = trim((string) $req->query('q', ''));
 
-
         $allowedEventIds = $this->myEventIds(Auth::id());
 
         $query = DB::table('test_sessions as ts')
@@ -249,7 +248,7 @@ class ParticipantController extends Controller
             $data = json_decode($r->sjt_results, true);
             $competencies = collect([]);
 
-            /// Ambil nilai dari JSON 'all' saja
+            // Ambil nilai dari JSON 'all'
             if (!empty($data['all'])) {
                 foreach ($data['all'] as $c) {
                     if (isset($c['code'], $c['score'])) {
@@ -258,18 +257,19 @@ class ParticipantController extends Controller
                 }
             }
 
-            // Pastikan 10 kode utama tetap muncul (untuk kolom SM, CIA, TS, dst di PDF)
+            // Pastikan tetap ada 10 kolom
             $codes = ['SM', 'CIA', 'TS', 'WWO', 'CA', 'L', 'SE', 'PS', 'PE', 'GH'];
             foreach ($codes as $code) {
                 $r->{$code} = round($competencies->get($code, 0), 1);
             }
 
-            // Hitung Grand Total Score
+            // Total
             $r->total_score = $competencies->sum();
+
             return $r;
         });
 
-        // Urutan data sesuai mode
+        // Urutkan sesuai mode
         if ($mode === 'top') {
             $rows = $rows->sortByDesc('total_score')->take($n);
         } elseif ($mode === 'bottom') {
@@ -280,24 +280,30 @@ class ParticipantController extends Controller
 
         $reportTitle = 'Participants Competency Report';
         $modeText = match ($mode) {
-            'top' => "Top {$n} Participants by Total Score",
+            'top'    => "Top {$n} Participants by Total Score",
             'bottom' => "Bottom {$n} Participants by Total Score",
-            default => "All Participants — Ordered by Highest Score",
+            default  => "All Participants — Ordered by Highest Score",
         };
 
+        // ✅ Local file path (bukan URL asset())
+        $logoPath = public_path('assets/public/images/logo-bcti1.png');
+
+        // Kirim ke view
         $data = [
             'rows'        => $rows,
             'reportTitle' => $reportTitle,
             'modeText'    => $modeText,
             'generatedBy' => Auth::user()->name ?? 'PIC',
             'generatedAt' => now('Asia/Makassar')->format('d M Y H:i') . ' WITA',
-
+            'logoPath'    => $logoPath,
         ];
 
+        // Generate PDF tanpa simpan
         $pdf = Pdf::loadView('pic.participants.pdf.report-participant', $data)
             ->setPaper('a4', 'landscape')
-            ->setOptions(['isRemoteEnabled' => true]); // WAJIB untuk membaca URL (asset())
+            ->setOptions(['isRemoteEnabled' => true]); // penting untuk font & css
 
+        // ✅ Stream langsung ke user
         return $pdf->stream('participants-report.pdf');
     }
 }

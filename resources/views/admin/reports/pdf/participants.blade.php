@@ -1,9 +1,16 @@
 @php
+    $logoFile = public_path('assets/public/images/logo-bcti1.png');
+    $logoBase64 = '';
+    if (file_exists($logoFile)) {
+        $logoBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($logoFile));
+    }
+@endphp
+
+
+@php
     $reportTitle = $reportTitle ?? 'Participants Competency Report';
     $generatedBy = $generatedBy ?? (auth()->user()->name ?? 'Admin');
     $generatedAt = $generatedAt ?? now()->format('d M Y H:i') . ' WIB';
-
-    $logoPath = asset('assets/public/images/logo-bcti1.png');
 
     $companyName = 'BUSINESS & COMMUNICATION TRAINING INSTITUTE';
     $companyAddr1 = 'kompleks sekolah Global Islamic Boarding School (GIBS)';
@@ -141,7 +148,7 @@
 
     <div class="header clearfix">
         <div class="h-left">
-            <img class="h-logo" src="{{ $logoPath }}" alt="BCTI">
+            <img class="h-logo" src="{{ $logoBase64 }}" alt="BCTI">
         </div>
         <div class="h-right">
             <div class="company-name">{{ $companyName }}</div>

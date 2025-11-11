@@ -2,6 +2,7 @@
 @section('title', 'Participants')
 
 @section('content')
+
     @php
         // nilai dari server / query
         $mode = $mode ?? request('mode', 'all'); // all | top | bottom
