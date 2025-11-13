@@ -168,14 +168,15 @@
                                     title: 'Tes Selesai!',
                                     text: 'Terima kasih telah menyelesaikan test.',
                                     icon: 'success',
+                                    timer: 1500,
                                     showConfirmButton: false,
                                     allowOutsideClick: false,
                                     allowEscapeKey: false,
-                                    didOpen: () => {
-                                        // 🚀 Pindah halaman langsung saat SweetAlert muncul
+                                    didClose: () => {
                                         window.location.replace(next);
                                     }
                                 });
+
                             } else {
                                 // Halaman biasa, langsung pindah
                                 window.location.replace(next);
