@@ -162,34 +162,31 @@
                             const data = await res.json().catch(() => null);
                             const next = data?.next || res.url;
 
-                            if (next) {
-                                if (isLastPage) {
-                                    // Tampilkan SweetAlert untuk halaman terakhir
-                                    Swal.fire({
-                                        title: 'Tes Selesai!',
-                                        text: 'Terima kasih telah menyelesaikan test. Anda akan diarahkan ke halaman hasil.',
-                                        icon: 'success',
-                                        confirmButtonText: 'Lihat Hasil',
-                                        allowOutsideClick: false,
-                                        allowEscapeKey: false
-                                    }).then(() => {
-                                        // Pindah ke halaman berikutnya setelah SweetAlert ditutup
+                            if (isLastPage) {
+                                // ✅ Tampilkan SweetAlert, lalu langsung redirect tanpa tunggu
+                                Swal.fire({
+                                    title: 'Tes Selesai!',
+                                    text: 'Terima kasih telah menyelesaikan test.',
+                                    icon: 'success',
+                                    showConfirmButton: false,
+                                    allowOutsideClick: false,
+                                    allowEscapeKey: false,
+                                    didOpen: () => {
+                                        // 🚀 Pindah halaman langsung saat SweetAlert muncul
                                         window.location.replace(next);
-                                    });
-                                } else {
-                                    // Halaman biasa, langsung pindah
-                                    window.location.replace(next);
-                                }
+                                    }
+                                });
                             } else {
-                                window.location.reload();
+                                // Halaman biasa, langsung pindah
+                                window.location.replace(next);
                             }
+
                         } catch (err) {
                             console.error('Submit gagal:', err);
                             alert('Terjadi kesalahan. Silakan coba lagi.');
-                            // Aktifkan kembali tombol jika gagal
                             submitBtn.disabled = false;
                             submitBtn.textContent = isLastPage ? 'Selesaikan Test' :
-                            'Kirim & Lanjutkan';
+                                'Kirim & Lanjutkan';
                         }
                     });
                 };
