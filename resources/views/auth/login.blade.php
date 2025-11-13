@@ -27,7 +27,7 @@
         cursor: pointer;
         color: #6c757d; /* Warna ikon */
       }
-      /* Menambahkan padding kanan pada input password agar teks tidak tertimpa ikon */
+
       .password-wrapper .form-control {
         padding-right: 40px;
       }
@@ -39,10 +39,6 @@
     <div class="content">
         <div class="container">
             <div class="row justify-content-center align-items-center min-vh-100">
-                {{-- <div class="col-md-6 order-md-2 text-center d-none d-md-block">
-            <img src="{{ asset('assets/login-form-09/images/undraw_file_sync_ot38.svg') }}" alt="Image" class="img-fluid">
-        </div> --}}
-
                 <div class="col-md-6 contents">
                     <div class="form-block mx-auto">
                         <div class="mb-4 text-center">
@@ -102,12 +98,6 @@
                             <span class="d-block text-center my-4 text-muted">or sign in with</span>
 
                             <div class="social-login text-center mb-4">
-                                <a href="#" class="facebook">
-                                    <span class="icon-facebook mr-3"></span>
-                                </a>
-                                <a href="#" class="twitter">
-                                    <span class="icon-twitter mr-3"></span>
-                                </a>
                                 <a href="{{ route('login.google.redirect') }}" class="google">
                                     <span class="icon-google mr-3"></span>
                                 </a>

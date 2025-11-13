@@ -52,11 +52,6 @@
   text-align: left;
 }
 
-/* Styling untuk teks 'Harap diingat:' */
-.sjt-reminder-text .highlight-red {
-  color: #ff0015; /* Warna merah muda lembut (sesuaikan jika ingin merah lebih terang/gelap) */
-  font-weight: bold; /* Menjaga agar tetap tebal */
-}
 
 .sjt-page-info {
     text-align: center;
@@ -114,7 +109,7 @@
 
 .sjt-option-item {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 12px;
     padding: 12px 15px;
     border: 1px solid #e2e8f0;
@@ -231,32 +226,75 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+    /* === Perbaikan Hero Section: Lebih rapi dan ringkas === */
     .sjt-hero {
-        min-height: 250px;
-        padding: 20px;
+        min-height: 200px; /* Sedikit lebih kecil */
+        padding: 20px 0; /* Padding vertikal lebih kecil, horizontal 0 */
     }
 
     .sjt-hero-content {
-        padding: 20px 25px;
+        padding: 20px 20px; /* Padding konten hero dikurangi */
     }
 
     .sjt-title {
-        font-size: 20px;
+        font-size: 18px; /* Judul lebih kecil */
+        margin-bottom: 10px;
     }
 
+    .sjt-instruction,
+    .sjt-reminder-text {
+        font-size: 11px; /* Instruksi lebih kecil */
+        line-height: 1.4;
+    }
+
+    .sjt-reminder-text {
+        margin-top: 10px;
+        text-align: center; /* Set reminder text ke tengah di mobile */
+    }
+
+    /* === Perbaikan Soal & Opsi: Font kecil, hapus bold, Konten Lebih Lebar === */
     .sjt-questions-section {
-        padding: 20px 15px;
+        padding: 20px 8px; /* Konten lebih lebar (padding horizontal dikurangi) */
+    }
+
+    /* Penyesuaian jarak soal pertama (gap di atas soal no 1) */
+    .sjt-question-block:first-child {
+        margin-top: 20px;
     }
 
     .sjt-question-header {
         padding: 12px 15px;
-        font-size: 13px;
+        font-size: 12px; /* Font soal (header) dikecilkan */
+        font-weight: 380; /* Mengurangi ketebalan font soal */
     }
 
     .sjt-question-content {
         padding: 15px;
     }
 
+    .sjt-option-item {
+        padding: 10px 12px;
+        gap: 8px; /* Didekatkan dari 12px */
+    }
+
+    /* Huruf Opsi (A, B, C, D) dikecilkan dan didekatkan */
+    .sjt-option-letter {
+        font-size: 13px; /* Ukuran font huruf opsi dikecilkan */
+        font-weight: 600;
+        min-width: 15px; /* Mengurangi min-width agar lebih dekat ke teks */
+    }
+
+    .sjt-option-text {
+        font-size: 11px; /* Font teks opsi jawaban dikecilkan */
+    }
+
+    /* Menghapus Bold pada opsi yang terpilih (selected) */
+    .sjt-option-item.selected .sjt-option-text {
+        color: #2d3748;
+        font-weight: 400;
+    }
+
+    /* Action buttons di mobile */
     .sjt-actions {
         flex-direction: column;
         gap: 15px;
@@ -265,9 +303,5 @@
     .sjt-btn {
         width: 100%;
         text-align: center;
-    }
-
-    .sjt-option-item {
-        padding: 10px 12px;
     }
 }

@@ -132,9 +132,6 @@
 
                 {{-- Strength Indicator --}}
                 <div class="mb-3">
-                  <div class="progress">
-                    <div class="progress-bar" id="password-strength" role="progressbar" style="width:0%"></div>
-                  </div>
                   <small id="password-help" class="help-text">Use at least 8 characters including uppercase, numbers, and symbols.</small>
                 </div>
 
@@ -158,12 +155,6 @@
 
                 {{-- Social --}}
                 <div class="social-login text-center mb-4">
-                  <a href="#" class="facebook">
-                    <span class="icon-facebook mr-3"></span>
-                  </a>
-                  <a href="#" class="twitter">
-                    <span class="icon-twitter mr-3"></span>
-                  </a>
                   <a href="{{ route('login.google.redirect') }}" class="google">
                     <span class="icon-google mr-3"></span>
                   </a>

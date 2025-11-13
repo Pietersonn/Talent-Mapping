@@ -7,14 +7,14 @@
   position: relative;
   padding-bottom: 40px;
   font-family: 'Inter', sans-serif;
-  padding: 50px 0; /* Adjusted padding for balance */
+  padding: 50px 0;
   border-top: 2px solid #0f172a10;
   width: 100%;
 }
 
 .footer-container {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr; /* Adjusted for three equal sections */
+  grid-template-columns: 1.5fr 1fr 1fr;
   gap: 0px;
   max-width: 1200px;
   margin: 0 auto;
@@ -22,18 +22,18 @@
 }
 
 .footer-logo {
-  width: 150px; /* Increased logo size */
-  margin-bottom: 20px; /* Increased margin to balance text */
+  width: 150px;
+  margin-bottom: 20px;
 }
 
 .footer-left {
-  text-align: left; /* Ensures the left section stays aligned to the left */
+  text-align: left;
 }
 
 .footer-left p {
   margin: 6px 0;
-  line-height: 1.8; /* Adjusted for readability */
-  font-size: 16px; /* Increased font size */
+  line-height: 1.8;
+  font-size: 16px;
 }
 
 .footer-contact p {
@@ -41,15 +41,15 @@
   align-items: center;
   gap: 8px;
   margin: 6px 0;
-  font-size: 16px; /* Increased font size */
+  font-size: 16px;
 }
 
 .footer-middle h4,
 .footer-right h4 {
-  color: #166534; /* Green color */
+  color: #166534;
   font-weight: 700;
   margin-top: 15px;
-  font-size: 20px; /* Increased font size for better visibility */
+  font-size: 20px;
 }
 
 .footer-middle ul,
@@ -60,12 +60,12 @@
 }
 
 .footer-middle li    {
-  margin-bottom: 12px; /* Increased margin for better spacing */
+  margin-bottom: 12px;
 }
 
 .footer-right li {
     margin-bottom: 12px;
-    font-size: 20px; /* Increased font size for text */
+    font-size: 20px;
 }
 
 .footer-middle a,
@@ -103,7 +103,7 @@
   margin-top: 20px;
 }
 .footer-bottom {
-    background-color: #79df7e; /* Green background color */
+    background-color: #79df7e;
     text-align: center;
     padding: 15px 0;
     font-size: 14px;
@@ -123,66 +123,53 @@
 @media (max-width: 768px) {
 
     .footer {
-        /* Mengurangi padding atas di mobile, menghapus padding bawah */
         padding: 40px 0 0;
     }
 
     .footer-container {
-        /* Mengubah grid dari 3 kolom menjadi 1 kolom (vertikal) */
         grid-template-columns: 1fr;
-        /* Menambah jarak vertikal antar bagian yang ditumpuk */
         gap: 40px;
-        /* Mengurangi padding samping di mobile */
         padding: 0 20px;
     }
 
     .footer-left,
     .footer-middle,
     .footer-right {
-        /* Menengahkan semua teks di mobile */
         text-align: center;
-
-        /* PENTING: Menghapus margin aneh dari style desktop */
         margin-left: 0;
         padding-left: 0;
     }
 
     .footer-logo {
-        /* Memastikan logo juga di tengah */
         margin: 0 auto 20px auto;
     }
 
     .footer-contact p {
-        /* Menengahkan item kontak (ikon + teks) */
         justify-content: center;
     }
 
     .footer-middle h4,
     .footer-right h4 {
-        /* Menghapus margin-top, karena 'gap' sudah memberi jarak */
         margin-top: 0;
-        font-size: 18px; /* Sedikit mengecilkan judul */
+        font-size: 18px;
     }
 
     .footer-middle ul,
     .footer-right ul {
-        margin-top: 15px; /* Mengurangi jarak dari judul */
+        margin-top: 15px;
     }
 
     .footer-right li {
-        /* Menyamakan font-size dengan bagian 'middle' */
         font-size: 16px;
     }
 
     .footer-line {
-        /* Garis ini tidak lagi diperlukan karena layout berubah */
         display: none;
     }
 
     .footer-bottom {
-        /* PENTING: Menghapus margin negatif dari style desktop */
+        font-size: 9px;
         margin-bottom: 0;
-        /* Menyesuaikan margin-top agar pas */
         margin-top: 40px;
     }
 }

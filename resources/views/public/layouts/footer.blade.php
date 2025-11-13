@@ -18,10 +18,9 @@
         <div class="footer-middle">
             <h4>Talent Mapping</h4>
             <ul>
-                <li><a href="#">About</a></li>
-                <li><a href="#">Course & Event</a></li>
-                <li><a href="#">Self-Dev</a></li>
-                <li><a href="#">Corporate Service</a></li>
+                <li><a href="{{ route('home') }}">Home</a></li>
+                <li><a href="{{ route('test.form') }}">Tes</a></li>
+                <li><a href="#">Contact</a></li>
             </ul>
         </div>
 

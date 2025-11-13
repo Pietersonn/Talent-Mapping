@@ -173,19 +173,18 @@
 
 .st30-question-content {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     padding: 15px 20px;
-    gap: 10px;
+    gap: 0px;
 }
 
 .st30-checkbox {
     width: 18px;
     height: 18px;
-    margin: 0;
+    margin-right: 12px;
     accent-color: #3182ce;
     cursor: pointer;
     flex-shrink: 0;
-    margin-top: 1px;
 }
 
 .st30-number {
@@ -193,6 +192,7 @@
     color: #2d3748;
     flex-shrink: 0;
     min-width: 25px;
+    margin-right: 4px; /* jarak kecil antara nomor dan teks */
 }
 
 .st30-text {
@@ -261,7 +261,8 @@
 @media (max-width: 768px) {
     .st30-hero {
         min-height: 350px;
-        padding: 20px;
+        widows: 350px;
+        padding: 0px;
     }
 
     .st30-hero-content {
@@ -273,12 +274,21 @@
     }
 
     .st30-instruction {
-        font-size: 14px;
+        font-size: 12px;
     }
 
     .st30-questions-section {
-        padding: 30px 20px;
+        padding: 20px 12px;
     }
+    .st30-question-content {
+        padding: 14px 16px; /* lebih kecil biar area tampak lebih besar */
+    }
+    .st30-text {
+        text-align: justify;
+        font-size: 13.5px; /* sedikit lebih kecil agar proporsional */
+        line-height: 1.5;
+    }
+
 
     .st30-actions {
         flex-direction: column;
@@ -288,5 +298,12 @@
     .st30-btn {
         width: 100%;
         text-align: center;
+    }
+    .st30-checkbox {
+        margin-right: 10px;
+    }
+
+    .st30-number {
+        margin-right: 3px;
     }
 }

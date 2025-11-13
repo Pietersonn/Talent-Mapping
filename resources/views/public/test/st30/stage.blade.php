@@ -23,13 +23,17 @@
 
                 <div class="st30-instruction">
                     @if ($stage == 1)
-                        Dari pernyataan berikut, <strong>pilihlah 5 -7 pernyataan yang paling cocok </strong>dengan gambaran diri anda.
+                        Dari pernyataan berikut, <strong>pilihlah 5 -7 pernyataan yang paling cocok </strong>dengan gambaran
+                        diri anda.
                     @elseif($stage == 2)
-                        Dari pernyataan berikut, <strong>pilihlah 5 -7 pernyataan yang paling tidak cocok </strong>dengan gambaran diri anda.
+                        Dari pernyataan berikut, <strong>pilihlah 5 -7 pernyataan yang paling tidak cocok </strong>dengan
+                        gambaran diri anda.
                     @elseif($stage == 3)
-                       Dari pernyataan berikut, <strong>pilihlah 5 -7 pernyataan yang cocok </strong>dengan gambaran diri anda.
+                        Dari pernyataan berikut, <strong>pilihlah 5 -7 pernyataan yang cocok </strong>dengan gambaran diri
+                        anda.
                     @else
-                       Dari pernyataan berikut, <strong>pilihlah 5 -7 pernyataan yang tidak cocok </strong>dengan gambaran diri anda.
+                        Dari pernyataan berikut, <strong>pilihlah 5 -7 pernyataan yang tidak cocok </strong>dengan gambaran
+                        diri anda.
                     @endif
                 </div>
             </div>
@@ -79,12 +83,13 @@
                 <!-- Action Buttons -->
                 <div class="st30-actions">
                     @if ($stage > 1)
-                        <button type="button" class="st30-btn st30-btn-back js-loading-link" onclick="history.back()">
+                        <a href="{{ route('test.st30.stage', $stage - 1) }}" class="st30-btn st30-btn-back js-loading-link">
                             Kembali
-                        </button>
+                        </a>
                     @else
                         <div></div>
                     @endif
+
 
                     <button type="submit" id="submitBtn" class="st30-btn st30-btn-primary" disabled>
                         @if ($stage < 4)

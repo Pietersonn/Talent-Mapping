@@ -34,10 +34,17 @@
         <li class="nav-item">
           <a href="#" class="nav-link">Contact</a>
         </li>
+
+        <!-- Tombol login hanya muncul di mobile -->
+        @guest
+        <li class="nav-item mobile-only">
+          <a href="{{ route('login') }}" class="nav-link">Daftar / Masuk</a>
+        </li>
+        @endguest
       </ul>
     </div>
 
-    <!-- Right actions (selalu di luar hamburger) -->
+    <!-- Right actions (desktop only) -->
     <div class="navbar-actions">
       @auth
         <div class="user-menu" id="tmUserMenu">
@@ -82,7 +89,7 @@
           </div>
         </div>
       @else
-        <a href="{{ route('login') }}" class="btn btn-login">Daftar/Masuk</a>
+        <a href="{{ route('login') }}" class="btn btn-login desktop-only">Daftar/Masuk</a>
       @endauth
     </div>
   </div>
