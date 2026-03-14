@@ -26,7 +26,7 @@ class RoleMiddleware
         if (!in_array($user->peran, $roles)) {
             return match ($user->peran) {
                 'admin'   => redirect()->route('admin.dashboard'),
-                'mitra'   => redirect()->route('pic.dashboard'),
+                'mitra'   => redirect()->route('mitra.dashboard'),
                 'peserta' => redirect()->route('home'),
                 default   => redirect()->route('home'),
             };

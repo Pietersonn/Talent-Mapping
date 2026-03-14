@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -10,36 +9,25 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class CompetencyController extends Controller
 {
-    /**
-     * Display a listing of competencies with search and pagination
-     */
     public function index(Request $request)
     {
         $query = CompetencyDescription::query();
 
-        // Fitur Pencarian (Debounce di View) mencakup Nama, Kode, Kekuatan, dan Kelemahan
-        if ($request->has('search') && $request->search != '') {
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('competency_name', 'like', "%{$search}%")
-                    ->orWhere('competency_code', 'like', "%{$search}%")
-                    ->orWhere('strength_description', 'like', "%{$search}%")
-                    ->orWhere('weakness_description', 'like', "%{$search}%");
+                $q->where('nama_kompetensi', 'like', "%{$search}%")
+                  ->orWhere('kode_kompetensi', 'like', "%{$search}%")
+                  ->orWhere('deskripsi_kekuatan', 'like', "%{$search}%")
+                  ->orWhere('deskripsi_kelemahan', 'like', "%{$search}%");
             });
         }
 
-        // Statistik untuk Cards
         $totalCompetencies = CompetencyDescription::count();
-        $latestUpdate = CompetencyDescription::latest('updated_at')->first()->updated_at ?? now();
+        $latestUpdate = CompetencyDescription::latest('updated_at')->first()?->updated_at ?? now();
+        $competencies = $query->orderBy('kode_kompetensi')->simplePaginate(10);
 
-        // Gunakan simplePaginate(10) agar sesuai permintaan (hanya tombol geser Prev/Next)
-        $competencies = $query->orderBy('competency_code', 'asc')->simplePaginate(10);
-
-        return view('admin.questions.competencies.index', compact(
-            'competencies',
-            'totalCompetencies',
-            'latestUpdate'
-        ));
+        return view('admin.questions.competencies.index', compact('competencies', 'totalCompetencies', 'latestUpdate'));
     }
 
     public function create()
@@ -50,15 +38,18 @@ class CompetencyController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'competency_code' => 'required|string|max:30|unique:competency_descriptions,competency_code',
-            'competency_name' => 'required|string|max:255',
-            'strength_description' => 'nullable|string',
-            'weakness_description' => 'nullable|string',
-            'improvement_activity' => 'nullable|string',
-            'training_recommendations' => 'nullable|string',
+            'kode_kompetensi'          => 'required|string|max:30|unique:deskripsi_kompetensi,kode_kompetensi',
+            'nama_kompetensi'          => 'required|string|max:255',
+            'deskripsi_kekuatan'       => 'nullable|string',
+            'deskripsi_kelemahan'      => 'nullable|string',
+            'aktivitas_pengembangan'   => 'nullable|string',
+            'rekomendasi_pelatihan'    => 'nullable|string',
         ]);
 
-        CompetencyDescription::create($request->all());
+        CompetencyDescription::create($request->only([
+            'kode_kompetensi', 'nama_kompetensi', 'deskripsi_kekuatan',
+            'deskripsi_kelemahan', 'aktivitas_pengembangan', 'rekomendasi_pelatihan',
+        ]));
 
         return redirect()->route('admin.questions.competencies.index')
             ->with('success', 'Kompetensi berhasil ditambahkan.');
@@ -79,16 +70,18 @@ class CompetencyController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'competency_code' => 'required|string|max:30|unique:competency_descriptions,competency_code,' . $id,
-            'competency_name' => 'required|string|max:255',
-            'strength_description' => 'nullable|string',
-            'weakness_description' => 'nullable|string',
-            'improvement_activity' => 'nullable|string',
-            'training_recommendations' => 'nullable|string',
+            'kode_kompetensi'        => 'required|string|max:30|unique:deskripsi_kompetensi,kode_kompetensi,'.$id,
+            'nama_kompetensi'        => 'required|string|max:255',
+            'deskripsi_kekuatan'     => 'nullable|string',
+            'deskripsi_kelemahan'    => 'nullable|string',
+            'aktivitas_pengembangan' => 'nullable|string',
+            'rekomendasi_pelatihan'  => 'nullable|string',
         ]);
 
-        $competency = CompetencyDescription::findOrFail($id);
-        $competency->update($request->all());
+        CompetencyDescription::findOrFail($id)->update($request->only([
+            'kode_kompetensi', 'nama_kompetensi', 'deskripsi_kekuatan',
+            'deskripsi_kelemahan', 'aktivitas_pengembangan', 'rekomendasi_pelatihan',
+        ]));
 
         return redirect()->route('admin.questions.competencies.index')
             ->with('success', 'Kompetensi berhasil diperbarui.');
@@ -96,43 +89,34 @@ class CompetencyController extends Controller
 
     public function destroy($id)
     {
-        $competency = CompetencyDescription::findOrFail($id);
-        $competency->delete();
-
+        CompetencyDescription::findOrFail($id)->delete();
         return redirect()->route('admin.questions.competencies.index')
             ->with('success', 'Kompetensi berhasil dihapus.');
     }
 
-    /**
-     * Export Competencies to PDF
-     */
     public function export(Request $request)
     {
         $query = CompetencyDescription::query();
 
-        // TAMBAHKAN LOGIC SEARCH INI
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('competency_name', 'like', "%{$search}%")
-                    ->orWhere('competency_code', 'like', "%{$search}%")
-                    ->orWhere('strength_description', 'like', "%{$search}%")
-                    ->orWhere('weakness_description', 'like', "%{$search}%");
+                $q->where('nama_kompetensi', 'like', "%{$search}%")
+                  ->orWhere('kode_kompetensi', 'like', "%{$search}%")
+                  ->orWhere('deskripsi_kekuatan', 'like', "%{$search}%")
+                  ->orWhere('deskripsi_kelemahan', 'like', "%{$search}%");
             });
         }
 
-        $rows = $query->orderBy('competency_code', 'asc')->get();
+        $rows = $query->orderBy('kode_kompetensi')->get();
 
-        $data = [
-            'reportTitle' => 'Laporan Bank Data Kompetensi SJT',
-            'generatedBy' => Auth::user()->name,
+        $pdf = Pdf::loadView('admin.questions.competencies.pdf.competencyReport', [
+            'reportTitle' => 'Laporan Bank Data Kompetensi',
+            'generatedBy' => Auth::user()->nama,
             'generatedAt' => now()->format('d/m/Y H:i'),
-            'rows'        => $rows
-        ];
+            'rows'        => $rows,
+        ])->setPaper('a4', 'landscape');
 
-        $pdf = Pdf::loadView('admin.questions.competencies.pdf.competencyReport', $data);
-        $pdf->setPaper('a4', 'landscape');
-
-        return $pdf->stream('Laporan-Kompetensi-SJT.pdf');
+        return $pdf->stream('Laporan-Kompetensi.pdf');
     }
 }

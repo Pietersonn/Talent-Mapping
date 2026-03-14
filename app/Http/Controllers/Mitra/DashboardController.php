@@ -1,9 +1,8 @@
 <?php
-
 namespace App\Http\Controllers\Mitra;
 
 use App\Http\Controllers\Controller;
-use App\Models\Event;
+use App\Models\Program;
 use App\Models\TestSession;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -15,60 +14,45 @@ class DashboardController extends Controller
         $mitra = Auth::user();
         abort_unless($mitra !== null, 401);
 
-        // 1. Acara milik Mitra
-        $myEvents = Event::where('id_pic', $mitra->id)
+        $myPrograms = Program::where('id_mitra', $mitra->id)
             ->where('aktif', true)
             ->orderByDesc('tanggal_mulai')
-            ->get(['id', 'nama', 'kode_acara', 'tanggal_mulai', 'tanggal_selesai', 'aktif', 'maks_peserta']);
+            ->get(['id', 'nama', 'kode_program', 'tanggal_mulai', 'tanggal_selesai', 'aktif', 'maks_peserta']);
 
-        $eventIds = $myEvents->pluck('id');
+        $ProgramIds = $myPrograms->pluck('id');
 
-        // 2. Statistik Global
-        $totalParticipants = 0;
-        if ($eventIds->isNotEmpty()) {
-            $totalParticipants = DB::table('peserta_acara')
-                ->whereIn('id_acara', $eventIds)
-                ->count();
-        }
+        $totalParticipants = $ProgramIds->isNotEmpty()
+            ? DB::table('peserta_program')->whereIn('id_program', $ProgramIds)->count() : 0;
 
-        $completedTests = 0;
-        if ($eventIds->isNotEmpty()) {
-            $completedTests = TestSession::whereIn('id_acara', $eventIds)
-                ->where('selesai', true)
-                ->count();
-        }
+        $completedTests = $ProgramIds->isNotEmpty()
+            ? TestSession::whereIn('id_program', $ProgramIds)->where('selesai', true)->count() : 0;
 
         $pendingTests = max(0, $totalParticipants - $completedTests);
-        $totalEvents  = $myEvents->count();
+        $totalPrograms  = $myPrograms->count();
 
-        // 3. Sesi terbaru
-        $recentSessions = $eventIds->isNotEmpty()
-            ? TestSession::whereIn('id_acara', $eventIds)
-                ->with(['user:id,nama,email', 'event:id,nama,kode_acara'])
-                ->latest('updated_at')
-                ->limit(5)
-                ->get()
+        $recentSessions = $ProgramIds->isNotEmpty()
+            ? TestSession::whereIn('id_program', $ProgramIds)
+                ->with(['user:id,nama,email', 'Program:id,nama,kode_program'])
+                ->latest('updated_at')->limit(5)->get()
             : collect();
 
-        // 4. Statistik per acara
-        $eventStats = $myEvents->map(function ($event) {
-            $registered = DB::table('peserta_acara')->where('id_acara', $event->id)->count();
-            $completed  = TestSession::where('id_acara', $event->id)->where('selesai', true)->count();
-
+        $ProgramStats = $myPrograms->map(function ($Program) {
+            $registered = DB::table('peserta_program')->where('id_program', $Program->id)->count();
+            $completed  = TestSession::where('id_program', $Program->id)->where('selesai', true)->count();
             return [
-                'id'           => $event->id,
-                'nama'         => $event->nama,
-                'kode_acara'   => $event->kode_acara,
-                'registered'   => $registered,
-                'completed'    => $completed,
-                'pending'      => max(0, $registered - $completed),
-                'completion'   => $registered > 0 ? round(($completed / $registered) * 100) : 0,
+                'id'         => $Program->id,
+                'nama'       => $Program->nama,
+                'kode'       => $Program->kode_program,
+                'registered' => $registered,
+                'completed'  => $completed,
+                'pending'    => max(0, $registered - $completed),
+                'completion' => $registered > 0 ? round(($completed / $registered) * 100) : 0,
             ];
         });
 
         return view('mitra.dashboard', compact(
-            'myEvents', 'totalParticipants', 'completedTests',
-            'pendingTests', 'totalEvents', 'recentSessions', 'eventStats'
+            'myPrograms', 'totalParticipants', 'completedTests',
+            'pendingTests', 'totalPrograms', 'recentSessions', 'ProgramStats'
         ));
     }
 }

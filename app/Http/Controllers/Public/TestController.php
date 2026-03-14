@@ -1,492 +1,301 @@
 <?php
-
 namespace App\Http\Controllers\Public;
 
-use Illuminate\Routing\Controller as BaseController;
-use App\Models\TestSession;
+use App\Http\Controllers\Controller;
+use App\Helpers\QuestionHelper;
+use App\Models\Program;
+use App\Models\QuestionVersion;
 use App\Models\ST30Question;
 use App\Models\ST30Response;
-use App\Models\SJTQuestion;
-use App\Models\SJTResponse;
-use App\Models\QuestionVersion;
-use App\Models\Event;
-use App\Helpers\QuestionHelper;
-use App\Helpers\ScoringHelper;
-use Illuminate\Http\Request;
+use App\Models\TalentCompetencyQuestion;
+use App\Models\TalentCompetencyResponse;
+use App\Models\TestSession;
+use App\Models\TestResult;
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
-use Illuminate\Support\Collection;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\Foundation\Validation\ValidatesRequests;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use App\Jobs\GenerateAssessmentReport;
+use Illuminate\View\View;
 
-class TestController extends BaseController
+class TestController extends Controller
 {
-    use AuthorizesRequests, ValidatesRequests;
-
-    public function __construct()
+    // ─── HALAMAN AWAL: Input kode program ─────────────────────────────────────
+    public function showCodeForm(): View
     {
-        $this->middleware('auth');
+        return view('public.test.enter-code');
     }
 
-    /** Show test registration form */
-    public function form(): View
+    public function submitCode(Request $request): RedirectResponse
     {
-        $activeEvents = Event::where('is_active', true)
-            ->where('start_date', '<=', now())
-            ->where('end_date', '>=', now())
-            ->get();
+        $request->validate(['kode_program' => 'required|string|max:20']);
 
-        return view('public.test.form', compact('activeEvents'));
-    }
-
-    /** Store test form submission */
-    public function storeForm(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'full_name'  => 'required|string|max:255',
-            'email'      => 'required|email|max:255',
-            'workplace'  => 'required|string|max:255',
-            'position'   => 'nullable|string|max:255',
-            'event_id'   => 'nullable|exists:events,id',
-            'event_code' => 'nullable|string|max:50',
-        ]);
-
-        $event = null;
-        if ($request->filled('event_id')) {
-            $event = Event::where('id', $request->event_id)
-                ->where('is_active', true)
-                ->first();
-
-            if (!$event) {
-                return back()->withErrors(['event_id' => 'Event tidak aktif / tidak ditemukan.'])->withInput();
-            }
-
-            if (!$request->filled('event_code') || strtoupper($request->event_code) !== strtoupper($event->event_code)) {
-                return back()->withErrors(['event_code' => 'Event code tidak sesuai.'])->withInput();
-            }
-
-            $alreadyFinishedSameEvent = TestSession::where('user_id', Auth::id())
-                ->where('event_id', $event->id)
-                ->where('is_completed', true)
-                ->exists();
-
-            if ($alreadyFinishedSameEvent) {
-                return back()->withErrors(['event_id' => 'Anda sudah menyelesaikan event ini. Silakan pilih event lain.'])->withInput();
-            }
-        }
-
-        $existingActive = TestSession::where('user_id', Auth::id())
-            ->where('is_completed', false)
+        $Program = Program::where('kode_program', trim(strtoupper($request->kode_program)))
+            ->where('aktif', true)
+            ->where('tanggal_mulai', '<=', now())
+            ->where('tanggal_selesai', '>=', now())
             ->first();
 
-        if ($existingActive) {
-            return $this->redirectToCurrentStep($existingActive);
+        if (!$Program) {
+            return back()->withErrors(['kode_program' => 'Kode program tidak valid atau program sudah tidak aktif.'])->withInput();
         }
 
-        // ID dibuat otomatis oleh Model/Trait HasCustomId
-        $testSession = TestSession::create([
-            'user_id'                => Auth::id(),
-            'event_id'               => $event?->id,
-            'session_token'          => Str::random(32),
-            'participant_name'       => $request->full_name,
-            'participant_background' => $request->workplace,
-            'position'               => $request->position,
-            'current_step'           => 'st30_stage1',
-        ]);
-
-        session(['test_session_token' => $testSession->session_token]);
-
-        if ($event) {
-            $event->participants()->syncWithoutDetaching([
-                Auth::id() => [
-                    'test_completed' => false,
-                    'results_sent'   => false,
-                ],
-            ]);
+        // Cek kapasitas
+        if ($Program->maks_peserta && $Program->participants()->count() >= $Program->maks_peserta) {
+            return back()->with('error', 'Program ini sudah mencapai batas maksimum peserta.');
         }
 
-        return redirect()->route('test.st30.stage', ['stage' => 1])
-            ->with('success', 'Sesi tes dimulai!');
+        return redirect()->route('test.register', ['Program' => $Program->id]);
     }
 
-    /** Aliases */
-    public function st30Stage(int $stage): View|RedirectResponse
+    // ─── REGISTRASI PESERTA ────────────────────────────────────────────────────
+    public function showRegister(Program $Program): View|RedirectResponse
     {
-        return $this->showST30Stage(request(), $stage);
-    }
-    public function storeST30Stage(Request $request, int $stage): RedirectResponse
-    {
-        return $this->processST30Stage($request, $stage);
-    }
-    public function sjtPage(int $page): View|RedirectResponse
-    {
-        return $this->showSJTPage(request(), $page);
-    }
-    public function storeSJTPage(Request $request, int $page)
-    {
-        return $this->processSJTPage($request, $page);
-    }
-
-    /** Show ST-30 stage */
-    public function showST30Stage(Request $request, int $stage)
-    {
-        $session = $this->getCurrentSession($request);
-
-        if (!$session || !$this->canAccessStage($session, "st30_stage{$stage}")) {
-            return redirect()->route('test.form')->with('error', 'Selesaikan langkah sebelumnya terlebih dahulu.');
+        if (!$Program->aktif || now()->lt($Program->tanggal_mulai) || now()->gt($Program->tanggal_selesai)) {
+            return redirect()->route('test.code')->with('error', 'Program ini sudah tidak aktif.');
         }
 
-        $activeVersion = QuestionVersion::where('type', 'st30')->where('is_active', true)->first();
-        if (!$activeVersion) {
-            return redirect()->route('test.form')->with('error', 'Tidak ada versi ST-30 aktif.');
-        }
+        $user = Auth::user();
 
-        $availableQuestions = match ((int)$stage) {
-            1 => ST30Question::where('version_id', $activeVersion->id)->where('is_active', true)->get(),
-            2 => $this->getQuestionsExcludingStages($activeVersion->id, $session, [1]),
-            3 => $this->getQuestionsExcludingStages($activeVersion->id, $session, [1, 2]),
-            4 => $this->getQuestionsExcludingStages($activeVersion->id, $session, [1, 2, 3]),
-            default => collect()
-        };
-
-        if ($availableQuestions->isEmpty()) {
-            return redirect()->route('test.form')->with('error', 'Tidak ada pertanyaan untuk stage ini.');
-        }
-
-        $progress = $this->calculateProgress($session->current_step);
-
-        return view('public.test.st30.stage', compact('session', 'stage', 'availableQuestions', 'progress'));
-    }
-
-    /** Process ST-30 stage */
-    public function processST30Stage(Request $request, int $stage)
-    {
-        $session = $this->getCurrentSession($request);
-
-        if (!$session || !$this->canAccessStage($session, "st30_stage{$stage}")) {
-            return redirect()->route('test.form')->with('error', 'Sesi tidak valid / akses tahap tidak sah.');
-        }
-
-        $activeVersion = QuestionVersion::where('type', 'st30')->where('is_active', true)->first();
-
-        $request->validate([
-            'selected_questions'   => 'required|array|min:5|max:7',
-            'selected_questions.*' => 'required|exists:st30_questions,id',
-        ]);
-
-        $alreadyPicked = match ((int)$stage) {
-            2 => QuestionHelper::getSelectedQuestionIds($session, [1]),
-            3 => QuestionHelper::getSelectedQuestionIds($session, [1, 2]),
-            4 => QuestionHelper::getSelectedQuestionIds($session, [1, 2, 3]),
-            default => [],
-        };
-
-        foreach ($request->selected_questions as $qid) {
-            if (in_array($qid, $alreadyPicked)) {
-                return back()->with('error', 'Tidak boleh memilih soal yang sama dari tahap sebelumnya.');
-            }
-        }
-
-        $existingResponse = ST30Response::where('session_id', $session->id)
-            ->where('stage_number', (int)$stage)
+        // Cek apakah sudah punya sesi aktif/selesai di Program ini
+        $existingSession = TestSession::where('id_pengguna', $user->id)
+            ->where('id_program', $Program->id)
+            ->latest()
             ->first();
 
-        $payload = [
-            'selected_items' => $request->selected_questions,
-            'for_scoring'    => in_array((int)$stage, [1, 2], true),
-        ];
-
-        if ($existingResponse) {
-            $existingResponse->update($payload);
-        } else {
-            ST30Response::create([
-                'id'                  => $this->generateResponseId('ST30'),
-                'session_id'          => $session->id,
-                'question_version_id' => $activeVersion->id,
-                'stage_number'        => (int)$stage,
-                'selected_items'      => $request->selected_questions,
-                'for_scoring'         => in_array((int)$stage, [1, 2], true),
-            ]);
+        if ($existingSession && $existingSession->selesai) {
+            return redirect()->route('test.result', ['session' => $existingSession->id]);
         }
 
-        if ((int)$stage < 4) {
-            $nextStage = (int)$stage + 1;
-            $session->update(['current_step' => 'st30_stage' . $nextStage]);
-
-            return redirect()->route('test.st30.stage', ['stage' => $nextStage])
-                ->with('success', "Stage {$stage} selesai!");
+        if ($existingSession && !$existingSession->selesai) {
+            return redirect()->route('test.resume', ['session' => $existingSession->id]);
         }
 
-        $session->update(['current_step' => 'sjt_page1']);
-
-        return redirect()->route('test.sjt.page', ['page' => 1])
-            ->with('success', 'ST-30 selesai! Lanjut ke SJT.');
+        return view('public.test.register', compact('Program'));
     }
 
-    /** Show SJT page */
-    public function showSJTPage(Request $request, int $page)
+    public function storeRegister(Request $request, Program $Program): RedirectResponse
     {
-        $session = $this->getCurrentSession($request);
-
-        if (!$session || !$this->canAccessStage($session, "sjt_page{$page}")) {
-            return redirect()->route('test.form')->with('error', 'Selesaikan langkah sebelumnya terlebih dahulu.');
-        }
-
-        $activeVersion = QuestionVersion::where('type', 'sjt')->where('is_active', true)->first();
-        if (!$activeVersion) {
-            return redirect()->route('test.form')->with('error', 'Tidak ada versi SJT aktif.');
-        }
-
-        $startNumber = (($page - 1) * 10) + 1;
-        $endNumber   = $page * 10;
-
-        $questions = SJTQuestion::where('version_id', $activeVersion->id)
-            ->where('is_active', true)
-            ->whereBetween('number', [$startNumber, $endNumber])
-            ->orderBy('number')
-            ->get();
-
-        if ($questions->isEmpty()) {
-            return redirect()->route('test.form')->with('error', 'Tidak ada pertanyaan pada halaman ini.');
-        }
-
-        $questions = $questions->load(['options' => function ($query) {
-            $query->where('is_active', true)->orderBy('option_letter');
-        }]);
-
-        $existingResponses = SJTResponse::where('session_id', $session->id)
-            ->where('page_number', $page)
-            ->get()
-            ->keyBy('question_id');
-
-        $progress = $this->calculateProgress($session->current_step);
-
-        return view('public.test.sjt.page', compact(
-            'session',
-            'page',
-            'questions',
-            'existingResponses',
-            'progress'
-        ));
-    }
-
-    /** Process SJT page */
-    public function processSJTPage(Request $request, int $page)
-    {
-        $session = $this->getCurrentSession($request);
-
-        if (!$session || !$this->canAccessStage($session, "sjt_page{$page}")) {
-            if ($request->expectsJson()) {
-                return response()->json(['message' => 'Sesi tidak valid / akses halaman tidak sah.'], 403);
-            }
-            return redirect()->route('test.form')->with('error', 'Sesi tidak valid / akses halaman tidak sah.');
-        }
-
-        $activeVersion = QuestionVersion::where('type', 'sjt')->where('is_active', true)->first();
-        if (!$activeVersion) {
-            if ($request->expectsJson()) {
-                return response()->json(['message' => 'Tidak ada versi SJT aktif.'], 500);
-            }
-            return redirect()->route('test.form')->with('error', 'Tidak ada versi SJT aktif.');
-        }
-
-        $startNumber = (($page - 1) * 10) + 1;
-        $endNumber   = $page * 10;
-
-        $questions = SJTQuestion::where('version_id', $activeVersion->id)
-            ->whereBetween('number', [$startNumber, $endNumber])
-            ->get();
-
-        $rules = [];
-        foreach ($questions as $q) {
-            $rules["responses.{$q->id}"] = ['required', 'in:a,b,c,d,e'];
-        }
-        $messages = [
-            'responses.*.required' => 'Semua pertanyaan wajib dijawab.',
-            'responses.*.in'       => 'Pilihan tidak valid.'
-        ];
-
-        $request->validate($rules, $messages);
-
-        $responsesInput = $request->input('responses', []);
-
-        $now = now();
-        foreach ($questions as $q) {
-            $sel = $responsesInput[$q->id] ?? null;
-            $responseId = SJTResponse::where('session_id', $session->id)
-                ->where('question_id', $q->id)
-                ->value('id') ?? $this->generateResponseId('SJR');
-
-            SJTResponse::updateOrCreate(
-                ['id' => $responseId],
-                [
-                    'session_id'          => $session->id,
-                    'question_id'         => $q->id,
-                    'question_version_id' => $activeVersion->id,
-                    'page_number'         => $page,
-                    'selected_option'     => $sel,
-                    'updated_at'          => $now,
-                    'created_at'          => $now
-                ]
-            );
-        }
-
-        $lastPageNumber = 5;
-        if ($page < $lastPageNumber) {
-            $next = $page + 1;
-            $session->update(['current_step' => 'sjt_page' . $next]);
-
-            $nextUrl = route('test.sjt.page', ['page' => $next]);
-
-            if ($request->expectsJson()) {
-                return response()->json(['next' => $nextUrl], 200);
-            }
-            return redirect()->route('test.sjt.page', ['page' => $next])->with('success', "Halaman {$page} selesai!");
-        }
-
-        // --- TES SELESAI ---
-
-        // 1. Tandai session completed
-        $session->update([
-            'current_step' => 'thanks',
-            'is_completed' => true,
-            'completed_at' => now(),
+        $request->validate([
+            'nama_peserta'    => 'required|string|max:100',
+            'latar_belakang'  => 'nullable|string|max:255',
+            'jabatan'         => 'nullable|string|max:100',
         ]);
 
-        // 2. Hitung hasil (Scoring)
-        try {
-            ScoringHelper::calculateAndSaveResults($session->id);
-        } catch (\Throwable $e) {
-            Log::error('ScoringHelper failed: ' . $e->getMessage(), ['session' => $session->id]);
+        $user = Auth::user();
+
+        // Cek duplikasi
+        $exists = TestSession::where('id_pengguna', $user->id)->where('id_program', $Program->id)->exists();
+        if ($exists) {
+            return redirect()->route('test.register', $Program->id)->with('error', 'Anda sudah terdaftar di program ini.');
         }
 
-        // 3. Dispatch Job & Kirim Email (Background Menggunakan Queue Database)
-        try {
-            // Gunakan dispatch() alih-alih dispatchAfterResponse()
-            // Ini akan memasukkan job ke tabel `jobs` dan dijalankan oleh Queue Worker
-            GenerateAssessmentReport::dispatch($session->id);
-        } catch (\Throwable $e) {
-            Log::error('Failed to dispatch report generation: ' . $e->getMessage());
+        $st30Version = QuestionVersion::getActive('st30');
+        $tkVersion   = QuestionVersion::getActive('tk');
+
+        if (!$st30Version || !$tkVersion) {
+            return back()->with('error', 'Sistem asesmen belum dikonfigurasi. Hubungi administrator.');
         }
 
-        $nextUrl = route('test.thank-you');
+        DB::transaction(function () use ($request, $user, $Program, $st30Version) {
+            $session = TestSession::create([
+                'id_pengguna'   => $user->id,
+                'id_program'    => $Program->id,
+                'token_sesi'    => Str::random(40),
+                'langkah_saat_ini' => 'st30_start',
+                'id_versi_st30' => $st30Version->id,
+                'nama_peserta'  => $request->nama_peserta,
+                'latar_belakang'=> $request->latar_belakang,
+                'jabatan'       => $request->jabatan,
+                'selesai'       => false,
+            ]);
 
-        if ($request->expectsJson()) {
-            return response()->json(['next' => $nextUrl], 200);
-        }
+            // Daftarkan ke pivot peserta_program
+            $Program->participants()->syncWithoutDetaching([
+                $user->id => ['tes_selesai' => false, 'hasil_terkirim' => false],
+            ]);
+        });
 
-        return redirect()->route('test.thank-you')->with('success', 'Tes berhasil diselesaikan! Hasil Anda sedang diproses dan akan dikirim ke email secara otomatis.');
+        $session = TestSession::where('id_pengguna', $user->id)->where('id_program', $Program->id)->latest()->first();
+        return redirect()->route('test.start', ['session' => $session->id]);
     }
 
-    /** Completed page */
-    public function completed(): View|RedirectResponse
+    // ─── MULAI / RESUME TES ───────────────────────────────────────────────────
+    public function start(TestSession $session): View|RedirectResponse
     {
-        $session = $this->getCurrentSession(request());
+        $this->authorizeSession($session);
 
-        if (!$session || !$session->is_completed) {
-            return redirect()->route('test.form')
-                ->with('error', 'Tidak ditemukan sesi tes yang selesai.');
-        }
+        if ($session->selesai) return redirect()->route('test.result', $session->id);
 
-        return view('public.test.completed', compact('session'));
+        $session->load('Program');
+        return view('public.test.start', compact('session'));
     }
 
-    /** Thank-you page */
-    public function thankYou(): View|RedirectResponse
+    public function resume(TestSession $session): RedirectResponse
     {
-        $session = $this->getCurrentSession(request());
-        if (!$session) {
-            return redirect()->route('test.form')->with('error', 'Tidak ada sesi aktif.');
-        }
+        $this->authorizeSession($session);
 
-        if (!in_array($session->current_step, ['thanks', 'completed']) && !$session->is_completed) {
-            return redirect()->route('test.form')->with('error', 'Selesaikan assessment terlebih dahulu.');
-        }
+        if ($session->selesai) return redirect()->route('test.result', $session->id);
 
-        return view('public.test.thank-you', compact('session'));
+        $step = $session->langkah_saat_ini;
+
+        if (str_starts_with($step, 'st30')) return redirect()->route('test.st30', $session->id);
+        if (str_starts_with($step, 'sjt'))  return redirect()->route('test.tk', $session->id);
+
+        return redirect()->route('test.start', $session->id);
     }
 
-    /** Progress bar */
-    private function calculateProgress(string $currentStep): float
+    // ─── ST-30 ────────────────────────────────────────────────────────────────
+    public function showST30(TestSession $session): View|RedirectResponse
     {
-        $progressMap = [
-            'form_data'   => 0,
-            'st30_stage1' => 33,
-            'st30_stage2' => 40,
-            'st30_stage3' => 47,
-            'st30_stage4' => 55,
-            'sjt_page1'   => 63,
-            'sjt_page2'   => 72,
-            'sjt_page3'   => 78,
-            'sjt_page4'   => 82,
-            'sjt_page5'   => 88,
-            'thanks'      => 100,
-            'completed'   => 100,
-        ];
-        return $progressMap[$currentStep] ?? 0;
+        $this->authorizeSession($session);
+        if ($session->selesai) return redirect()->route('test.result', $session->id);
+
+        $versionId = $session->id_versi_st30;
+        $questions = ST30Question::where('id_versi', $versionId)->orderBy('nomor')->get();
+
+        // Jawaban yang sudah diisi
+        $answered = ST30Response::where('id_sesi', $session->id)
+            ->pluck('skor_dipilih', 'id_soal');
+
+        return view('public.test.st30', compact('session', 'questions', 'answered'));
     }
 
-    /** Get questions excluding previous picks */
-    private function getQuestionsExcludingStages(string $versionId, TestSession $session, array $excludeStages): Collection
+    public function saveST30(Request $request, TestSession $session): JsonResponse
     {
-        $excludedIds = QuestionHelper::getSelectedQuestionIds($session, $excludeStages);
+        $this->authorizeSession($session);
 
-        return ST30Question::where('version_id', $versionId)
-            ->where('is_active', true)
-            ->whereNotIn('id', $excludedIds)
+        $request->validate([
+            'jawaban'               => 'required|array',
+            'jawaban.*.id_soal'     => 'required|string',
+            'jawaban.*.skor'        => 'required|integer|min:1|max:5',
+        ]);
+
+        DB::transaction(function () use ($request, $session) {
+            foreach ($request->jawaban as $item) {
+                ST30Response::updateOrCreate(
+                    ['id_sesi' => $session->id, 'id_soal' => $item['id_soal']],
+                    ['id_versi_soal' => $session->id_versi_st30, 'skor_dipilih' => $item['skor']]
+                );
+            }
+        });
+
+        return response()->json(['success' => true]);
+    }
+
+    public function finishST30(Request $request, TestSession $session): RedirectResponse
+    {
+        $this->authorizeSession($session);
+
+        $totalST30 = ST30Question::where('id_versi', $session->id_versi_st30)->count();
+        $answered  = ST30Response::where('id_sesi', $session->id)->count();
+
+        if ($answered < $totalST30) {
+            return back()->with('error', "Harap jawab semua pertanyaan. Baru {$answered} dari {$totalST30} dijawab.");
+        }
+
+        $session->update(['langkah_saat_ini' => 'sjt_page1']);
+
+        return redirect()->route('test.tk', $session->id);
+    }
+
+    // ─── TALENTA KOMPETENSI (TK) ──────────────────────────────────────────────
+    public function showTK(TestSession $session, int $page = 1): View|RedirectResponse
+    {
+        $this->authorizeSession($session);
+        if ($session->selesai) return redirect()->route('test.result', $session->id);
+
+        $tkVersion = QuestionVersion::getActive('tk');
+        if (!$tkVersion) return back()->with('error', 'Versi soal TK tidak aktif.');
+
+        $perPage   = 10;
+        $questions = TalentCompetencyQuestion::where('id_versi', $tkVersion->id)
+            ->orderBy('nomor')
+            ->forPage($page, $perPage)
             ->get();
+
+        $totalPages  = (int) ceil(TalentCompetencyQuestion::where('id_versi', $tkVersion->id)->count() / $perPage);
+        $answered    = TalentCompetencyResponse::where('id_sesi', $session->id)
+            ->whereIn('id_soal', $questions->pluck('id'))
+            ->pluck('pilihan_dipilih', 'id_soal');
+
+        $session->update(['langkah_saat_ini' => "sjt_page{$page}"]);
+
+        return view('public.test.tk', compact('session', 'questions', 'answered', 'page', 'totalPages', 'tkVersion'));
     }
 
-    /** Current test session from session token */
-    private function getCurrentSession(Request $request): ?TestSession
+    public function saveTK(Request $request, TestSession $session): JsonResponse
     {
-        $sessionToken = $request->session()->get('test_session_token');
-        if (!$sessionToken) return null;
+        $this->authorizeSession($session);
 
-        return TestSession::where('session_token', $sessionToken)->first();
+        $request->validate([
+            'jawaban'                 => 'required|array',
+            'jawaban.*.id_soal'       => 'required|string',
+            'jawaban.*.pilihan'       => 'required|string|in:a,b,c,d,e',
+            'jawaban.*.nomor_halaman' => 'required|integer|min:1',
+            'id_versi_soal'           => 'required|string',
+        ]);
+
+        DB::transaction(function () use ($request, $session) {
+            foreach ($request->jawaban as $item) {
+                TalentCompetencyResponse::upsertAnswer(
+                    $session->id,
+                    $item['id_soal'],
+                    $request->id_versi_soal,
+                    $item['nomor_halaman'],
+                    $item['pilihan']
+                );
+            }
+        });
+
+        return response()->json(['success' => true]);
     }
 
-    /**
-     * Generator ID respons ST30/SJT yang konsisten
-     */
-    private function generateResponseId(string $prefix): string
+    public function finishTK(Request $request, TestSession $session): RedirectResponse
     {
-        do {
-            $id = $prefix . str_pad(rand(1, 99999), 5, '0', STR_PAD_LEFT);
-        } while (
-            ST30Response::where('id', $id)->exists() ||
-            SJTResponse::where('id', $id)->exists()
-        );
+        $this->authorizeSession($session);
 
-        return $id;
+        $tkVersion   = QuestionVersion::getActive('tk');
+        $totalTK     = TalentCompetencyQuestion::where('id_versi', $tkVersion->id)->count();
+        $answeredTK  = TalentCompetencyResponse::where('id_sesi', $session->id)->count();
+
+        if ($answeredTK < $totalTK) {
+            return back()->with('error', "Harap jawab semua pertanyaan TK. Baru {$answeredTK} dari {$totalTK} dijawab.");
+        }
+
+        DB::transaction(function () use ($session) {
+            $session->update([
+                'selesai'          => true,
+                'selesai_pada'     => now(),
+                'langkah_saat_ini' => 'selesai',
+            ]);
+
+            // Update pivot
+            $session->Program->participants()->updateExistingPivot($session->id_pengguna, ['tes_selesai' => true]);
+        });
+
+        // Dispatch job generate laporan
+        \App\Jobs\GenerateAssessmentReport::dispatch($session->id);
+
+        return redirect()->route('test.result', $session->id);
     }
 
-    private function redirectToCurrentStep(TestSession $session): RedirectResponse
+    // ─── HASIL ────────────────────────────────────────────────────────────────
+    public function result(TestSession $session): View|RedirectResponse
     {
-        session(['test_session_token' => $session->session_token]);
+        $this->authorizeSession($session);
 
-        return match ($session->current_step) {
-            'form_data', 'st30_stage1' => redirect()->route('test.st30.stage', ['stage' => 1]),
-            'st30_stage2' => redirect()->route('test.st30.stage', ['stage' => 2]),
-            'st30_stage3' => redirect()->route('test.st30.stage', ['stage' => 3]),
-            'st30_stage4' => redirect()->route('test.st30.stage', ['stage' => 4]),
-            'sjt_page1'   => redirect()->route('test.sjt.page', ['page' => 1]),
-            'sjt_page2'   => redirect()->route('test.sjt.page', ['page' => 2]),
-            'sjt_page3'   => redirect()->route('test.sjt.page', ['page' => 3]),
-            'sjt_page4'   => redirect()->route('test.sjt.page', ['page' => 4]),
-            'sjt_page5'   => redirect()->route('test.sjt.page', ['page' => 5]),
-            'thanks'      => redirect()->route('test.thank-you'),
-            'completed'   => redirect()->route('test.completed'),
-            default       => redirect()->route('test.st30.stage', ['stage' => 1]),
-        };
+        if (!$session->selesai) return redirect()->route('test.resume', $session->id);
+
+        $session->load(['Program', 'testResult']);
+        return view('public.test.result', compact('session'));
     }
 
-    private function canAccessStage(?TestSession $session, string $targetStep): bool
+    // ─── HELPER ───────────────────────────────────────────────────────────────
+    private function authorizeSession(TestSession $session): void
     {
-        return $session && $session->current_step === $targetStep;
+        abort_unless($session->id_pengguna === Auth::id(), 403, 'Akses ditolak.');
     }
 }

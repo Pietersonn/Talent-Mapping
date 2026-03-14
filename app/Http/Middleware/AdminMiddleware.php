@@ -18,7 +18,7 @@ class AdminMiddleware
         }
         if ($user->peran !== 'admin') {
             return match ($user->peran) {
-                'mitra'   => redirect()->route('pic.dashboard')->with('error', 'Akses admin diperlukan.'),
+                'mitra'   => redirect()->route('mitra.dashboard')->with('error', 'Akses admin diperlukan.'),
                 'peserta' => redirect()->route('home')->with('error', 'Akses admin diperlukan.'),
                 default   => redirect()->route('home'),
             };

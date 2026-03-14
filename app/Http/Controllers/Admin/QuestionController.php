@@ -1,11 +1,11 @@
 <?php
-
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\QuestionVersion;
 use App\Models\ST30Question;
-use App\Models\SJTQuestion;
+use App\Models\TalentCompetencyQuestion;
+use App\Models\TalentCompetencyOption;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -13,251 +13,162 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class QuestionController extends Controller
 {
-    /**
-     * Display a listing of question versions
-     */
     public function index(Request $request)
     {
-        $st30Versions = QuestionVersion::where('type', 'st30')
+        $st30Versions = QuestionVersion::where('jenis', 'st30')
             ->withCount(['st30Questions'])
-            ->orderBy('is_active', 'desc')
-            ->orderBy('version', 'desc')
-            ->get();
+            ->orderBy('aktif', 'desc')->orderBy('versi', 'desc')->get();
 
-        $sjtVersions = QuestionVersion::where('type', 'sjt')
-            ->withCount(['sjtQuestions'])
-            ->orderBy('is_active', 'desc')
-            ->orderBy('version', 'desc')
-            ->get();
+        $tkVersions = QuestionVersion::where('jenis', 'tk')
+            ->withCount(['talentCompetencyQuestions'])
+            ->orderBy('aktif', 'desc')->orderBy('versi', 'desc')->get();
 
         $activeVersions = [
-            'st30' => $st30Versions->where('is_active', true)->first(),
-            'sjt' => $sjtVersions->where('is_active', true)->first(),
+            'st30' => $st30Versions->where('aktif', true)->first(),
+            'tk'   => $tkVersions->where('aktif', true)->first(),
         ];
 
-        return view('admin.questions.versions.index', compact('st30Versions', 'sjtVersions', 'activeVersions'));
+        return view('admin.questions.versions.index', compact('st30Versions', 'tkVersions', 'activeVersions'));
     }
 
-    /**
-     * Show the form for creating a new version
-     */
     public function create()
     {
         return view('admin.questions.versions.create');
     }
 
-    /**
-     * Store a newly created version
-     */
     public function store(Request $request)
     {
         $request->validate([
-            'type' => 'required|in:st30,sjt',
-            'name' => 'required|string|max:50',
-            'description' => 'nullable|string|max:500',
+            'jenis'     => 'required|in:st30,tk',
+            'nama'      => 'required|string|max:50',
+            'deskripsi' => 'nullable|string|max:500',
         ]);
 
-        $latestVersion = QuestionVersion::where('type', $request->type)
-            ->orderBy('version', 'desc')
-            ->first();
-
-        $nextVersion = $latestVersion ? $latestVersion->version + 1 : 1;
+        $latestVersion = QuestionVersion::where('jenis', $request->jenis)->orderBy('versi', 'desc')->first();
 
         $questionVersion = QuestionVersion::create([
-            'version' => $nextVersion,
-            'type' => $request->type,
-            'name' => $request->name,
-            'description' => $request->description,
-            'is_active' => false,
+            'versi'     => $latestVersion ? $latestVersion->versi + 1 : 1,
+            'jenis'     => $request->jenis,
+            'nama'      => $request->nama,
+            'deskripsi' => $request->deskripsi,
+            'aktif'     => false,
         ]);
 
-        return redirect()
-            ->route('admin.questions.show', ['questionVersion' => $questionVersion->id])
+        return redirect()->route('admin.questions.show', ['questionVersion' => $questionVersion->id])
             ->with('success', 'Versi soal berhasil dibuat.');
     }
 
-    /**
-     * Display the specified version
-     */
     public function show(QuestionVersion $questionVersion)
     {
-        if ($questionVersion->type === 'st30') {
+        if ($questionVersion->jenis === 'st30') {
             $questionVersion->load('st30Questions');
-            $typologyStats = $questionVersion->st30Questions
-                ->groupBy('typology_code')
-                ->map(fn($questions) => $questions->count())
-                ->toArray();
+            $typologyStats   = $questionVersion->st30Questions->groupBy('kode_tipologi')->map(fn($q) => $q->count())->toArray();
             $competencyStats = [];
         } else {
-            $questionVersion->load('sjtQuestions');
-            $competencyStats = $questionVersion->sjtQuestions
-                ->groupBy('competency')
-                ->map(fn($questions) => $questions->count())
-                ->toArray();
-            $typologyStats = [];
+            $questionVersion->load('talentCompetencyQuestions');
+            $competencyStats = $questionVersion->talentCompetencyQuestions->groupBy('kode_kompetensi')->map(fn($q) => $q->count())->toArray();
+            $typologyStats   = [];
         }
 
-        $statistics = [
-            'total_questions' => $questionVersion->questions_count,
-        ];
-
-        return view('admin.questions.versions.show', compact(
-            'questionVersion',
-            'statistics',
-            'typologyStats',
-            'competencyStats'
-        ));
+        return view('admin.questions.versions.show', compact('questionVersion', 'typologyStats', 'competencyStats'));
     }
 
-    /**
-     * Show the form for editing the specified version
-     */
     public function edit(QuestionVersion $questionVersion)
     {
         return view('admin.questions.versions.edit', compact('questionVersion'));
     }
 
-    /**
-     * Update the specified version
-     */
     public function update(Request $request, QuestionVersion $questionVersion)
     {
-        $request->validate([
-            'name' => 'required|string|max:50',
-            'description' => 'nullable|string|max:500',
-        ]);
+        $request->validate(['nama' => 'required|string|max:50', 'deskripsi' => 'nullable|string|max:500']);
 
-        $questionVersion->update([
-            'name' => $request->name,
-            'description' => $request->description,
-        ]);
+        $questionVersion->update(['nama' => $request->nama, 'deskripsi' => $request->deskripsi]);
 
-        return redirect()
-            ->route('admin.questions.show', ['questionVersion' => $questionVersion->id])
+        return redirect()->route('admin.questions.show', ['questionVersion' => $questionVersion->id])
             ->with('success', 'Versi soal berhasil diperbarui.');
     }
 
-    /**
-     * Remove the specified version
-     */
     public function destroy(QuestionVersion $questionVersion)
     {
-        $hasResponses = false;
-
-        // Cek langsung ke tabel response menggunakan question_version_id
-        // Tidak perlu join ke tabel questions karena di tabel response sudah ada question_version_id
-        if ($questionVersion->type === 'st30') {
-            $hasResponses = DB::table('st30_responses')
-                ->where('question_version_id', $questionVersion->id)
-                ->exists();
-        } else {
-            $hasResponses = DB::table('sjt_responses')
-                ->where('question_version_id', $questionVersion->id)
-                ->exists();
-        }
-
-        if ($hasResponses) {
-            return redirect()
-                ->route('admin.questions.index')
+        $table = $questionVersion->jenis === 'st30' ? 'jawaban_st30' : 'jawaban_tk';
+        if (DB::table($table)->where('id_versi_soal', $questionVersion->id)->exists()) {
+            return redirect()->route('admin.questions.index')
                 ->with('error', 'Tidak dapat menghapus versi yang sudah memiliki data respon peserta.');
         }
-
-        if ($questionVersion->is_active) {
-            return redirect()
-                ->route('admin.questions.index')
+        if ($questionVersion->aktif) {
+            return redirect()->route('admin.questions.index')
                 ->with('error', 'Tidak dapat menghapus versi yang sedang aktif.');
         }
-
         $questionVersion->delete();
-
-        return redirect()
-            ->route('admin.questions.index')
-            ->with('success', 'Versi soal berhasil dihapus.');
+        return redirect()->route('admin.questions.index')->with('success', 'Versi soal berhasil dihapus.');
     }
 
-    /**
-     * Activate the specified version
-     */
     public function activate(QuestionVersion $questionVersion)
     {
-        $count = $questionVersion->questions_count;
-        $required = $questionVersion->type === 'st30' ? 30 : 50;
+        $count    = $questionVersion->questions_count;
+        $required = $questionVersion->jenis === 'st30' ? 30 : 50;
 
         if ($count < $required) {
-            return redirect()
-                ->route('admin.questions.index')
+            return redirect()->route('admin.questions.index')
                 ->with('error', "Gagal aktivasi. Versi ini hanya memiliki {$count} soal (Minimal {$required}).");
         }
 
-        if ($questionVersion->type === 'sjt') {
-            $questions = $questionVersion->sjtQuestions()->with('options')->get();
-            $incompleteQuestions = 0;
-            foreach ($questions as $q) {
-                if ($q->options->count() < 5) $incompleteQuestions++;
-            }
-
-            if ($incompleteQuestions > 0) {
-                return redirect()
-                    ->route('admin.questions.index')
-                    ->with('error', "Gagal aktivasi. Ada {$incompleteQuestions} soal SJT yang opsinya belum lengkap.");
+        if ($questionVersion->jenis === 'tk') {
+            $incomplete = $questionVersion->talentCompetencyQuestions()->withCount('options')->get()
+                ->filter(fn($q) => $q->options_count < 5)->count();
+            if ($incomplete > 0) {
+                return redirect()->route('admin.questions.index')
+                    ->with('error', "Gagal aktivasi. Ada {$incomplete} soal TK yang opsinya belum lengkap.");
             }
         }
 
         DB::transaction(function () use ($questionVersion) {
-            QuestionVersion::where('type', $questionVersion->type)->update(['is_active' => false]);
-            $questionVersion->update(['is_active' => true]);
+            QuestionVersion::where('jenis', $questionVersion->jenis)->update(['aktif' => false]);
+            $questionVersion->update(['aktif' => true]);
         });
 
-        return redirect()
-            ->route('admin.questions.index')
-            ->with('success', "Versi {$questionVersion->name} berhasil diaktifkan.");
+        return redirect()->route('admin.questions.index')
+            ->with('success', "Versi {$questionVersion->nama} berhasil diaktifkan.");
     }
 
-    /**
-     * Clone version
-     */
     public function clone(QuestionVersion $questionVersion)
     {
         DB::transaction(function () use ($questionVersion) {
-            $latestVersion = QuestionVersion::where('type', $questionVersion->type)
-                ->orderBy('version', 'desc')
-                ->lockForUpdate()
-                ->first();
-
+            $latest     = QuestionVersion::where('jenis', $questionVersion->jenis)->orderBy('versi', 'desc')->lockForUpdate()->first();
             $newVersion = QuestionVersion::create([
-                'version' => ($latestVersion ? $latestVersion->version : 0) + 1,
-                'type' => $questionVersion->type,
-                'name' => $questionVersion->name . ' (Copy)',
-                'description' => 'Cloned from ' . $questionVersion->name,
-                'is_active' => false,
+                'versi'     => ($latest ? $latest->versi : 0) + 1,
+                'jenis'     => $questionVersion->jenis,
+                'nama'      => $questionVersion->nama.' (Copy)',
+                'deskripsi' => 'Disalin dari '.$questionVersion->nama,
+                'aktif'     => false,
             ]);
 
-            if ($questionVersion->type === 'st30') {
+            if ($questionVersion->jenis === 'st30') {
                 foreach ($questionVersion->st30Questions as $q) {
                     ST30Question::create([
-                        'version_id' => $newVersion->id,
-                        'number' => $q->number,
-                        'statement' => $q->statement,
-                        'typology_code' => $q->typology_code,
-                        'is_active' => $q->is_active,
+                        'id_versi'     => $newVersion->id,
+                        'nomor'        => $q->nomor,
+                        'pernyataan'   => $q->pernyataan,
+                        'kode_tipologi'=> $q->kode_tipologi,
+                        'aktif'        => $q->aktif,
                     ]);
                 }
             } else {
-                foreach ($questionVersion->sjtQuestions as $q) {
-                    $newQ = SJTQuestion::create([
-                        'version_id' => $newVersion->id,
-                        'number' => $q->number,
-                        'question_text' => $q->question_text,
-                        'competency' => $q->competency,
-                        'page_number' => $q->page_number,
-                        'is_active' => $q->is_active,
+                foreach ($questionVersion->talentCompetencyQuestions as $q) {
+                    $newQ = TalentCompetencyQuestion::create([
+                        'id_versi'        => $newVersion->id,
+                        'nomor'           => $q->nomor,
+                        'teks_pertanyaan' => $q->teks_pertanyaan,
+                        'kode_kompetensi' => $q->kode_kompetensi,
+                        'aktif'           => $q->aktif,
                     ]);
                     foreach ($q->options as $opt) {
-                        $newQ->options()->create([
-                            'option_letter' => $opt->option_letter,
-                            'option_text' => $opt->option_text,
-                            'score' => $opt->score,
-                            'competency_target' => $opt->competency_target
+                        TalentCompetencyOption::create([
+                            'id_soal'          => $newQ->id,
+                            'huruf_pilihan'    => $opt->huruf_pilihan,
+                            'teks_pilihan'     => $opt->teks_pilihan,
+                            'skor'             => $opt->skor,
+                            'target_kompetensi'=> $opt->target_kompetensi,
                         ]);
                     }
                 }
@@ -267,60 +178,39 @@ class QuestionController extends Controller
         return redirect()->route('admin.questions.index')->with('success', 'Versi berhasil diduplikasi.');
     }
 
-    /**
-     * Export PDF Report (REKAP SEMUA VERSI)
-     * Mengganti logika sebelumnya yang per-id menjadi global list.
-     */
     public function exportPdf(Request $request)
     {
-        $search = $request->query('search'); // Ambil kata kunci dari URL
-
-        $query = QuestionVersion::query();
+        $search = $request->query('search');
+        $query  = QuestionVersion::query();
 
         if ($search) {
             $query->where(function ($q) use ($search) {
-                // Cari berdasarkan Nama
-                $q->where('name', 'LIKE', "%{$search}%")
-                    // Cari berdasarkan Tipe (SJT / ST30)
-                    ->orWhere('type', 'LIKE', "%{$search}%")
-                    // Cari berdasarkan Deskripsi
-                    ->orWhere('description', 'LIKE', "%{$search}%");
-
-                // Cari berdasarkan Status (Aktif / Tidak Aktif)
+                $q->where('nama', 'LIKE', "%{$search}%")
+                  ->orWhere('jenis', 'LIKE', "%{$search}%")
+                  ->orWhere('deskripsi', 'LIKE', "%{$search}%");
                 if (stripos($search, 'tidak') !== false || stripos($search, 'non') !== false) {
-                    $q->orWhere('is_active', 0);
+                    $q->orWhere('aktif', 0);
                 } elseif (stripos($search, 'aktif') !== false) {
-                    $q->orWhere('is_active', 1);
+                    $q->orWhere('aktif', 1);
                 }
             });
         }
 
-        // Urutkan: Tipe dulu, lalu Versi terbaru
-        $versions = $query->orderBy('type', 'desc')
-            ->orderBy('version', 'desc')
-            ->get();
+        $versions = $query->orderBy('jenis', 'desc')->orderBy('versi', 'desc')->get();
 
-        $data = [
+        $pdf = Pdf::loadView('admin.questions.versions.pdf.versionReport', [
             'reportTitle' => 'Laporan Versi Soal',
-            'generatedBy' => Auth::user()->name,
+            'generatedBy' => Auth::user()->nama,
             'generatedAt' => now()->format('d/m/Y H:i'),
             'versions'    => $versions,
-            'search'      => $search
-        ];
-
-        $pdf = Pdf::loadView('admin.questions.versions.pdf.versionReport', $data);
-        $pdf->setPaper('a4', 'portrait');
+            'search'      => $search,
+        ])->setPaper('a4', 'portrait');
 
         return $pdf->stream('Laporan_Versi_Soal.pdf');
     }
-    /**
-     * AJAX Statistics
-     */
+
     public function statistics(QuestionVersion $questionVersion)
     {
-        return response()->json([
-            'questions_count' => $questionVersion->questions_count,
-            'is_active' => $questionVersion->is_active,
-        ]);
+        return response()->json(['questions_count' => $questionVersion->questions_count, 'aktif' => $questionVersion->aktif]);
     }
 }

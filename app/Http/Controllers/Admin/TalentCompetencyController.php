@@ -1,10 +1,9 @@
 <?php
-
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\SJTQuestion;
-use App\Models\SJTOption;
+use App\Models\TalentCompetencyQuestion;
+use App\Models\TalentCompetencyOption;
 use App\Models\QuestionVersion;
 use App\Models\CompetencyDescription;
 use Illuminate\Http\Request;
@@ -12,317 +11,185 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 
-class SJTQuestionController extends Controller
+class TalentCompetencyController extends Controller
 {
-    /**
-     * Display a listing of SJT questions
-     */
     public function index(Request $request)
     {
-        $activeVersion = QuestionVersion::getActive('sjt');
-        $selectedVersion = null;
+        $activeVersion   = QuestionVersion::getActive('tk');
+        $selectedVersion = $request->has('version') ? QuestionVersion::find($request->version) : $activeVersion;
+        $versions        = QuestionVersion::where('jenis', 'tk')->orderBy('versi', 'desc')->get();
 
-        // Get version from request or use active version
-        if ($request->has('version')) {
-            $selectedVersion = QuestionVersion::find($request->version);
-        } else {
-            $selectedVersion = $activeVersion;
-        }
-
-        // Get all SJT versions for dropdown
-        $versions = QuestionVersion::where('type', 'sjt')
-            ->orderBy('version', 'desc')
-            ->get();
-
-        $questions = collect();
-        $competencyStats = [];
+        $questions = collect(); $competencyStats = [];
 
         if ($selectedVersion) {
-            // 1. Buat Query Dasar
-            $query = SJTQuestion::where('version_id', $selectedVersion->id)
-                ->with(['questionVersion', 'competencyDescription', 'options'])
-                ->orderBy('number');
+            $query = TalentCompetencyQuestion::where('id_versi', $selectedVersion->id)
+                ->with(['questionVersion', 'competencyDescription', 'options'])->orderBy('nomor');
 
-            // 2. Ambil SEMUA data khusus untuk menghitung Statistik (agar chart/total akurat)
-            $allDataForStats = $query->get();
-            $competencyStats = $allDataForStats->groupBy('competency')
-                ->map(fn($items) => $items->count())
-                ->toArray();
-
-            // 3. Ambil data PAGINATION (10 per halaman) untuk Tabel
-            $questions = $query->paginate(10);
+            $competencyStats = $query->get()->groupBy('kode_kompetensi')->map(fn($i) => $i->count())->toArray();
+            $questions       = $query->paginate(10);
         }
 
-        // Get all competencies for reference
-        $competencies = CompetencyDescription::orderBy('competency_code')->get();
-
-        return view('admin.questions.sjt.index', compact(
-            'questions',
-            'selectedVersion',
-            'activeVersion',
-            'versions',
-            'competencyStats',
-            'competencies'
-        ));
+        $competencies = CompetencyDescription::orderBy('kode_kompetensi')->get();
+        return view('admin.questions.talent-competency.index', compact('questions', 'selectedVersion', 'activeVersion', 'versions', 'competencyStats', 'competencies'));
     }
 
-    /**
-     * Show the form for creating a new SJT question
-     */
     public function create(Request $request)
     {
-        $selectedVersion = null;
+        $selectedVersion = $request->has('version')
+            ? QuestionVersion::find($request->version)
+            : QuestionVersion::getActive('tk');
 
-        if ($request->has('version')) {
-            $selectedVersion = QuestionVersion::find($request->version);
-        } else {
-            $selectedVersion = QuestionVersion::getActive('sjt');
-        }
+        if (!$selectedVersion) return redirect()->route('admin.questions.index')->with('error', 'Tidak ada versi TK. Buat versi terlebih dahulu.');
 
-        if (!$selectedVersion) {
-            return redirect()->route('admin.questions.index')
-                ->with('error', 'Tidak ada versi SJT yang tersedia. Silakan buat versi terlebih dahulu.');
-        }
+        $nextNumber = TalentCompetencyQuestion::where('id_versi', $selectedVersion->id)->max('nomor') + 1;
+        if ($nextNumber > 50) return redirect()->route('admin.questions.talent-competency.index', ['version' => $selectedVersion->id])->with('error', 'Versi ini sudah mencapai batas maksimum 50 pertanyaan.');
 
-        // Get next question number
-        $nextNumber = SJTQuestion::where('version_id', $selectedVersion->id)
-            ->max('number') + 1;
-
-        if ($nextNumber > 50) {
-            return redirect()->route('admin.questions.sjt.index', ['version' => $selectedVersion->id])
-                ->with('error', 'Versi ini sudah mencapai batas maksimum 50 pertanyaan.');
-        }
-
-        $competencies = CompetencyDescription::orderBy('competency_name')->get();
-        $versions = QuestionVersion::where('type', 'sjt')->orderBy('version', 'desc')->get();
-
-        return view('admin.questions.sjt.create', compact(
-            'selectedVersion',
-            'nextNumber',
-            'competencies',
-            'versions'
-        ));
+        $competencies = CompetencyDescription::orderBy('nama_kompetensi')->get();
+        $versions     = QuestionVersion::where('jenis', 'tk')->orderBy('versi', 'desc')->get();
+        return view('admin.questions.talent-competency.create', compact('selectedVersion', 'nextNumber', 'competencies', 'versions'));
     }
 
-    /**
-     * Store a newly created SJT question with options
-     */
     public function store(Request $request)
     {
         $request->validate([
-            'version_id' => 'required|exists:question_versions,id',
-            'number' => 'required|integer|min:1|max:50',
-            'question_text' => 'required|string|max:1000',
-            'competency' => 'required|exists:competency_descriptions,competency_code',
-            'options' => 'required|array|size:5',
-            'options.*.option_text' => 'required|string|max:500',
-            'options.*.score' => 'required|integer|min:0|max:4',
+            'id_versi'        => 'required|exists:versi_soal,id',
+            'nomor'           => 'required|integer|min:1|max:50',
+            'teks_pertanyaan' => 'required|string|max:1000',
+            'kode_kompetensi' => 'required|exists:deskripsi_kompetensi,kode_kompetensi',
+            'options'         => 'required|array|size:5',
+            'options.*.teks_pilihan' => 'required|string|max:500',
+            'options.*.skor'         => 'required|integer|min:0|max:4',
         ]);
 
-        // Check if number already exists in this version
-        $exists = SJTQuestion::where('version_id', $request->version_id)
-            ->where('number', $request->number)
-            ->exists();
-
-        if ($exists) {
-            return back()->withErrors([
-                'number' => 'Nomor pertanyaan sudah ada di versi ini.'
-            ])->withInput();
+        if (TalentCompetencyQuestion::where('id_versi', $request->id_versi)->where('nomor', $request->nomor)->exists()) {
+            return back()->withErrors(['nomor' => 'Nomor pertanyaan sudah ada di versi ini.'])->withInput();
         }
 
         DB::transaction(function () use ($request) {
-            // Create the question (TANPA page_number)
-            $question = SJTQuestion::create([
-                'version_id' => $request->version_id,
-                'number' => $request->number,
-                'question_text' => $request->question_text,
-                'competency' => $request->competency,
+            $question = TalentCompetencyQuestion::create([
+                'id_versi'        => $request->id_versi,
+                'nomor'           => $request->nomor,
+                'teks_pertanyaan' => $request->teks_pertanyaan,
+                'kode_kompetensi' => $request->kode_kompetensi,
             ]);
 
-            // Create options (A, B, C, D, E)
-            $optionLetters = ['a', 'b', 'c', 'd', 'e'];
             foreach ($request->options as $index => $optionData) {
-                SJTOption::create([
-                    'question_id' => $question->id,
-                    'option_letter' => $optionLetters[$index],
-                    'option_text' => $optionData['option_text'],
-                    'score' => $optionData['score'],
-                    'competency_target' => $request->competency,
+                TalentCompetencyOption::create([
+                    'id_soal'           => $question->id,
+                    'huruf_pilihan'     => ['a','b','c','d','e'][$index],
+                    'teks_pilihan'      => $optionData['teks_pilihan'],
+                    'skor'              => $optionData['skor'],
+                    'target_kompetensi' => $request->kode_kompetensi,
                 ]);
             }
         });
 
-        return redirect()->route('admin.questions.sjt.index', ['version' => $request->version_id])
-            ->with('success', 'Pertanyaan SJT beserta opsi berhasil dibuat.');
+        return redirect()->route('admin.questions.talent-competency.index', ['version' => $request->id_versi])
+            ->with('success', 'Pertanyaan TK beserta opsi berhasil dibuat.');
     }
 
-    /**
-     * Display the specified SJT question
-     */
-    public function show(SJTQuestion $sjtQuestion)
+    public function show(TalentCompetencyQuestion $talentCompetencyQuestion)
     {
-        $sjtQuestion->load(['questionVersion', 'competencyDescription', 'options']);
-
-        return view('admin.questions.sjt.show', compact('sjtQuestion'));
+        $talentCompetencyQuestion->load(['questionVersion', 'competencyDescription', 'options']);
+        return view('admin.questions.talent-competency.show', compact('talentCompetencyQuestion'));
     }
 
-    /**
-     * Show the form for editing the specified SJT question
-     */
-    public function edit(SJTQuestion $sjtQuestion)
+    public function edit(TalentCompetencyQuestion $talentCompetencyQuestion)
     {
-        $sjtQuestion->load(['questionVersion', 'options']);
-        $competencies = CompetencyDescription::orderBy('competency_name')->get();
-        $versions = QuestionVersion::where('type', 'sjt')->orderBy('version', 'desc')->get();
-
-        return view('admin.questions.sjt.edit', compact('sjtQuestion', 'competencies', 'versions'));
+        $talentCompetencyQuestion->load(['questionVersion', 'options']);
+        $competencies = CompetencyDescription::orderBy('nama_kompetensi')->get();
+        $versions     = QuestionVersion::where('jenis', 'tk')->orderBy('versi', 'desc')->get();
+        return view('admin.questions.talent-competency.edit', compact('talentCompetencyQuestion', 'competencies', 'versions'));
     }
 
-    /**
-     * Update the specified SJT question and options
-     */
-    public function update(Request $request, SJTQuestion $sjtQuestion)
+    public function update(Request $request, TalentCompetencyQuestion $talentCompetencyQuestion)
     {
         $request->validate([
-            'number' => 'required|integer|min:1|max:50',
-            'question_text' => 'required|string|max:1000',
-            'competency' => 'required|exists:competency_descriptions,competency_code',
-            'options' => 'required|array|size:5',
-            'options.*.option_text' => 'required|string|max:500',
-            'options.*.score' => 'required|integer|min:0|max:4',
+            'nomor'           => 'required|integer|min:1|max:50',
+            'teks_pertanyaan' => 'required|string|max:1000',
+            'kode_kompetensi' => 'required|exists:deskripsi_kompetensi,kode_kompetensi',
+            'options'         => 'required|array|size:5',
+            'options.*.teks_pilihan' => 'required|string|max:500',
+            'options.*.skor'         => 'required|integer|min:0|max:4',
         ]);
 
-        // Check if number already exists in this version (excluding current question)
-        $exists = SJTQuestion::where('version_id', $sjtQuestion->version_id)
-            ->where('number', $request->number)
-            ->where('id', '!=', $sjtQuestion->id)
-            ->exists();
-
-        if ($exists) {
-            return back()->withErrors([
-                'number' => 'Nomor pertanyaan sudah ada di versi ini.'
-            ])->withInput();
+        if (TalentCompetencyQuestion::where('id_versi', $talentCompetencyQuestion->id_versi)->where('nomor', $request->nomor)->where('id', '!=', $talentCompetencyQuestion->id)->exists()) {
+            return back()->withErrors(['nomor' => 'Nomor pertanyaan sudah ada di versi ini.'])->withInput();
         }
 
-        DB::transaction(function () use ($request, $sjtQuestion) {
-            // Update the question (TANPA page_number)
-            $sjtQuestion->update([
-                'number' => $request->number,
-                'question_text' => $request->question_text,
-                'competency' => $request->competency,
+        DB::transaction(function () use ($request, $talentCompetencyQuestion) {
+            $talentCompetencyQuestion->update([
+                'nomor'           => $request->nomor,
+                'teks_pertanyaan' => $request->teks_pertanyaan,
+                'kode_kompetensi' => $request->kode_kompetensi,
             ]);
 
-            // Update options
-            $optionLetters = ['a', 'b', 'c', 'd', 'e'];
             foreach ($request->options as $index => $optionData) {
-                $option = $sjtQuestion->options()->where('option_letter', $optionLetters[$index])->first();
+                $option = $talentCompetencyQuestion->options()->where('huruf_pilihan', ['a','b','c','d','e'][$index])->first();
                 if ($option) {
                     $option->update([
-                        'option_text' => $optionData['option_text'],
-                        'score' => $optionData['score'],
-                        'competency_target' => $request->competency,
+                        'teks_pilihan'      => $optionData['teks_pilihan'],
+                        'skor'              => $optionData['skor'],
+                        'target_kompetensi' => $request->kode_kompetensi,
                     ]);
                 }
             }
         });
 
-        return redirect()->route('admin.questions.sjt.index', ['version' => $sjtQuestion->version_id])
-            ->with('success', 'Pertanyaan SJT berhasil diperbarui.');
+        return redirect()->route('admin.questions.talent-competency.index', ['version' => $talentCompetencyQuestion->id_versi])
+            ->with('success', 'Pertanyaan TK berhasil diperbarui.');
     }
 
-    /**
-     * Remove the specified SJT question
-     */
-    public function destroy(SJTQuestion $sjtQuestion)
+    public function destroy(TalentCompetencyQuestion $talentCompetencyQuestion)
     {
-        // Check if question is used in responses
-        if ($sjtQuestion->hasResponses()) {
-            return redirect()->route('admin.questions.sjt.index', ['version' => $sjtQuestion->version_id])
-                ->with('error', 'Tidak dapat menghapus pertanyaan yang sudah digunakan dalam tes.');
-        }
-
-        $versionId = $sjtQuestion->version_id;
-
-        DB::transaction(function () use ($sjtQuestion) {
-            // Delete options first
-            $sjtQuestion->options()->delete();
-            // Delete question
-            $sjtQuestion->delete();
+        $versionId = $talentCompetencyQuestion->id_versi;
+        DB::transaction(function () use ($talentCompetencyQuestion) {
+            $talentCompetencyQuestion->options()->delete();
+            $talentCompetencyQuestion->delete();
         });
-
-        return redirect()->route('admin.questions.sjt.index', ['version' => $versionId])
-            ->with('success', 'Pertanyaan SJT berhasil dihapus.');
+        return redirect()->route('admin.questions.talent-competency.index', ['version' => $versionId])
+            ->with('success', 'Pertanyaan TK berhasil dihapus.');
     }
 
-
-    /**
-     * Bulk export SJT questions
-     */
     public function export(Request $request)
     {
-        $versionId = $request->get('version');
-        $search = $request->get('search');
-
-        if (!$versionId) {
-            $activeVersion = QuestionVersion::getActive('sjt');
-            if ($activeVersion) {
-                $versionId = $activeVersion->id;
-            } else {
-                return redirect()->back()->with('error', 'Silakan pilih versi untuk diekspor.');
-            }
-        }
+        $versionId = $request->get('version') ?? QuestionVersion::getActive('tk')?->id;
+        if (!$versionId) return back()->with('error', 'Silakan pilih versi untuk diekspor.');
 
         $version = QuestionVersion::find($versionId);
+        $search  = $request->get('search');
+        $query   = TalentCompetencyQuestion::where('id_versi', $versionId)->with(['options', 'competencyDescription']);
 
-        $query = SJTQuestion::where('version_id', $versionId)
-            ->with(['options', 'competencyDescription']);
-
-        if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('question_text', 'like', '%' . $search . '%')
-                    ->orWhere('number', 'like', '%' . $search . '%')
-                    ->orWhere('competency', 'like', '%' . $search . '%')
-                    ->orWhereHas('competencyDescription', function ($subQ) use ($search) {
-                        $subQ->where('competency_name', 'like', '%' . $search . '%');
-                    });
-            });
+        if ($search) {
+            $query->where(fn($q) => $q->where('teks_pertanyaan', 'like', "%{$search}%")
+                ->orWhere('nomor', 'like', "%{$search}%")
+                ->orWhere('kode_kompetensi', 'like', "%{$search}%")
+                ->orWhereHas('competencyDescription', fn($s) => $s->where('nama_kompetensi', 'like', "%{$search}%")));
         }
 
-        $questions = $query->orderBy('number')->get();
-
-        $data = [
-            'reportTitle' => 'Laporan Bank Soal SJT',
-            'versionName' => $version->version . ' - ' . $version->name . ($search ? ' (Filter: ' . $search . ')' : ''),
-            'generatedBy' => Auth::user()->name,
+        $pdf = Pdf::loadView('admin.questions.talent-competency.pdf.tkReport', [
+            'reportTitle' => 'Laporan Bank Soal Talenta Kompetensi',
+            'versionName' => $version->versi.' - '.$version->nama.($search ? " (Filter: {$search})" : ''),
+            'generatedBy' => Auth::user()->nama,
             'generatedAt' => now()->format('d/m/Y H:i'),
-            'rows'        => $questions
-        ];
+            'rows'        => $query->orderBy('nomor')->get(),
+        ])->setPaper('a4', 'landscape');
 
-        $pdf = Pdf::loadView('admin.questions.sjt.pdf.sjtReport', $data);
-        $pdf->setPaper('a4', 'landscape');
-
-        return $pdf->stream('Laporan-Soal-SJT-v' . $version->version . '.pdf');
+        return $pdf->stream('Laporan-Soal-TK-v'.$version->versi.'.pdf');
     }
 
-    /**
-     * Reorder questions
-     */
     public function reorder(Request $request)
     {
         $request->validate([
-            'version_id' => 'required|exists:question_versions,id',
-            'questions' => 'required|array',
-            'questions.*.id' => 'required|exists:sjt_questions,id',
-            'questions.*.number' => 'required|integer|min:1|max:50',
+            'id_versi'            => 'required|exists:versi_soal,id',
+            'questions'           => 'required|array',
+            'questions.*.id'      => 'required|exists:soal_tk,id',
+            'questions.*.nomor'   => 'required|integer|min:1|max:50',
         ]);
 
         DB::transaction(function () use ($request) {
-            foreach ($request->questions as $questionData) {
-                SJTQuestion::where('id', $questionData['id'])
-                    ->update([
-                        'number' => $questionData['number'],
-                        // 'page_number' dihapus dari sini
-                    ]);
+            foreach ($request->questions as $q) {
+                TalentCompetencyQuestion::where('id', $q['id'])->update(['nomor' => $q['nomor']]);
             }
         });
 

@@ -1,167 +1,115 @@
 <?php
-
 namespace App\Jobs;
 
+use App\Helpers\QuestionHelper;
+use App\Models\CompetencyDescription;
+use App\Models\TestResult;
+use App\Models\TestSession;
+use App\Models\TypologyDescription;
+use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\DB;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
 
 class GenerateAssessmentReport implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $timeout = 0;
+    public int $tries   = 3;
+    public int $timeout = 120;
 
-    public function __construct(public string $sessionId) {}
+    public function __construct(public readonly string $sessionId)
+    {}
 
     public function handle(): void
     {
-        try {
-            Log::info("Job GenerateAssessmentReport DIMULAI untuk sesi: {$this->sessionId}");
+        $session = TestSession::with(['user', 'Program'])->find($this->sessionId);
 
-            // ---- 1) Ambil sesi & pengguna ----
-            $session = DB::table('sesi_tes')->where('id', $this->sessionId)->first();
-            if (!$session) {
-                Log::warning("GenerateAssessmentReport: Sesi {$this->sessionId} tidak ditemukan.");
-                return;
-            }
-
-            $user           = DB::table('pengguna')->where('id', $session->id_pengguna)->first();
-            $recipientName  = $session->nama_peserta ?: ($user->nama ?? 'Peserta');
-            $recipientEmail = $user->email ?? null;
-
-            $event     = DB::table('acara')->where('id', $session->id_acara)->first();
-            $eventName = $event->nama ?? 'Talent Mapping';
-
-            // ---- 2) Ambil hasil dari hasil_tes ----
-            $result = DB::table('hasil_tes')->where('id_sesi', $this->sessionId)->first();
-            if (!$result) {
-                Log::warning("GenerateAssessmentReport: Hasil tes untuk sesi {$this->sessionId} tidak ditemukan.");
-                return;
-            }
-
-            // ---- 3) Susun data PDF ----
-            $tkResults   = json_decode((string) $result->hasil_tk,   true) ?: [];
-            $st30Results = json_decode((string) $result->hasil_st30, true) ?: [];
-
-            $top3    = $tkResults['top3']    ?? [];
-            $bottom3 = $tkResults['bottom3'] ?? [];
-
-            $st1Ids = json_decode((string) DB::table('jawaban_st30')
-                ->where('id_sesi', $this->sessionId)
-                ->where('nomor_tahap', 1)
-                ->where('untuk_penilaian', 1)
-                ->value('item_dipilih'), true) ?: [];
-
-            $st2Ids = json_decode((string) DB::table('jawaban_st30')
-                ->where('id_sesi', $this->sessionId)
-                ->where('nomor_tahap', 2)
-                ->where('untuk_penilaian', 1)
-                ->value('item_dipilih'), true) ?: [];
-
-            // ---- 4) Ambil tipologi ST-30 ----
-            $dominantTypologyCode = null;
-            if (!empty($st1Ids)) {
-                $firstSt1 = DB::table('soal_st30')->where('id', $st1Ids[0])->first();
-                $dominantTypologyCode = $firstSt1->kode_tipologi ?? null;
-            }
-
-            $st1Typos = collect();
-            if (!empty($st1Ids)) {
-                $st1Typos = DB::table('soal_st30 as q')
-                    ->join('deskripsi_tipologi as t', 't.kode_tipologi', '=', 'q.kode_tipologi')
-                    ->whereIn('q.id', $st1Ids)
-                    ->select('t.kode_tipologi AS code', 't.nama_tipologi AS name', 't.deskripsi_kekuatan AS desc')
-                    ->distinct()->get();
-            }
-
-            $st2Typos = collect();
-            if (!empty($st2Ids)) {
-                $st2Typos = DB::table('soal_st30 as q')
-                    ->join('deskripsi_tipologi as t', 't.kode_tipologi', '=', 'q.kode_tipologi')
-                    ->whereIn('q.id', $st2Ids)
-                    ->select('t.kode_tipologi AS code', 't.nama_tipologi AS name', 't.deskripsi_kelemahan AS desc')
-                    ->distinct()->get();
-            }
-
-            $dominantTypology = $dominantTypologyCode
-                ? DB::table('deskripsi_tipologi')->where('kode_tipologi', $dominantTypologyCode)->first()
-                : null;
-
-            // ---- 5) Generate PDF ----
-            $pdfData = [
-                'recipientName'    => $recipientName,
-                'eventName'        => $eventName,
-                'top3'             => $top3,
-                'bottom3'          => $bottom3,
-                'allCompetencies'  => $tkResults['all'] ?? [],
-                'st1Typos'         => $st1Typos,
-                'st2Typos'         => $st2Typos,
-                'dominantTypology' => $dominantTypology,
-                'generatedAt'      => now('Asia/Makassar')->format('d M Y H:i') . ' WITA',
-            ];
-
-            $pdf = Pdf::loadView('public.test.result-pdf', $pdfData)
-                ->setPaper('a4', 'portrait')
-                ->setOptions(['isRemoteEnabled' => true]);
-
-            $pdfContent  = $pdf->output();
-            $fileName    = 'hasil-talent-mapping-' . Str::slug($recipientName) . '-' . $this->sessionId . '.pdf';
-            $relativePath = 'reports/' . $fileName;
-
-            Storage::disk('local')->put($relativePath, $pdfContent);
-
-            DB::table('hasil_tes')->where('id_sesi', $this->sessionId)->update([
-                'tipologi_dominan'    => $dominantTypologyCode,
-                'laporan_dibuat_pada' => now(),
-                'path_pdf'            => $relativePath,
-                'updated_at'          => now(),
-            ]);
-
-            // ---- 6) Kirim email ----
-            if ($recipientEmail) {
-                try {
-                    $body = "Halo {$recipientName},\n\n"
-                        . "Terima kasih telah mengikuti program Talent Mapping.\n"
-                        . "Berikut hasil asesmen Anda terlampir dalam format PDF.\n\n"
-                        . "Semoga hasil ini dapat membantu Anda memahami potensi diri dengan lebih baik.\n\n"
-                        . "Salam hangat,\nTim Talent Mapping";
-
-                    Mail::raw($body, function ($m) use ($recipientEmail, $recipientName, $pdfContent, $fileName) {
-                        $m->to($recipientEmail, $recipientName)
-                            ->subject('Hasil Talent Mapping Anda')
-                            ->attachData($pdfContent, $fileName, ['mime' => 'application/pdf']);
-                    });
-
-                    DB::table('hasil_tes')->where('id_sesi', $this->sessionId)->update([
-                        'email_terkirim_pada' => now(),
-                        'updated_at'          => now(),
-                    ]);
-
-                    Log::info("Email berhasil dikirim ke: {$recipientEmail}");
-                } catch (\Throwable $e) {
-                    Log::error("Email gagal dikirim: " . $e->getMessage());
-                }
-            }
-
-            // ---- 7) Tandai sesi selesai ----
-            DB::table('sesi_tes')->where('id', $this->sessionId)->update([
-                'selesai'    => 1,
-                'updated_at' => now(),
-            ]);
-
-            Log::info("Job GenerateAssessmentReport SELESAI untuk sesi {$this->sessionId}");
-        } catch (\Throwable $e) {
-            Log::error("GAGAL memproses GenerateAssessmentReport untuk sesi {$this->sessionId}: " . $e->getMessage());
-            throw $e;
+        if (!$session) {
+            Log::warning("GenerateAssessmentReport: sesi {$this->sessionId} tidak ditemukan.");
+            return;
         }
+
+        if (!$session->selesai) {
+            Log::warning("GenerateAssessmentReport: sesi {$this->sessionId} belum selesai.");
+            return;
+        }
+
+        // ── Hitung hasil ──────────────────────────────────────────────────────
+        $st30Scores = QuestionHelper::calculateST30Scores($session->id);
+        $tkPayload  = QuestionHelper::buildTKResultPayload($session->id);
+
+        $dominantTypology = array_key_first($st30Scores);
+
+        // ── Ambil deskripsi ───────────────────────────────────────────────────
+        $typologyDesc  = TypologyDescription::where('kode_tipologi', $dominantTypology)->first();
+        $competencyDescs = CompetencyDescription::whereIn('kode_kompetensi', array_keys($tkPayload['all'] ? array_column($tkPayload['all'], null, 'code') : []))->get()->keyBy('kode_kompetensi');
+
+        // ── Simpan / update TestResult ────────────────────────────────────────
+        $testResult = TestResult::updateOrCreate(
+            ['id_sesi' => $session->id],
+            [
+                'hasil_st30'         => $st30Scores,
+                'hasil_tk'           => $tkPayload,
+                'tipologi_dominan'   => $dominantTypology,
+                'laporan_dibuat_pada'=> now(),
+            ]
+        );
+
+        // ── Generate PDF ──────────────────────────────────────────────────────
+        $pdfData = [
+            'session'          => $session,
+            'user'             => $session->user,
+            'Program'            => $session->Program,
+            'st30Scores'       => $st30Scores,
+            'tkPayload'        => $tkPayload,
+            'dominantTypology' => $dominantTypology,
+            'typologyDesc'     => $typologyDesc,
+            'competencyDescs'  => $competencyDescs,
+        ];
+
+        $pdf = Pdf::loadView('pdf.assessment-report', $pdfData)->setPaper('a4', 'portrait');
+
+        // Simpan ke disk local (bukan public — tidak perlu symlink)
+        $filename  = 'reports/'.date('Y/m').'/'.$session->id.'.pdf';
+        Storage::disk('local')->put($filename, $pdf->output());
+
+        // Update path_pdf
+        $testResult->update(['path_pdf' => $filename]);
+
+        // ── Kirim email ───────────────────────────────────────────────────────
+        $user = $session->user;
+        if ($user && $user->email && empty($testResult->email_terkirim_pada)) {
+            try {
+                $pdfPath = Storage::disk('local')->path($filename);
+                Mail::raw(
+                    "Halo {$user->nama},\n\nTerima kasih telah menyelesaikan Talent Assessment.\nBerikut kami lampirkan hasil assessment Anda.\n\nSalam,\nTim BCTI",
+                    function ($m) use ($user, $pdfPath, $session) {
+                        $m->to($user->email, $user->nama)
+                          ->subject('Hasil Talent Assessment - '.($session->Program?->nama ?? 'BCTI'))
+                          ->attach($pdfPath, ['as' => 'hasil-asesmen.pdf', 'mime' => 'application/pdf']);
+                    }
+                );
+                $testResult->update(['email_terkirim_pada' => now()]);
+
+                // Update pivot hasil_terkirim
+                if ($session->Program) {
+                    $session->Program->participants()->updateExistingPivot($session->id_pengguna, ['hasil_terkirim' => true]);
+                }
+            } catch (\Exception $e) {
+                Log::error("GenerateAssessmentReport: gagal kirim email ke {$user->email} — ".$e->getMessage());
+            }
+        }
+    }
+
+    public function failed(\Throwable $exception): void
+    {
+        Log::error("GenerateAssessmentReport GAGAL untuk sesi {$this->sessionId}: ".$exception->getMessage());
     }
 }

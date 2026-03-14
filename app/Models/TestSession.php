@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use App\Traits\HasCustomId;
@@ -15,22 +14,13 @@ class TestSession extends Model
     protected $table = 'sesi_tes';
     protected $keyType = 'string';
     public $incrementing = false;
-    public $timestamps = true;
-
     protected string $customIdPrefix = 'TS';
     protected int $customIdLength = 3;
 
     protected $fillable = [
-        'id_pengguna',
-        'id_acara',
-        'token_sesi',
-        'langkah_saat_ini',
-        'id_versi_st30',
-        'nama_peserta',
-        'latar_belakang',
-        'jabatan',
-        'selesai',
-        'selesai_pada',
+        'id_pengguna', 'id_program', 'token_sesi', 'langkah_saat_ini',
+        'id_versi_st30', 'nama_peserta', 'latar_belakang', 'jabatan',
+        'selesai', 'selesai_pada',
     ];
 
     protected $casts = [
@@ -38,28 +28,14 @@ class TestSession extends Model
         'selesai_pada' => 'datetime',
     ];
 
-    // ===== Alias untuk kompatibilitas kode lama =====
-    public function getUserIdAttribute(): int              { return $this->id_pengguna; }
-    public function getEventIdAttribute(): ?string         { return $this->id_acara; }
-    public function getSessionTokenAttribute(): string     { return $this->token_sesi; }
-    public function getCurrentStepAttribute(): string      { return $this->langkah_saat_ini; }
-    public function getSt30VersionIdAttribute(): ?string   { return $this->id_versi_st30; }
-    public function getParticipantNameAttribute(): ?string { return $this->nama_peserta; }
-    public function getParticipantBackgroundAttribute(): ?string { return $this->latar_belakang; }
-    public function getPositionAttribute(): ?string        { return $this->jabatan; }
-    public function getIsCompletedAttribute(): bool        { return $this->selesai; }
-    public function getCompletedAtAttribute()              { return $this->selesai_pada; }
-
-    // ===== Relationships =====
-
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'id_pengguna');
     }
 
-    public function event(): BelongsTo
+    public function Program(): BelongsTo
     {
-        return $this->belongsTo(Event::class, 'id_acara');
+        return $this->belongsTo(Program::class, 'id_program');
     }
 
     public function st30Responses(): HasMany
@@ -72,18 +48,10 @@ class TestSession extends Model
         return $this->hasMany(TalentCompetencyResponse::class, 'id_sesi', 'id');
     }
 
-    /** @deprecated Gunakan talentCompetencyResponses() */
-    public function sjtResponses(): HasMany
-    {
-        return $this->talentCompetencyResponses();
-    }
-
     public function testResult(): HasOne
     {
         return $this->hasOne(TestResult::class, 'id_sesi', 'id');
     }
-
-    // ===== Accessors =====
 
     public function getProgressDisplayAttribute(): string
     {
