@@ -1,0 +1,158 @@
+:root {
+  /* --- Warna Hijau Sage --- */
+  --primary-color: #6A994E;
+  --secondary-color: #386641;
+  --gradient-primary: linear-gradient(135deg, #A7C957 0%, #6A994E 100%);
+  /* --gradient-background: linear-gradient(135deg, #F2E8CF 0%, #EDF1D6 50%, #F8FAF0 100%); */ /* <-- Boleh dihapus/komentari */
+  /* ----------------------- */
+  --text-dark: #1f2937;
+  --text-light: #6b7280;
+  --white: #ffffff;
+  --btn-radius: 10px;
+}
+
+/* Base reset */
+html, body {
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* --- GANTI BACKGROUND DI SINI --- */
+  background: #EFF5EC; /* Warna putih kehijauan (light sage) */
+  /* Atau coba warna lain seperti: #F0FFF0 (Honeydew), #F5FFFA (Mint Cream) */
+  /* ----------------------------- */
+  color: var(--text-dark);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+/* Page container */
+.thank-you-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 100px 15px; /* Padding desktop sebagai default */
+  display: flex;
+  align-items: center;
+}
+
+/* Main content area */
+.thank-you-main {
+    width: 100%;
+}
+/* Memastikan row align items center secara default */
+.thank-you-main .row {
+    align-items: center;
+}
+
+/* Kolom Teks */
+.thank-you-content {
+  text-align: left; /* DEFAULT: Teks rata kiri */
+  animation: slideInLeft .7s ease-out;
+  z-index: 2;
+  position: relative;
+  width: 100%;
+  padding-right: 30px; /* DEFAULT: Jarak kanan dari gambar */
+  padding-top: 70px;
+}
+
+/* ... (Style .thank-you-title, .thank-you-subtitle, .highlight, .thank-you-description, .thank-you-actions, .btn, .btn-secondary, .learn-more-btn tetap sama) ... */
+.thank-you-title { font-size: 35px; font-weight: 800; margin: 0 0 8px; color: var(--secondary-color); }
+.thank-you-subtitle { font-size: 32px; font-weight: 800; margin: 0 0 24px; line-height: 1.1; }
+.thank-you-subtitle .highlight { background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; padding: 0 4px; }
+.thank-you-description { font-size: 17px; color: var(--text-light); margin-bottom: 32px; max-width: 55ch; margin-left: 0; margin-right: 0; }
+.thank-you-description strong { color: var(--secondary-color); font-weight: 600; }
+.thank-you-actions { display: flex; gap: 16px; justify-content: flex-start; flex-wrap: wrap; z-index: 2; position: relative; }
+.btn { display: inline-flex; align-items: center; justify-content: center; border-radius: var(--btn-radius); padding: 12px 20px; font-weight: 600; font-size: 16px; text-decoration: none; cursor: pointer; border: none; transition: all 0.3s ease; }
+.btn-secondary { background: #A1A1AA; color: var(--white); }
+.btn-secondary:hover { background: #71717A; color: var(--white); text-decoration: none; }
+.learn-more-btn { background: linear-gradient(135deg, #84A98C 0%, #52796F 100%); color: var(--white) !important; box-shadow: 0 8px 15px rgba(56, 102, 65, 0.15); font-weight: 700; }
+.learn-more-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 20px rgba(56, 102, 65, 0.2); color: var(--white) !important; text-decoration: none; }
+
+
+/* Kolom Gambar */
+.thank-you-image {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding-left: 30px; /* DEFAULT: Jarak kiri dari teks */
+  transform: translateY(-300px); /* <<< DEFAULT: Naik 50px (Desktop) >>> */
+}
+
+.illustration {
+  display: block;
+  width: 100%;
+  max-width: 420px; /* DEFAULT: Ukuran gambar desktop */
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 15px 30px rgba(0,0,0,.1));
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Animasi (Tetap Sama) */
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-25px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+/* === Responsive Rules (Sekarang untuk menimpa default di layar kecil) === */
+
+/* Tablet & Mobile (Layar <= 991.98px) */
+@media (max-width: 991.98px) {
+  .thank-you-container {
+      padding: 48px 15px;
+  }
+  .thank-you-content {
+    text-align: center; /* OVERRIDE: Teks kembali ke tengah */
+    padding-right: 0; /* Hapus padding antar kolom */
+  }
+  .thank-you-description {
+    margin-left: auto; /* OVERRIDE: Tengahkan lagi */
+    margin-right: auto;
+  }
+  .thank-you-actions {
+    justify-content: center; /* OVERRIDE: Tombol kembali ke tengah */
+  }
+  .thank-you-image {
+    justify-content: center; /* OVERRIDE: Gambar kembali ke tengah */
+    padding-left: 0; /* Hapus padding antar kolom */
+    margin-top: 32px; /* Beri jarak atas karena menumpuk */
+    transform: translateY(0); /* <<< OVERRIDE: Reset pergeseran vertikal >>> */
+    /* Atau bisa pakai: transform: none; */
+  }
+}
+
+/* Tablet (Spesifik ukuran gambar) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .illustration {
+      max-width: 350px; /* Ukuran gambar tablet */
+   }
+}
+
+
+/* Mobile (Spesifik ukuran font & gambar) */
+@media (max-width: 767.98px) {
+  .thank-you-container {
+      padding: 32px 15px;
+  }
+   .thank-you-title { font-size: 29px; }
+   .thank-you-subtitle { font-size: 26px; }
+   .thank-you-description { font-size: 15px; }
+   .illustration {
+      max-width: 280px; /* Ukuran gambar mobile */
+   }
+}
+
+/* Menghapus elemen orbit (Tetap Sama) */
+.floating-elements, .orbit-lines, .orbit-line { display: none; }
+/* Menghapus background dari wrapper (Tetap Sama) */
+.site-wrapper, .main-wrapper { background: none; }

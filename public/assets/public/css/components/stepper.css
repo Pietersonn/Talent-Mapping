@@ -1,0 +1,84 @@
+:root{
+  /* Ganti ke kuning BCTI di sini kalau mau */
+  --tm-active: #f6c400;         /* warna aktif/terisi */
+  --tm-inactive: #cbd5e1;       /* abu node inactive */
+  --tm-line: #e5e7eb;           /* garis dasar */
+  --tm-label: #64748b;          /* teks label abu */
+  --tm-label-active: #111827;   /* teks label aktif */
+}
+
+/* container stepper → pendek & center */
+.tm-stepper{
+  position: relative;
+  max-width: 950px;      /* pendek; ubah sesuai selera (680–800px ok) */
+  margin: 35px auto 1px;
+  padding: 0 8px;
+}
+
+/* garis dasar */
+.tm-stepper-line{
+  height: 6px;
+  background: var(--tm-line);
+  border-radius: 999px;
+  width: 100%;
+}
+
+/* garis isi mengikuti % */
+.tm-stepper-fill{
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  height: 6px;
+  transform: translateY(-50%);
+  background: var(--tm-active);
+  border-radius: 999px;
+  transition: width .25s ease;
+  /* -16px kira-kira jarak padding kiri+kanan container untuk tampilan pas */
+  max-width: calc(100% - 16px);
+}
+
+/* node */
+.tm-stepper-nodes{
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+  padding: 0 0; /* biar dot duduk di atas line */
+}
+
+.tm-node{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.tm-dot{
+  width: 28px; height: 28px;
+  border-radius: 999px;
+  display: grid; place-items: center;
+  font: 700 13px/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: #fff;
+  background: var(--tm-inactive);
+  border: 2px solid #fff;         /* sedikit border biar kontras di atas line */
+  box-shadow: 0 0 0 2px var(--tm-line);
+}
+
+.tm-node.active .tm-dot{ background: var(--tm-active); }
+.tm-node.done .tm-dot{ background: var(--tm-active); }
+
+.tm-label{
+  font: 600 12px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: var(--tm-label);
+}
+.tm-node.active .tm-label,
+.tm-node.done   .tm-label{ color: var(--tm-label-active); }
+
+/* responsif */
+@media (max-width: 640px){
+  .tm-stepper{ max-width: 92vw; }
+  .tm-label{ font-size: 11px; }
+  .tm-dot{ width: 26px; height: 26px; font-size: 12px; }
+}

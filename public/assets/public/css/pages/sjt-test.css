@@ -1,0 +1,307 @@
+/* Reset dan Base Styles untuk Test Interface */
+* {
+    box-sizing: border-box;
+}
+
+/* SJT Test Styles */
+.sjt-test-container {
+    min-height: 100vh;
+    background: #f8fafc;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+/* Hero Section */
+.sjt-hero {
+
+    background: url('/assets/public/images/img-test1.jpg') top center / cover no-repeat;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.sjt-hero-content {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 30px 40px;
+    border-radius: 20px;
+    max-width: 700px;
+    width: 100%;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.sjt-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 15px;
+}
+
+.sjt-instruction {
+    font-size: 14px;
+    color: #4a5568;
+    line-height: 1.5;
+}
+
+.sjt-reminder-text {
+  font-size: 12px;
+  color: #4a5568;
+  line-height: 1.5;
+  margin-top: 15px;
+  text-align: left;
+}
+
+
+.sjt-page-info {
+    text-align: center;
+    font-size: 14px;
+    color: #4a5568;
+    font-weight: 600;
+}
+
+/* Questions Section */
+.sjt-questions-section {
+    padding: 30px 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.sjt-questions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.sjt-question-block {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+}
+
+.sjt-question-header {
+    background: #38b2ac;
+    color: white;
+    padding: 15px 20px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.sjt-question-content {
+    padding: 20px;
+}
+
+.sjt-question-text {
+    color: #2d3748;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.sjt-options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sjt-option-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.sjt-option-item:hover {
+    border-color: #38b2ac;
+    background: #f0fffe;
+}
+
+.sjt-option-item.selected {
+    border-color: #38b2ac;
+    background: #e6fffa;
+}
+
+.sjt-radio {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: #38b2ac;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.sjt-option-letter {
+    font-weight: 700;
+    color: #38b2ac;
+    min-width: 20px;
+    flex-shrink: 0;
+}
+
+.sjt-option-text {
+    color: #4a5568;
+    line-height: 1.4;
+    font-size: 14px;
+    flex: 1;
+}
+
+.sjt-option-item.selected .sjt-option-text {
+    color: #2d3748;
+    font-weight: 500;
+}
+
+/* Form Actions */
+.sjt-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 30px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.sjt-btn {
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.sjt-btn-back {
+    background: #718096;
+    color: white;
+}
+
+.sjt-btn-back:hover {
+    background: #4a5568;
+}
+
+.sjt-btn-primary {
+    background: #38b2ac;
+    color: white;
+}
+
+.sjt-btn-primary:hover:not(:disabled) {
+    background: #319795;
+}
+
+.sjt-btn-primary:disabled {
+    background: #a0aec0;
+    color: #e2e8f0;
+    cursor: not-allowed;
+}
+
+/* Answer Status */
+.sjt-answer-status {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.sjt-answer-status.incomplete {
+    background: #fed7d7;
+    color: #c53030;
+    border: 1px solid #feb2b2;
+}
+
+.sjt-answer-status.complete {
+    background: #c6f6d5;
+    color: #2f855a;
+    border: 1px solid #9ae6b4;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    /* === Perbaikan Hero Section: Lebih rapi dan ringkas === */
+    .sjt-hero {
+        min-height: 200px; /* Sedikit lebih kecil */
+        padding: 20px 0; /* Padding vertikal lebih kecil, horizontal 0 */
+    }
+
+    .sjt-hero-content {
+        padding: 20px 20px; /* Padding konten hero dikurangi */
+    }
+
+    .sjt-title {
+        font-size: 18px; /* Judul lebih kecil */
+        margin-bottom: 10px;
+    }
+
+    .sjt-instruction,
+    .sjt-reminder-text {
+        font-size: 11px; /* Instruksi lebih kecil */
+        line-height: 1.4;
+    }
+
+    .sjt-reminder-text {
+        margin-top: 10px;
+        text-align: center; /* Set reminder text ke tengah di mobile */
+    }
+
+    /* === Perbaikan Soal & Opsi: Font kecil, hapus bold, Konten Lebih Lebar === */
+    .sjt-questions-section {
+        padding: 20px 8px; /* Konten lebih lebar (padding horizontal dikurangi) */
+    }
+
+    /* Penyesuaian jarak soal pertama (gap di atas soal no 1) */
+    .sjt-question-block:first-child {
+        margin-top: 20px;
+    }
+
+    .sjt-question-header {
+        padding: 12px 15px;
+        font-size: 12px; /* Font soal (header) dikecilkan */
+        font-weight: 380; /* Mengurangi ketebalan font soal */
+    }
+
+    .sjt-question-content {
+        padding: 15px;
+    }
+
+    .sjt-option-item {
+        padding: 10px 12px;
+        gap: 8px; /* Didekatkan dari 12px */
+    }
+
+    /* Huruf Opsi (A, B, C, D) dikecilkan dan didekatkan */
+    .sjt-option-letter {
+        font-size: 13px; /* Ukuran font huruf opsi dikecilkan */
+        font-weight: 600;
+        min-width: 15px; /* Mengurangi min-width agar lebih dekat ke teks */
+    }
+
+    .sjt-option-text {
+        font-size: 11px; /* Font teks opsi jawaban dikecilkan */
+    }
+
+    /* Menghapus Bold pada opsi yang terpilih (selected) */
+    .sjt-option-item.selected .sjt-option-text {
+        color: #2d3748;
+        font-weight: 400;
+    }
+
+    /* Action buttons di mobile */
+    .sjt-actions {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .sjt-btn {
+        width: 100%;
+        text-align: center;
+    }
+}

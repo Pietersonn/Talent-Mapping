@@ -1,0 +1,874 @@
+/* === HOMEPAGE SPECIFIC STYLES === */
+
+/* === HERO SECTION === */
+.hero-wrapper {
+    background-color: #ffffff;
+    padding: 70px 0;
+    display: flex;
+    justify-content: center;
+}
+
+/* ===== HERO BOX ===== */
+.hero-box {
+    background-color: #e2ffe3;
+    border-radius: 20px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.05);
+    max-width: 1200px;
+    width: 100%;
+    padding: 70px 50px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+/* ===== LEFT CONTENT ===== */
+.hero-left {
+    flex: 1.1;
+}
+
+.hero-left h1 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 60px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #000000;
+    margin-bottom: 25px;
+}
+
+.hero-left h1 span {
+    color: #2d6a4f;
+}
+
+.hero-left p {
+    font-size: 21px;
+    color: #2f2f2f;
+    margin-bottom: 15px;
+    line-height: 1.6;
+}
+
+.sub-text {
+    font-weight: 600;
+    color: #1b4332;
+    margin-top: 35px;
+    font-size: 20px;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 20px;
+    margin-top: 18px;
+}
+
+.btn {
+    display: inline-block;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 18px;
+    padding: 14px 40px;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+}
+
+.btn.test {
+    background-color: #2d6a4f;
+    color: #fff;
+}
+
+.btn.test:hover {
+    background-color: #40916c;
+}
+
+.btn.profile-bcti {
+    background-color: #b666f7;
+    color: #fff;
+}
+
+.btn.btn-cta-secondary {
+    /* Menggunakan gradient hijau dari .stat-number */
+    background: linear-gradient(120deg, #84cc16 0%, #65a30d 100%);
+    color: #fff;
+    border: none;
+}
+
+.btn.btn-cta-secondary:hover {
+    background: linear-gradient(120deg, #95dd2a 0%, #76b91e 100%);
+    box-shadow: 0 6px 18px rgba(132, 204, 22, 0.3);
+    transform: translateY(-2px);
+}
+
+/* ===== RIGHT IMAGE ===== */
+.hero-right {
+    flex: 0.9;
+    display: flex;
+    justify-content: center;
+}
+
+.hero-right img {
+    width: 95%;
+    max-width: 720px;
+    border-radius: 24px;
+    transform: rotate(-2.5deg);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+}
+
+/* === DISCOVER SECTION === */
+.discover-section {
+    padding: 0 0 50px;
+    background: white;
+    position: relative;
+}
+
+.discover-content {
+    display: grid;
+    grid-template-columns: 50% 50%;
+    gap: 10px;
+    align-items: flex-start;
+    margin-top: 0;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.discover-image {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    order: 1;
+}
+
+.discover-image img {
+    width: 100%;
+    max-width: 520px;
+    height: auto;
+    filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.08));
+}
+
+.talent-competency-card {
+    background: #f9fafb;
+    border-radius: 28px;
+    padding: 50px 45px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e5e7eb;
+    position: relative;
+    transform: translateY(0);
+    transition: all 0.4s ease;
+    order: 2;
+    margin-top: 120px;
+    max-width: 590px;
+}
+
+.talent-competency-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 35px 80px rgba(0, 0, 0, 0.1);
+}
+
+.card-header h3 {
+    font-size: 28px;
+    font-weight: 800;
+    color: #1f2937;
+    line-height: 1.3;
+    margin-bottom: 24px;
+    font-family: 'Poppins', sans-serif;
+}
+
+.card-content p {
+    color: #4b5563; /* Konsisten */
+    line-height: 1.6; /* Konsisten */
+    font-size: 16px;
+    font-weight: 400;
+}
+
+/* === FEATURE SECTION === */
+.feature-section {
+    padding: 80px 0;
+    background-color: #ffffff;
+}
+
+.feature-wrapper {
+    /* DIUBAH: Menjadi grid 2 kolom */
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: flex-start;
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto; /* Pusatkan wrapper */
+}
+
+.feature-item,
+.feature-item.feature-item--reverse {
+    /* DIUBAH: Paksa semua item jadi vertikal & tengah */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+    text-align: center; /* Teks jadi di tengah */
+}
+
+.feature-image img {
+    /* DIUBAH: Gambar lebih besar untuk layout baru */
+    width: 100%;
+    max-width: 200px; /* Sesuaikan ukuran ini jika perlu */
+    height: auto;
+    object-fit: contain;
+    flex-shrink: 0;
+    margin-bottom: 10px;
+}
+
+.feature-content {
+    flex: 1;
+}
+
+.feature-content h3 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.8rem; /* 28px */
+    color: #1b263b;
+    margin-bottom: 15px;
+    font-weight: 700;
+}
+
+.feature-content p {
+    font-size: 1rem; /* 16px */
+    color: #4b5563;
+    line-height: 1.6;
+    max-width: 480px; /* Batasi lebar paragraf */
+    margin: 0 auto; /* Pusatkan paragraf */
+}
+
+/* === HOW IT WORKS SECTION === */
+.how-it-works {
+    background: #ffffff;
+    padding: 0;
+}
+
+.how-it-works .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: #f5f6fa;
+    border-radius: 20px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.05);
+    padding: 80px 60px;
+}
+
+.how-it-works h2 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 46px;
+    font-weight: 700;
+    color: #1b263b;
+    margin-bottom: 60px;
+    text-align: left;
+}
+
+.steps {
+    display: flex;
+    justify-content: flex-start;
+    gap: 40px;
+    flex-wrap: nowrap;
+}
+
+.step {
+    max-width: 350px;
+    text-align: left;
+}
+
+.circle {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #95d5b2, #74c69d);
+    color: #fff;
+    font-size: 24px;
+    font-weight: 700;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 15px 25px 0;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    transition: 0.3s ease;
+}
+
+.circle:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.step h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1b263b;
+    margin-bottom: 10px;
+    font-family: 'Poppins', sans-serif; /* Konsisten */
+}
+
+.step p {
+    font-size: 16px;
+    color: #4b5563;
+    line-height: 1.6;
+}
+
+.button-wrapper {
+    text-align: left;
+    margin-top: 60px;
+}
+
+.start-btn {
+    display: inline-block;
+    background-color: #1b4332;
+    color: #fff;
+    font-weight: 600;
+    padding: 20px 40px;
+    border-radius: 10px;
+    transition: 0.3s ease;
+    text-decoration: none;
+}
+
+.start-btn:hover {
+    background-color: #2d6a4f;
+}
+
+/* === WHAT YOU WILL RECEIVE SECTION === */
+.what-you-will-receive {
+    background: #ffff;
+    padding: 0;
+}
+
+.what-you-will-receive .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 40px;
+    text-align: center;
+}
+
+.what-you-will-receive h2 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: #1b263b;
+    margin-bottom: 40px;
+}
+
+.items {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.item {
+    max-width: 230px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.icon {
+    width: 60px;
+    height: 60px;
+    background-color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.icon i {
+    font-size: 30px;
+    color: #4caf50;
+}
+
+.item h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1b263b;
+    margin-bottom: 10px;
+    font-family: 'Poppins', sans-serif; /* Konsisten */
+}
+
+.item p {
+    font-size: 16px; /* Konsisten (dari 14px) */
+    color: #4b5563;
+    line-height: 1.6;
+    margin: 0;
+    min-height: 45px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* === SEARCH POTENTIAL SECTION === */
+.search-potential-section {
+    padding: 60px 0;
+    background: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.search-potential-section::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -200px;
+    width: 600px;
+    height: 600px;
+    background: linear-gradient(135deg, #84cc16, #65a30d);
+    border-radius: 50%;
+    opacity: 0.03;
+    transform: translateY(-50%);
+}
+
+.search-content {
+    display: grid;
+    grid-template-columns: 55% 45%;
+    gap: 100px;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.search-card {
+    background: white;
+    border-radius: 32px;
+    padding: 60px 50px;
+    border: 2px solid #e5e7eb;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.04);
+    position: relative;
+    left: 80px;
+}
+
+.search-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+    border-radius: 30px;
+    z-index: -1;
+}
+
+.search-card h2 {
+    font-size: 38px;
+    font-weight: 800;
+    color: #1f2937;
+    margin-bottom: 20px;
+    line-height: 1.2;
+    font-family: 'Poppins', sans-serif; /* Konsisten */
+}
+
+.search-card p {
+    color: #4b5563; /* Konsisten */
+    line-height: 1.6; /* Konsisten */
+    font-size: 16px; /* Konsisten (dari 17px) */
+    margin-bottom: 40px;
+    font-weight: 400;
+}
+
+.stats {
+    margin-bottom: 40px;
+}
+
+.stat-number {
+    font-size: 64px;
+    font-weight: 900;
+    background: linear-gradient(120deg, #84cc16 0%, #65a30d 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 0.9;
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
+}
+
+.stat-label {
+    color: #4b5563; /* Konsisten */
+    font-weight: 600;
+    font-size: 16px; /* Konsisten (dari 18px) */
+    line-height: 1.4;
+}
+
+.search-illustration {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.search-illustration img {
+    width: 100%;
+    max-width: 350px;
+    height: auto;
+    filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.1));
+    transform: scale(1.05);
+}
+.btn.btn-cta-secondary {
+    /* Menggunakan gradient hijau dari .stat-number */
+    background: #1f2937;
+    color: #fff;
+    border: none;
+}
+
+.btn.btn-cta-secondary:hover {
+    background: #1f2937;
+    box-shadow: 0 6px 18px rgba(132, 204, 22, 0.3);
+    transform: translateY(-2px);
+}
+
+/* === RESPONSIVE DESIGN === */
+@media (max-width: 768px) {
+
+    /* === HERO === */
+    .hero-wrapper {
+        padding-top: 0%;
+        padding-bottom: 30px;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .hero-box {
+        flex-direction: column;
+        text-align: center;
+        padding: 50px 30px 50px 30px;
+        border-radius: 0;
+        box-shadow: none;
+        width: 100%;
+    }
+
+    .hero-left h1 {
+        font-size: 36px;
+        line-height: 1.25;
+    }
+
+    .hero-left p {
+        font-size: 18px;
+    }
+
+    .sub-text {
+        margin-top: 25px;
+        font-size: 18px;
+    }
+
+    .hero-buttons {
+        justify-content: center;
+        flex-direction: column;
+        gap: 15px;
+        margin-top: 25px;
+    }
+
+    .hero-buttons .btn {
+        font-size: 16px;
+        padding: 14px 28px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .hero-right img {
+        width: 100%;
+        max-width: 320px;
+        transform: rotate(0deg);
+        margin-top: 10px;
+    }
+
+
+    /* === Talent Competency === */
+    .discover-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .discover-image {
+        display: none;
+    }
+
+    .talent-competency-card {
+        width: 100%;
+        max-width: none;
+        background: #f9fafb;
+        border-radius: 18px;
+        padding: 40px 28px; /* Menaikkan padding dari 12px */
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e5e7eb;
+        margin-top: 10px;
+        text-align: justify;
+    }
+
+    .talent-competency-card h3 {
+        font-size: 24px;
+        margin-bottom: 16px;
+        line-height: 1.4;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .talent-competency-card .card-content p {
+        font-size: 14px; /* Konsisten (dari 12px) */
+        line-height: 1.6; /* Konsisten */
+        text-align: justify;
+    }
+
+    /* === RESPONSIVE FEATURE SECTION === */
+    .feature-section {
+        padding: 50px 0;
+    }
+
+    .feature-wrapper {
+        /* DIUBAH: Kembali ke flex column untuk mobile */
+        display: flex;
+        flex-direction: column;
+        gap: 40px; /* Jarak vertikal antar item */
+        padding: 0 25px; /* Padding kiri-kanan */
+    }
+
+    .feature-item,
+    .feature-item.feature-item--reverse {
+        /* DIUBAH: Layout horizontal di mobile */
+        display: flex;
+        flex-direction: row; /* Layout horizontal */
+        align-items: center; /* Pusatkan secara vertikal */
+        gap: 20px;
+        text-align: left; /* Teks rata kiri */
+        padding: 0;
+    }
+
+    .feature-item.feature-item--reverse {
+        flex-direction: row-reverse; /* Balik urutan untuk item kedua */
+    }
+
+    .feature-image {
+        flex: 0 0 100px; /* KUNCI: Beri lebar 100px */
+    }
+
+    .feature-image img {
+        /* DIUBAH: Ukuran gambar mobile */
+        width: 100%;
+        max-width: none; /* Hapus batasan max-width */
+        height: auto;
+        margin-bottom: 0; /* Hapus margin bawah */
+    }
+
+    .feature-content {
+        flex: 1; /* Konten teks akan mengisi sisa ruang */
+    }
+
+    .feature-content h3 {
+        font-size: 1.25rem; /* 20px */
+        line-height: 1.3;
+        margin-bottom: 8px;
+    }
+
+    .feature-content p {
+        font-size: 0.875rem; /* 14px */
+        line-height: 1.5;
+        max-width: none; /* Hapus batasan lebar paragraf */
+        text-align: justify;
+    }
+
+    /* === How It Works Section === */
+    .how-it-works {
+        padding: 50px 0;
+        background-color: #ffffff;
+    }
+
+    .how-it-works .container {
+        padding: 0 34px;
+        border-radius: 16px;
+    }
+
+    .how-it-works h2 {
+        font-size: 32px; /* Konsisten (dari 46px) */
+        font-weight: 700; /* Konsisten (dari 500) */
+        margin-bottom: 30px;
+        text-align: left;
+        color: #1a1a1a;
+        letter-spacing: -0.5px;
+    }
+
+    .steps {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+    }
+
+    .step {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .circle {
+        width: 55px;
+        height: 55px;
+        border-radius: 50%;
+        background-color: #1b4332;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 18px;
+        flex-shrink: 0;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .step-content {
+        flex: 1;
+        text-align: left;
+    }
+
+    .step-content h3 {
+        font-size: 20px;
+        font-weight: 600; /* Konsisten (dari 400) */
+        color: #1a1a1a;
+        margin-bottom: 6px;
+        font-family: 'Poppins', sans-serif; /* Konsisten */
+    }
+
+    .step-content p {
+        font-size: 14px; /* Konsisten (dari 15px) */
+        color: #4b5563;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .button-wrapper {
+        text-align: center;
+        margin-top: 40px;
+    }
+
+    .start-btn {
+        display: inline-block;
+        width: 100%;
+        max-width: 4000px;
+        padding: 14px 0;
+        font-size: 15.5px;
+        font-weight: 600;
+        color: #fff;
+        background-color: #1b4332;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: 0.3s ease;
+    }
+
+    .start-btn:hover {
+        background-color: #2d6a4f;
+    }
+
+    /* === WHAT YOU WILL RECEIVE SECTION (Mobile) === */
+    .what-you-will-receive .container {
+        padding: 40px 20px;
+    }
+
+    .what-you-will-receive h2 {
+        font-size: 32px;
+        margin-bottom: 30px;
+    }
+
+    .items {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    .item {
+        max-width: none;
+        padding: 15px 10px;
+        background: #f9f9f9;
+        border-radius: 12px;
+        transition: transform 0.3s ease;
+    }
+
+    .item:hover {
+        transform: translateY(-3px);
+    }
+
+    .icon {
+        width: 50px;
+        height: 50px;
+        margin-bottom: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .icon i {
+        font-size: 24px;
+    }
+
+    .item h3 {
+        font-size: 18px; /* Konsisten (dari 16px) */
+        margin-bottom: 5px;
+        font-weight: 700;
+        font-family: 'Poppins', sans-serif; /* Konsisten */
+    }
+
+    .item p {
+        font-size: 14px; /* Konsisten (dari 12px) */
+        line-height: 1.5;
+        min-height: auto;
+        height: 60px;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* === SEARCH POTENTIAL SECTION (Mobile) === */
+    .search-potential-section {
+        padding: 50px 0;
+    }
+
+    .search-content {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        padding: 0 5px;
+    }
+
+    .search-card {
+        position: relative;
+        left: 0;
+        padding: 40px 25px;
+        text-align: center;
+    }
+
+    .search-card h2 {
+        font-size: 30px;
+        line-height: 1.3;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .search-card p {
+        font-size: 14px;
+    }
+
+    .stats {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 35px;
+    }
+
+    .stat-number {
+        font-size: 56px;
+    }
+
+    .stat-label {
+        font-size: 14px;
+        text-align: center;
+    }
+
+    .search-card .btn-cta-secondary {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 14px 28px;
+        font-size: 16px;
+    }
+
+    .search-illustration {
+        display: none;
+    }
+}

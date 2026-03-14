@@ -1,0 +1,355 @@
+/* === RESET & BASE STYLES === */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    color: #2c3e50;
+    background-color: #ffffff;
+    overflow-x: hidden;
+}
+
+/* === UTILITY CLASSES === */
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 40px;
+    width: 100%;
+}
+
+@media (max-width: 1440px) {
+    .container {
+        max-width: 1200px;
+        padding: 0 32px;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 0 16px;
+    }
+}
+
+.highlight {
+    background: linear-gradient(120deg, #84cc16 0%, #65a30d 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+}
+
+/* === BUTTONS === */
+.btn {
+    display: inline-block;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 16px;
+}
+
+.btn-cta {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #1f2937;
+    box-shadow: 0 4px 14px rgba(251, 191, 36, 0.3);
+}
+
+.btn-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4);
+}
+
+.btn-cta-secondary {
+    background: #1f2937;
+    color: white;
+    padding: 14px 28px;
+    border-radius: 12px;
+}
+
+.btn-cta-secondary:hover {
+    background: #374151;
+    transform: translateY(-2px);
+}
+
+.btn-login {
+    background: #01ea79;
+    color: #1f2937;
+    border: 2px solid #e5e7eb;
+    padding: 8px 20px;
+    border-radius: 6px;
+}
+
+.btn-login:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+}
+
+/* === User avatar hover + animation === */
+:root{
+  --tm-accent: #84cc16;      /* hijau utama */
+  --tm-accent-dark:#65a30d;  /* hijau tua */
+}
+
+.btn-user.btn-user--avatar{
+  position: relative;
+  width:44px; height:44px;
+  display:flex; align-items:center; justify-content:center;
+  padding:0; border-radius:9999px;
+  background:#fff; border:1px solid #e5e7eb;
+  cursor:pointer; transition:box-shadow .25s ease, transform .08s ease, border-color .25s ease;
+  overflow:hidden;
+}
+
+/* ring lembut saat hover/focus */
+.btn-user.btn-user--avatar:hover{ border-color: rgba(132,204,22,.45); }
+.btn-user.btn-user--avatar:focus{ outline:0; box-shadow:0 0 0 3px rgba(132,204,22,.35); }
+.btn-user.btn-user--avatar:active{ transform: translateY(1px); }
+
+.user-avatar-img{
+  width:70%; height:70%; object-fit:contain;
+  transition: transform .18s ease, filter .25s ease;
+  filter: grayscale(15%); /* tampilan normal */
+}
+
+/* Re-tint PNG saat hover → jadi hijau + sedikit zoom */
+.btn-user.btn-user--avatar:hover .user-avatar-img{
+  transform: scale(1.06);
+  /* tint PNG hitam ke hijau dengan CSS filter */
+  filter: brightness(0) saturate(100%) invert(61%) sepia(53%)
+          saturate(495%) hue-rotate(41deg) brightness(94%) contrast(93%);
+}
+
+/* Pulse ring saat dropdown terbuka (opsional) */
+.user-menu.open .btn-user.btn-user--avatar::after{
+  content:"";
+  position:absolute; inset:-2px; border-radius:inherit;
+  box-shadow:0 0 0 0 rgba(132,204,22,.25);
+  animation: tmPulse 1.8s ease-out infinite;
+}
+@keyframes tmPulse{
+  0%   { box-shadow:0 0 0 0 rgba(132,204,22,.25); }
+  70%  { box-shadow:0 0 0 10px rgba(132,204,22,0); }
+  100% { box-shadow:0 0 0 0 rgba(132,204,22,0); }
+}
+/* === User avatar hover + animation === */
+:root{
+  --tm-accent: #84cc16;      /* hijau utama */
+  --tm-accent-dark:#65a30d;  /* hijau tua */
+}
+
+.btn-user.btn-user--avatar{
+  position: relative;
+  width:44px; height:44px;
+  display:flex; align-items:center; justify-content:center;
+  padding:0; border-radius:9999px;
+  background:#fff; border:1px solid #e5e7eb;
+  cursor:pointer; transition:box-shadow .25s ease, transform .08s ease, border-color .25s ease;
+  overflow:hidden;
+}
+
+/* ring lembut saat hover/focus */
+.btn-user.btn-user--avatar:hover{ border-color: rgba(132,204,22,.45); }
+.btn-user.btn-user--avatar:focus{ outline:0; box-shadow:0 0 0 3px rgba(132,204,22,.35); }
+.btn-user.btn-user--avatar:active{ transform: translateY(1px); }
+
+.user-avatar-img{
+  width:70%; height:70%; object-fit:contain;
+  transition: transform .18s ease, filter .25s ease;
+  filter: grayscale(15%); /* tampilan normal */
+}
+
+/* Re-tint PNG saat hover → jadi hijau + sedikit zoom */
+.btn-user.btn-user--avatar:hover .user-avatar-img{
+  transform: scale(1.06);
+  /* tint PNG hitam ke hijau dengan CSS filter */
+  filter: brightness(0) saturate(100%) invert(61%) sepia(53%)
+          saturate(495%) hue-rotate(41deg) brightness(94%) contrast(93%);
+}
+
+/* Pulse ring saat dropdown terbuka (opsional) */
+.user-menu.open .btn-user.btn-user--avatar::after{
+  content:"";
+  position:absolute; inset:-2px; border-radius:inherit;
+  box-shadow:0 0 0 0 rgba(132,204,22,.25);
+  animation: tmPulse 1.8s ease-out infinite;
+}
+@keyframes tmPulse{
+  0%   { box-shadow:0 0 0 0 rgba(132,204,22,.25); }
+  70%  { box-shadow:0 0 0 10px rgba(132,204,22,0); }
+  100% { box-shadow:0 0 0 0 rgba(132,204,22,0); }
+}
+
+
+/* User Menu */
+.user-menu {
+    position: relative;
+}
+
+.btn-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.btn-user:hover {
+    background: #f9fafb;
+    color: #1f2937;
+}
+
+.user-role {
+    font-size: 12px;
+    background: #e5e7eb;
+    color: #6b7280;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.user-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    min-width: 200px;
+    padding: 8px 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    z-index: 1001;
+}
+
+.user-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    color: #6b7280;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+    font-size: 14px;
+}
+
+.dropdown-item:hover {
+    background: #f9fafb;
+    color: #1f2937;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 8px 0;
+}
+
+.dropdown-form {
+    margin: 0;
+}
+
+.logout-btn {
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    font: inherit;
+    cursor: pointer;
+}
+
+/* Mobile Menu */
+.mobile-menu-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    z-index: 1100;
+    position: relative;
+}
+
+.mobile-menu-toggle span {
+    display: block;
+    width: 25px;
+    height: 3px;
+    background: #1f2937;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+/* Efek animasi saat toggle aktif (jadi X) */
+.mobile-menu-toggle.active span:nth-child(1) {
+    transform: rotate(45deg) translateY(8px);
+}
+.mobile-menu-toggle.active span:nth-child(2) {
+    opacity: 0;
+}
+.mobile-menu-toggle.active span:nth-child(3) {
+    transform: rotate(-45deg) translateY(-8px);
+}
+
+/* === MAIN CONTENT === */
+.main-content {
+    margin-top: 70px; /* Reduced from 80px to 70px */
+}
+
+/* === RESPONSIVE DESIGN === */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 16px;
+    }
+
+    .main-content {
+        padding: 10px;
+    }
+
+
+}
+
+/* === ANIMATION CLASSES === */
+.animate-in {
+    animation: fadeInUp 0.8s ease forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
