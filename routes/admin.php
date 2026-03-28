@@ -8,7 +8,7 @@ use App\Http\Controllers\Admin\SJTQuestionController;
 use App\Http\Controllers\Admin\CompetencyController;
 use App\Http\Controllers\Admin\TypologyController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
-use App\Http\Controllers\Admin\EventController as AdminEventController;
+use App\Http\Controllers\Admin\programController as AdminprogramController;
 use App\Http\Controllers\Admin\ResultController;
 use App\Http\Controllers\Admin\ScoreController;
 use App\Http\Controllers\Admin\ResendRequestController;
@@ -100,7 +100,7 @@ Route::middleware(['auth', 'role:admin,staff'])
             Route::delete('/{questionVersion}', [AdminQuestionController::class, 'destroy'])->name('destroy')->middleware('role:admin');
         });
 
-        // Users, Events, dll tetap sama...
+        // Users, programs, dll tetap sama...
         Route::prefix('users')->name('users.')->group(function () {
             Route::get('/', [AdminUserController::class, 'index'])->name('index');
             Route::get('/create', [AdminUserController::class, 'create'])->name('create');
@@ -114,16 +114,16 @@ Route::middleware(['auth', 'role:admin,staff'])
             Route::get('/export/pdf', [AdminUserController::class, 'exportPdf'])->name('export.pdf');
         });
 
-        Route::prefix('events')->name('events.')->group(function () {
-            Route::get('/', [AdminEventController::class, 'index'])->name('index');
-            Route::get('/create', [AdminEventController::class, 'create'])->name('create')->middleware('role:admin');
-            Route::post('/', [AdminEventController::class, 'store'])->name('store')->middleware('role:admin');
-            Route::get('/export/pdf', [AdminEventController::class, 'exportPdf'])->name('export.pdf');
-            Route::get('/{event}', [AdminEventController::class, 'show'])->name('show');
-            Route::get('/{event}/edit', [AdminEventController::class, 'edit'])->name('edit')->middleware('role:admin');
-            Route::put('/{event}', [AdminEventController::class, 'update'])->name('update')->middleware('role:admin');
-            Route::delete('/{event}', [AdminEventController::class, 'destroy'])->name('destroy')->middleware('role:admin');
-            Route::post('/{event}/toggle-status', [AdminEventController::class, 'toggleStatus'])->name('toggle-status')->middleware('role:admin');
+        Route::prefix('programs')->name('programs.')->group(function () {
+            Route::get('/', [AdminprogramController::class, 'index'])->name('index');
+            Route::get('/create', [AdminprogramController::class, 'create'])->name('create')->middleware('role:admin');
+            Route::post('/', [AdminprogramController::class, 'store'])->name('store')->middleware('role:admin');
+            Route::get('/export/pdf', [AdminprogramController::class, 'exportPdf'])->name('export.pdf');
+            Route::get('/{program}', [AdminprogramController::class, 'show'])->name('show');
+            Route::get('/{program}/edit', [AdminprogramController::class, 'edit'])->name('edit')->middleware('role:admin');
+            Route::put('/{program}', [AdminprogramController::class, 'update'])->name('update')->middleware('role:admin');
+            Route::delete('/{program}', [AdminprogramController::class, 'destroy'])->name('destroy')->middleware('role:admin');
+            Route::post('/{program}/toggle-status', [AdminprogramController::class, 'toggleStatus'])->name('toggle-status')->middleware('role:admin');
         });
 
         Route::prefix('results')->name('results.')->group(function () {

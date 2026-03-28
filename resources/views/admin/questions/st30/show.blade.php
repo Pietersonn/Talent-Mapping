@@ -147,7 +147,7 @@
                 Detail Pertanyaan ST-30
             </h1>
             <div style="font-size: 0.9rem; color: #64748b; margin-left: 44px;">
-                Lihat rincian pernyataan, tipologi, dan statistik penggunaan.
+                Liat rincian pernyataan, tipologi, dan statistik penggunaan.
             </div>
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
@@ -165,7 +165,7 @@
                 @endif
             </div>
 
-            <a href="{{ route('admin.questions.st30.index', ['version' => $st30Question->version_id]) }}" class="btn-cancel">
+            <a href="{{ route('admin.questions.st30.index', ['version' => $st30Question->id_versi]) }}" class="btn-cancel">
                 <i class="fas fa-arrow-left"></i> Kembali
             </a>
         </div>
@@ -179,8 +179,8 @@
         <div class="bento-title"><i class="fas fa-file-alt text-green-500"></i> Pernyataan Soal</div>
 
         <div class="statement-hero">
-            <i class="far fa-copy btn-copy-abs" onclick="copyToClipboard('{{ addslashes($st30Question->statement) }}')" title="Salin"></i>
-            "{{ $st30Question->statement }}"
+            <i class="far fa-copy btn-copy-abs" onclick="copyToClipboard('{{ addslashes($st30Question->pernyataan) }}')" title="Salin"></i>
+            "{{ $st30Question->pernyataan }}"
         </div>
 
         <div style="margin-top: 2rem;">
@@ -188,9 +188,9 @@
 
             @if ($st30Question->typologyDescription)
                 <div class="typo-visual">
-                    <div class="typo-code">{{ $st30Question->typology_code }}</div>
+                    <div class="typo-code">{{ $st30Question->kode_tipologi }}</div>
                     <div>
-                        <h4 class="typo-name">{{ $st30Question->typologyDescription->typology_name }}</h4>
+                        <h4 class="typo-name">{{ $st30Question->typologyDescription->nama_tipologi }}</h4>
                         <span class="typo-tag">Personality Trait</span>
                     </div>
                 </div>
@@ -198,11 +198,11 @@
                 <div class="traits-split">
                     <div class="trait-item t-green">
                         <h6><i class="fas fa-bolt"></i> Kekuatan</h6>
-                        <p>{{ $st30Question->typologyDescription->strength_description }}</p>
+                        <p>{{ $st30Question->typologyDescription->deskripsi_kekuatan }}</p>
                     </div>
                     <div class="trait-item t-orange">
                         <h6><i class="fas fa-exclamation-triangle"></i> Kelemahan</h6>
-                        <p>{{ $st30Question->typologyDescription->weakness_description }}</p>
+                        <p>{{ $st30Question->typologyDescription->deskripsi_kelemahan }}</p>
                     </div>
                 </div>
             @else
@@ -223,12 +223,12 @@
             </div>
             <div class="meta-row">
                 <span class="mr-label">Nomor Urut</span>
-                <span class="mr-val text-primary font-bold">#{{ $st30Question->number }}</span>
+                <span class="mr-val text-primary font-bold">#{{ $st30Question->nomor }}</span>
             </div>
             <div class="meta-row">
                 <span class="mr-label">Status Versi</span>
                 <span class="mr-val">
-                    @if($st30Question->questionVersion->is_active)
+                    @if($st30Question->questionVersion->aktif)
                         <span class="status-active">AKTIF</span>
                     @else
                         <span class="status-inactive">NON-AKTIF</span>
@@ -237,7 +237,7 @@
             </div>
             <div class="meta-row">
                 <span class="mr-label">Penggunaan</span>
-                <span class="mr-val text-success">{{ $st30Question->usage_count }}x</span>
+                <span class="mr-val text-success">{{ $st30Question->usage_count ?? 0 }}x</span>
             </div>
             <div class="meta-row">
                 <span class="mr-label">Dibuat</span>
@@ -254,7 +254,7 @@
                 <a href="{{ route('admin.questions.st30.edit', $st30Question) }}" class="btn-act act-edit">
                     <i class="fas fa-pen"></i> Edit
                 </a>
-                <button onclick="confirmDelete('{{ $st30Question->number }}', '{{ route('admin.questions.st30.destroy', $st30Question) }}')"
+                <button onclick="confirmDelete('{{ $st30Question->nomor }}', '{{ route('admin.questions.st30.destroy', $st30Question) }}')"
                         class="btn-act act-del">
                     <i class="fas fa-trash"></i> Hapus
                 </button>

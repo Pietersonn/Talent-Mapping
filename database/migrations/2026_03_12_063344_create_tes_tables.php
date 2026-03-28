@@ -13,8 +13,8 @@ return new class extends Migration {
             $table->string('id', 5)->primary();
             $table->unsignedBigInteger('id_pengguna')  // was: user_id
                   ->index('idx_sesi_tes_pengguna');
-            $table->string('id_acara', 10)->nullable() // was: event_id  (10 char sesuai acara.id)
-                  ->index('idx_sesi_tes_acara');
+            $table->string('id_program', 10)->nullable() // was: event_id  (10 char sesuai program.id)
+                  ->index('idx_sesi_tes_program');
             $table->string('token_sesi', 32)->unique(); // was: session_token
             $table->string('langkah_saat_ini', 32)->default('form_data'); // was: current_step
             $table->string('id_versi_st30', 10)->nullable(); // was: st30_version_id
@@ -29,8 +29,8 @@ return new class extends Migration {
             $table->foreign('id_pengguna', 'fk_sesi_tes_ke_pengguna')
                   ->references('id')->on('pengguna')
                   ->onUpdate('restrict')->onDelete('cascade');
-            $table->foreign('id_acara', 'fk_sesi_tes_ke_acara')
-                  ->references('id')->on('acara')
+            $table->foreign('id_program', 'fk_sesi_tes_ke_program')
+                  ->references('id')->on('program')
                   ->onUpdate('restrict')->onDelete('set null');
         });
 

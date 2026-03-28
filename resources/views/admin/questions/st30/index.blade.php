@@ -81,7 +81,7 @@
                 <option value="">-- Pilih Versi --</option>
                 @foreach($versions as $version)
                     <option value="{{ $version->id }}" {{ $selectedVersion && $selectedVersion->id == $version->id ? 'selected' : '' }}>
-                        {{ $version->name }} {{ $version->is_active ? '(Active)' : '' }}
+                        {{ $version->nama }} {{ $version->aktif ? '(Active)' : '' }}
                     </option>
                 @endforeach
             </select>
@@ -98,7 +98,7 @@
                 <i class="fas fa-print"></i>
             </button>
 
-            @if(Auth::user()->role === 'admin')
+            @if(Auth::user()->peran === 'admin')
                 <a href="{{ route('admin.questions.st30.create', ['version' => $selectedVersion->id]) }}" class="btn-add">
                     <i class="fas fa-plus"></i> Tambah
                 </a>
@@ -121,8 +121,8 @@
             </div>
             <div class="stat-card">
                 <div>
-                    <div class="stat-value" style="color: {{ $selectedVersion->is_active ? '#22c55e' : '#94a3b8' }}">
-                        {{ $selectedVersion->is_active ? 'Active' : 'Inactive' }}
+                    <div class="stat-value" style="color: {{ $selectedVersion->aktif ? '#22c55e' : '#94a3b8' }}">
+                        {{ $selectedVersion->aktif ? 'Active' : 'Inactive' }}
                     </div>
                     <div class="stat-label">Status Versi</div>
                 </div>
@@ -167,34 +167,34 @@
                                 <tr>
                                     <td>
                                         <span style="font-family: monospace; font-weight: 600; color: #64748b;">
-                                            #{{ str_pad($question->number, 2, '0', STR_PAD_LEFT) }}
+                                            #{{ str_pad($question->nomor, 2, '0', STR_PAD_LEFT) }}
                                         </span>
                                     </td>
                                     <td>
                                         <div class="statement-text">
-                                            <span class="short-text">{{ Str::limit($question->statement, 70) }}</span>
-                                            @if(strlen($question->statement) > 70)
+                                            <span class="short-text">{{ Str::limit($question->pernyataan, 70) }}</span>
+                                            @if(strlen($question->pernyataan) > 70)
                                                 <button class="text-expand-btn" onclick="toggleStatement(this)">
                                                     Lihat
                                                 </button>
                                                 <span class="full-text" style="display: none;">
-                                                    {{ $question->statement }}
+                                                    {{ $question->pernyataan }}
                                                 </span>
                                             @endif
                                         </div>
                                     </td>
                                     <td>
                                         <span class="badge-typology">
-                                            {{ $question->typology_code }}
+                                            {{ $question->kode_tipologi }}
                                         </span>
                                         @if($question->typologyDescription)
                                             <span class="typology-desc">
-                                                {{ Str::limit($question->typologyDescription->typology_name, 25) }}
+                                                {{ Str::limit($question->typologyDescription->nama_tipologi, 25) }}
                                             </span>
                                         @endif
                                     </td>
                                     <td>
-                                        @if($question->questionVersion->is_active)
+                                        @if($question->questionVersion->aktif)
                                             <span class="status-dot dot-active"></span> <span style="font-size: 0.85rem; color: #0f172a;">Aktif</span>
                                         @else
                                             <span class="status-dot dot-inactive"></span> <span style="font-size: 0.85rem; color: #94a3b8;">Tidak Aktif</span>
@@ -205,12 +205,12 @@
                                             <a href="{{ route('admin.questions.st30.show', $question) }}" class="btn-icon btn-view" title="View">
                                                 <i class="fas fa-eye text-xs"></i>
                                             </a>
-                                            @if(Auth::user()->role === 'admin')
+                                            @if(Auth::user()->peran === 'admin')
                                                 <a href="{{ route('admin.questions.st30.edit', $question) }}" class="btn-icon btn-edit" title="Edit">
                                                     <i class="fas fa-pen text-xs"></i>
                                                 </a>
                                                 <button type="button" class="btn-icon btn-delete"
-                                                        data-question-number="{{ $question->number }}"
+                                                        data-question-number="{{ $question->nomor }}"
                                                         data-delete-url="{{ route('admin.questions.st30.destroy', $question) }}"
                                                         title="Delete">
                                                     <i class="fas fa-trash text-xs"></i>
@@ -259,7 +259,7 @@
                         </div>
                         <h5 style="color: #0f172a; font-weight: 700; margin-bottom: 0.5rem;">Belum ada Data</h5>
                         <p style="color: #64748b;">Versi ini belum memiliki pertanyaan.</p>
-                        @if(Auth::user()->role === 'admin')
+                        @if(Auth::user()->peran === 'admin')
                             <a href="{{ route('admin.questions.st30.create', ['version' => $selectedVersion->id]) }}" class="btn-add" style="margin-top: 1rem;">
                                 <i class="fas fa-plus"></i> Tambah Soal Pertama
                             </a>

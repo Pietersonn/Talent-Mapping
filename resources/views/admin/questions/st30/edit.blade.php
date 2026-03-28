@@ -34,7 +34,7 @@
             </h1>
             <div style="font-size: 0.9rem; color: #64748b; margin-left: 44px;">Perbarui detail pernyataan dan tipologi soal ini.</div>
         </div>
-        <a href="{{ route('admin.questions.st30.index', ['version' => $st30Question->version_id]) }}" class="btn-cancel">
+        <a href="{{ route('admin.questions.st30.index', ['version' => $st30Question->id_versi]) }}" class="btn-cancel">
             <i class="fas fa-arrow-left"></i> Kembali
         </a>
     </div>
@@ -53,22 +53,22 @@
 
                 <div class="form-group">
                     <label class="form-label required">Pernyataan (Statement)</label>
-                    <textarea name="statement" id="statement" class="form-control @error('statement') border-red-500 @enderror" rows="5" required maxlength="500" placeholder="Masukkan pernyataan perilaku...">{{ old('statement', $st30Question->statement) }}</textarea>
-                    @error('statement') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
-                    <div class="form-text text-right"><span id="statement_char_count">{{ strlen($st30Question->statement) }}</span>/500 karakter</div>
+                    <textarea name="pernyataan" id="pernyataan" class="form-control @error('pernyataan') border-red-500 @enderror" rows="5" required maxlength="500" placeholder="Masukkan pernyataan perilaku...">{{ old('pernyataan', $st30Question->pernyataan) }}</textarea>
+                    @error('pernyataan') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                    <div class="form-text text-right"><span id="pernyataan_char_count">{{ strlen($st30Question->pernyataan) }}</span>/500 karakter</div>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label required">Tipologi Kepribadian</label>
-                    <select name="typology_code" id="typology_code" class="form-control @error('typology_code') border-red-500 @enderror" required>
+                    <select name="kode_tipologi" id="kode_tipologi" class="form-control @error('kode_tipologi') border-red-500 @enderror" required>
                         @foreach($typologies as $typology)
-                            <option value="{{ $typology->typology_code }}"
-                                {{ old('typology_code', $st30Question->typology_code) == $typology->typology_code ? 'selected' : '' }}>
-                                {{ $typology->typology_code }} - {{ $typology->typology_name }}
+                            <option value="{{ $typology->kode_tipologi }}"
+                                {{ old('kode_tipologi', $st30Question->kode_tipologi) == $typology->kode_tipologi ? 'selected' : '' }}>
+                                {{ $typology->kode_tipologi }} - {{ $typology->nama_tipologi }}
                             </option>
                         @endforeach
                     </select>
-                    @error('typology_code') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                    @error('kode_tipologi') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                 </div>
 
                 <div id="typology_description" class="p-4 bg-blue-50 border border-blue-100 rounded-xl mt-4">
@@ -76,7 +76,7 @@
                         <i class="fas fa-info-circle"></i> Deskripsi Tipologi
                     </div>
                     <p class="text-sm text-blue-800 leading-relaxed" id="typology_desc_text">
-                        {{ $st30Question->typologyDescription->strength_description ?? 'Tidak ada deskripsi.' }}
+                        {{ $st30Question->typologyDescription->deskripsi_kekuatan ?? 'Tidak ada deskripsi.' }}
                     </p>
                 </div>
             </div>
@@ -86,14 +86,14 @@
 
                 <div class="form-group">
                     <label class="form-label">Versi Soal</label>
-                    <input type="text" class="form-control" value="{{ $st30Question->questionVersion->display_name }}" readonly disabled style="color: #64748b;">
+                    <input type="text" class="form-control" value="{{ $st30Question->questionVersion->versi }} - {{ $st30Question->questionVersion->nama }}" readonly disabled style="color: #64748b;">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label required">Nomor Urut</label>
-                    <input type="number" name="number" class="form-control @error('number') border-red-500 @enderror"
-                           value="{{ old('number', $st30Question->number) }}" min="1" max="30" required>
-                    @error('number') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                    <input type="number" name="nomor" class="form-control @error('nomor') border-red-500 @enderror"
+                           value="{{ old('nomor', $st30Question->nomor) }}" min="1" max="30" required>
+                    @error('nomor') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="p-3 bg-gray-50 rounded-xl mt-4 border border-gray-100">
@@ -101,7 +101,7 @@
                         <i class="fas fa-chart-pie"></i> Statistik
                     </div>
                     <div class="text-sm text-gray-600">
-                        <div class="flex justify-between mb-1"><span>Total Penggunaan:</span> <span class="font-bold">{{ $st30Question->usage_count }}x</span></div>
+                        <div class="flex justify-between mb-1"><span>Total Penggunaan:</span> <span class="font-bold">{{ $st30Question->usage_count ?? 0 }}x</span></div>
                         <div class="flex justify-between"><span>Dibuat:</span> <span>{{ $st30Question->created_at->format('d M Y') }}</span></div>
                     </div>
                 </div>
@@ -110,7 +110,7 @@
         </div>
 
         <div class="form-actions">
-            <a href="{{ route('admin.questions.st30.index', ['version' => $st30Question->version_id]) }}" class="btn-cancel">Batal</a>
+            <a href="{{ route('admin.questions.st30.index', ['version' => $st30Question->id_versi]) }}" class="btn-cancel">Batal</a>
             <button type="submit" class="btn-save">
                 <i class="fas fa-save"></i> Simpan Perubahan
             </button>
@@ -125,12 +125,12 @@ $(document).ready(function() {
     // Data Deskripsi
     const typologyDescriptions = {
         @foreach($typologies as $typology)
-            '{{ $typology->typology_code }}': '{{ addslashes($typology->strength_description) }}',
+            '{{ $typology->kode_tipologi }}': '{{ addslashes($typology->deskripsi_kekuatan) }}',
         @endforeach
     };
 
     // Update deskripsi saat dropdown berubah
-    $('#typology_code').on('change', function() {
+    $('#kode_tipologi').on('change', function() {
         var selectedCode = $(this).val();
         if (selectedCode && typologyDescriptions[selectedCode]) {
             $('#typology_desc_text').text(typologyDescriptions[selectedCode]);
@@ -138,8 +138,8 @@ $(document).ready(function() {
     });
 
     // Hitung karakter
-    $('#statement').on('input', function() {
-        $('#statement_char_count').text($(this).val().length);
+    $('#pernyataan').on('input', function() {
+        $('#pernyataan_char_count').text($(this).val().length);
     });
 });
 </script>

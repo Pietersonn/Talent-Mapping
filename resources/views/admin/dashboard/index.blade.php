@@ -67,7 +67,7 @@
         font-size: 1rem;
     }
     .icon-users { background: #eff6ff; color: #3b82f6; }
-    .icon-events { background: #f0fdf4; color: #22c55e; }
+    .icon-programs { background: #f0fdf4; color: #22c55e; }
     .icon-tests { background: #fefce8; color: #eab308; }
     .icon-db { background: #fef2f2; color: #ef4444; }
 
@@ -186,16 +186,16 @@
         <a href="{{ route('admin.users.index') }}" class="stat-link">Lihat semua <i class="fas fa-arrow-right text-[10px]"></i></a>
     </div>
 
-    {{-- STATS 2: Active Events --}}
+    {{-- STATS 2: Active Programs --}}
     <div class="bento-card">
         <div class="stat-header">
             <div>
-                <div class="stat-value">{{ number_format($activeEvents) }}</div>
-                <div class="stat-label">Event Aktif</div>
+                <div class="stat-value">{{ number_format($activePrograms) }}</div>
+                <div class="stat-label">Program Aktif</div>
             </div>
-            <div class="stat-icon icon-events"><i class="fas fa-calendar-check"></i></div>
+            <div class="stat-icon icon-programs"><i class="fas fa-calendar-check"></i></div>
         </div>
-        <a href="{{ route('admin.events.index') }}" class="stat-link">Kelola Event <i class="fas fa-arrow-right text-[10px]"></i></a>
+        <a href="{{ route('admin.programs.index') }}" class="stat-link">Kelola Program <i class="fas fa-arrow-right text-[10px]"></i></a>
     </div>
 
     {{-- STATS 3: Completed --}}
@@ -295,7 +295,7 @@
                                 <div class="avatar-xs">{{ substr($session->participant_name ?? $session->user->name, 0, 1) }}</div>
                                 <div style="display:flex; flex-direction:column; line-height:1.2;">
                                     <span style="font-weight:600; font-size:0.85rem;">{{ Str::limit($session->participant_name ?? $session->user->name, 15) }}</span>
-                                    <span style="font-size:0.7rem; color:#94a3b8;">{{ Str::limit($session->event->name ?? '-', 20) }}</span>
+                                    <span style="font-size:0.7rem; color:#94a3b8;">{{ Str::limit($session->program->name ?? '-', 20) }}</span>
                                 </div>
                             </div>
                         </td>
@@ -429,7 +429,7 @@ $(document).ready(function() {
 
 function updateStats(period) {
     $('.chart-filter').removeClass('active');
-    $(event.target).addClass('active');
+    $(Program.target).addClass('active');
 
     $.ajax({
         url: '{{ route("admin.dashboard.stats") }}',

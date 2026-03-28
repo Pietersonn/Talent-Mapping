@@ -35,32 +35,4 @@ class ProfileController extends Controller
         return view('public.profile.edit', ['user' => Auth::user()]);
     }
 
-    public function update(Request $request): RedirectResponse
-    {
-        $user = Auth::user();
-
-        $request->validate([
-            'nama'          => ['required', 'string', 'max:100'],
-            'nomor_telepon' => ['nullable', 'string', 'max:20'],
-        ]);
-
-        $user->update([
-            'nama'          => $request->nama,
-            'nomor_telepon' => $request->nomor_telepon,
-        ]);
-
-        return redirect()->route('profile.index')->with('success', 'Profil berhasil diperbarui.');
-    }
-
-    public function updatePassword(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'current_password' => ['required', 'current_password'],
-            'password'         => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
-
-        Auth::user()->update(['password' => Hash::make($request->password)]);
-
-        return back()->with('success', 'Password berhasil diperbarui.');
-    }
 }

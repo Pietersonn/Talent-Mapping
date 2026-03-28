@@ -40,7 +40,7 @@
 <div class="form-card">
     <form action="{{ route('admin.questions.st30.store') }}" method="POST" id="st30Form">
         @csrf
-        <input type="hidden" name="version_id" value="{{ $selectedVersion->id }}">
+        <input type="hidden" name="id_versi" value="{{ $selectedVersion->id }}">
 
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
 
@@ -49,22 +49,22 @@
 
                 <div class="form-group">
                     <label class="form-label required">Pernyataan (Statement)</label>
-                    <textarea name="statement" id="statement" class="form-control @error('statement') border-red-500 @enderror" rows="5" required maxlength="500" placeholder="Contoh: Saya lebih suka bekerja secara terstruktur...">{{ old('statement') }}</textarea>
-                    @error('statement') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
-                    <div class="form-text text-right"><span id="statement_char_count">0</span>/500 karakter</div>
+                    <textarea name="pernyataan" id="pernyataan" class="form-control @error('pernyataan') border-red-500 @enderror" rows="5" required maxlength="500" placeholder="Contoh: Saya lebih suka bekerja secara terstruktur...">{{ old('pernyataan') }}</textarea>
+                    @error('pernyataan') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                    <div class="form-text text-right"><span id="pernyataan_char_count">0</span>/500 karakter</div>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label required">Tipologi Kepribadian</label>
-                    <select name="typology_code" id="typology_code" class="form-control @error('typology_code') border-red-500 @enderror" required>
+                    <select name="kode_tipologi" id="kode_tipologi" class="form-control @error('kode_tipologi') border-red-500 @enderror" required>
                         <option value="">-- Pilih Tipologi --</option>
                         @foreach($typologies as $typology)
-                            <option value="{{ $typology->typology_code }}" {{ old('typology_code') == $typology->typology_code ? 'selected' : '' }}>
-                                {{ $typology->typology_code }} - {{ $typology->typology_name }}
+                            <option value="{{ $typology->kode_tipologi }}" {{ old('kode_tipologi') == $typology->kode_tipologi ? 'selected' : '' }}>
+                                {{ $typology->kode_tipologi }} - {{ $typology->nama_tipologi }}
                             </option>
                         @endforeach
                     </select>
-                    @error('typology_code') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                    @error('kode_tipologi') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                 </div>
 
                 <div id="typology_description" class="p-4 bg-blue-50 border border-blue-100 rounded-xl mt-4" style="display: none;">
@@ -80,14 +80,14 @@
 
                 <div class="form-group">
                     <label class="form-label">Versi Soal</label>
-                    <input type="text" class="form-control" value="{{ $selectedVersion->display_name }}" readonly disabled style="color: #64748b;">
+                    <input type="text" class="form-control" value="{{ $selectedVersion->versi }} - {{ $selectedVersion->nama }}" readonly disabled style="color: #64748b;">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label required">Nomor Urut</label>
-                    <input type="number" name="number" class="form-control @error('number') border-red-500 @enderror"
-                           value="{{ old('number', $nextNumber) }}" min="1" max="30" required>
-                    @error('number') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                    <input type="number" name="nomor" class="form-control @error('nomor') border-red-500 @enderror"
+                           value="{{ old('nomor', $nextNumber) }}" min="1" max="30" required>
+                    @error('nomor') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="p-3 bg-yellow-50 rounded-xl mt-4 border border-yellow-100">
@@ -119,11 +119,11 @@
 $(document).ready(function() {
     const typologyDescriptions = {
         @foreach($typologies as $typology)
-            '{{ $typology->typology_code }}': '{{ addslashes($typology->strength_description) }}',
+            '{{ $typology->kode_tipologi }}': '{{ addslashes($typology->deskripsi_kekuatan) }}',
         @endforeach
     };
 
-    $('#typology_code').on('change', function() {
+    $('#kode_tipologi').on('change', function() {
         var selectedCode = $(this).val();
         if (selectedCode && typologyDescriptions[selectedCode]) {
             $('#typology_desc_text').text(typologyDescriptions[selectedCode]);
@@ -133,13 +133,13 @@ $(document).ready(function() {
         }
     });
 
-    $('#statement').on('input', function() {
-        $('#statement_char_count').text($(this).val().length);
+    $('#pernyataan').on('input', function() {
+        $('#pernyataan_char_count').text($(this).val().length);
     });
 
     $('#st30Form').on('submit', function(e) {
-        var statement = $('#statement').val().trim();
-        var typology = $('#typology_code').val();
+        var statement = $('#pernyataan').val().trim();
+        var typology = $('#kode_tipologi').val();
 
         if (!statement || !typology) {
             e.preventDefault();

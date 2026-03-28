@@ -18,14 +18,6 @@ class ST30Response extends Model {
     protected $fillable = ['id_sesi','id_versi_soal','nomor_tahap','item_dipilih','item_dikecualikan','untuk_penilaian','waktu_respons'];
     protected $casts = ['item_dipilih' => 'array','item_dikecualikan' => 'array','untuk_penilaian' => 'boolean','nomor_tahap' => 'integer','waktu_respons' => 'integer'];
 
-    // Alias
-    public function getSessionIdAttribute(): string         { return $this->id_sesi; }
-    public function getQuestionVersionIdAttribute(): string { return $this->id_versi_soal; }
-    public function getStageNumberAttribute(): int          { return $this->nomor_tahap; }
-    public function getSelectedItemsAttribute(): ?array     { return $this->getAttributes()['item_dipilih'] ? json_decode($this->getAttributes()['item_dipilih'], true) : null; }
-    public function getExcludedItemsAttribute(): ?array     { return $this->getAttributes()['item_dikecualikan'] ? json_decode($this->getAttributes()['item_dikecualikan'], true) : null; }
-    public function getForScoringAttribute(): bool          { return $this->untuk_penilaian; }
-    public function getResponseTimeAttribute(): ?int        { return $this->waktu_respons; }
 
     public function generateCustomId(): string {
         $prefix = 'STR';
