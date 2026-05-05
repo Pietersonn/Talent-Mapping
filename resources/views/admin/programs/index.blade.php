@@ -1,6 +1,6 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Manajemen Event')
+@section('title', 'Manajemen Program')
 
 @push('styles')
 <style>
@@ -32,9 +32,9 @@
     .custom-table tr:hover td { background-color: #f8fafc; }
 
     /* --- COMPONENTS --- */
-    .event-info { display: flex; flex-direction: column; }
-    .event-name { font-weight: 700; color: #0f172a; font-size: 0.95rem; }
-    .event-code { font-family: monospace; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; width: fit-content; margin-top: 4px; }
+    .program-info { display: flex; flex-direction: column; }
+    .program-name { font-weight: 700; color: #0f172a; font-size: 0.95rem; }
+    .program-code { font-family: monospace; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; width: fit-content; margin-top: 4px; }
 
     .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
     .dot-active { background-color: #22c55e; }
@@ -58,24 +58,24 @@
         <div>
             <h1 style="font-size: 1.5rem; font-weight: 800; color: #0f172a; margin-bottom: 4px; display: flex; align-items: center; gap: 10px;">
                 <i class="fas fa-calendar-alt" style="color: #22c55e; background: #dcfce7; padding: 10px; border-radius: 12px; font-size: 1.1rem;"></i>
-                Manajemen Event
+                Manajemen Program
             </h1>
         </div>
 
         <div style="display: flex; gap: 12px; align-items: center;">
             <div class="search-group">
                 <i class="fas fa-search search-icon"></i>
-                <input type="text" id="realtimeSearch" class="search-input" placeholder="Cari Nama Event, Kode, PIC..." autocomplete="off">
+                <input type="text" id="realtimeSearch" class="search-input" placeholder="Cari Nama Program, Kode, Mitra..." autocomplete="off">
                 <i class="fas fa-circle-notch fa-spin loading-spinner"></i>
             </div>
 
-            <a href="{{ route('admin.events.export.pdf', request()->query()) }}" class="btn-print" id="btnExportPdf" title="Cetak PDF" target="_blank">
+            <a href="{{ route('admin.Programs.export.pdf', request()->query()) ?? '#' }}" class="btn-print" id="btnExportPdf" title="Cetak PDF" target="_blank">
                 <i class="fas fa-print"></i>
             </a>
 
-            @if(Auth::user()->role === 'admin')
-                <a href="{{ route('admin.events.create') }}" class="btn-add">
-                    <i class="fas fa-plus"></i> Tambah Event
+            @if(Auth::user()->peran === 'admin')
+                <a href="{{ route('admin.Programs.create') }}" class="btn-add">
+                    <i class="fas fa-plus"></i> Tambah Program
                 </a>
             @endif
         </div>
@@ -88,45 +88,46 @@
             <table class="custom-table">
                 <thead>
                     <tr>
-                        <th width="30%">Nama Event</th>
-                        <th width="35%">Instansi</th>
-                        <th width="15%">PIC</th>
-                        <th width="15%">Peserta</th>
-                        <th width="20%">Aksi</th>
+                        <th width="30%">Nama Program</th>
+                        <th width="30%">Perusahaan</th>
+                        <th width="15%">Mitra</th>
+                        <th width="10%">Peserta</th>
+                        <th width="15%">Aksi</th>
                     </tr>
                 </thead>
-                <tbody id="eventTableBody">
-                    @forelse($events as $event)
+                <tbody id="programTableBody">
+                    @forelse($Programs as $Program)
                         <tr>
                             <td>
-                                <div class="event-info">
-                                    <div class="event-name">
-                                        @if($event->is_active)
+                                <div class="program-info">
+                                    <div class="program-name">
+                                        @if($Program->aktif)
                                             <span class="status-dot dot-active" title="Aktif"></span>
                                         @else
                                             <span class="status-dot dot-inactive" title="Tidak Aktif"></span>
                                         @endif
-                                        {{ $event->name }}
+                                        {{ $Program->nama }}
                                     </div>
+                                    <div class="program-code">{{ $Program->kode_program }}</div>
                                 </div>
                             </td>
-                            <td style="color: #64748b; font-weight: 500;">{{ $event->company ?? '-' }}</td>
-                            <td style="color: #64748b;">{{ $event->pic->name ?? 'Belum ada PIC' }}</td>
+                            <td style="color: #64748b; font-weight: 500;">{{ $Program->perusahaan ?? '-' }}</td>
+                            <td style="color: #64748b;">{{ $Program->mitra->nama ?? 'Belum ada Mitra' }}</td>
                             <td>
-                                <span style="font-weight: 700; color: #22c55e;">{{ $event->participants_count }}</span>
+                                <span style="font-weight: 700; color: #22c55e;">{{ $Program->participants_count }}</span>
                                 <span style="color: #cbd5e1;">/</span>
-                                <span style="color: #94a3b8;">{{ $event->max_participants ?? '∞' }}</span>
+                                <span style="color: #94a3b8;">{{ $Program->maks_peserta ?? '∞' }}</span>
                             </td>
                             <td>
                                 <div class="action-buttons">
-                                    <a href="{{ route('admin.events.show', $event->id) }}" class="btn-icon btn-view" title="Detail"><i class="fas fa-eye text-xs"></i></a>
-                                    <a href="{{ route('admin.events.edit', $event->id) }}" class="btn-icon btn-edit" title="Edit"><i class="fas fa-pen text-xs"></i></a>
-                                    <button onclick="deleteEvent('{{ $event->name }}', '{{ route('admin.events.destroy', $event->id) }}')" class="btn-icon btn-delete" title="Hapus"><i class="fas fa-trash text-xs"></i></button>
+                                    <a href="{{ route('admin.Programs.show', $Program->id) }}" class="btn-icon btn-view" title="Detail"><i class="fas fa-eye text-xs"></i></a>
+                                    <a href="{{ route('admin.Programs.edit', $Program->id) }}" class="btn-icon btn-edit" title="Edit"><i class="fas fa-pen text-xs"></i></a>
+                                    <button onclick="deleteProgram('{{ $Program->nama }}', '{{ route('admin.Programs.destroy', $Program->id) }}')" class="btn-icon btn-delete" title="Hapus"><i class="fas fa-trash text-xs"></i></button>
                                 </div>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" style="text-align:center; padding: 3rem; color: #94a3b8;">Tidak ada data event ditemukan.</td></tr>
+                        <tr><td colspan="5" style="text-align:center; padding: 3rem; color: #94a3b8;">Tidak ada data program ditemukan.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -134,7 +135,7 @@
     </div>
 
     <div class="mt-6 flex justify-end">
-        {{ $events->appends(request()->query())->links() }}
+        {{ $Programs->appends(request()->query())->links() }}
     </div>
 @endsection
 
@@ -151,7 +152,7 @@
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
             $.ajax({
-                url: "{{ route('admin.events.index') }}",
+                url: "{{ route('admin.Programs.index') }}",
                 type: "GET",
                 data: { search: query },
                 success: function(response) {
@@ -159,6 +160,7 @@
                     $('.loading-spinner').hide();
                     $('.search-icon').show();
 
+                    // Update Export PDF jika route tersedia
                     updateExportUrl(query);
                 },
                 error: function() {
@@ -169,9 +171,12 @@
         }, 500);
     });
 
-    // Fungsi khusus untuk update URL tombol PDF
     function updateExportUrl(searchQuery) {
-        let baseUrl = "{{ route('admin.events.export.pdf') }}";
+        // Abaikan jika route export pdf tidak ada/masih disesuaikan
+        let btnExport = document.getElementById('btnExportPdf');
+        if(!btnExport || btnExport.getAttribute('href') === '#') return;
+
+        let baseUrl = "{{ route('admin.Programs.export.pdf') ?? '#' }}";
         let params = new URLSearchParams(window.location.search);
 
         if (searchQuery) {
@@ -180,58 +185,56 @@
             params.delete('search');
         }
 
-        $('#btnExportPdf').attr('href', baseUrl + "?" + params.toString());
+        btnExport.setAttribute('href', baseUrl + "?" + params.toString());
     }
 
     function renderTable(response) {
-        const tbody = $('#eventTableBody');
-        const events = response.events.data;
+        const tbody = $('#programTableBody');
+        const programs = response.Programs.data;
         const isAdmin = response.is_admin;
 
         tbody.empty();
 
-        if (events.length === 0) {
-            tbody.html('<tr><td colspan="5" style="text-align:center; padding: 3rem; color: #94a3b8;">Tidak ada data event ditemukan.</td></tr>');
+        if (programs.length === 0) {
+            tbody.html('<tr><td colspan="5" style="text-align:center; padding: 3rem; color: #94a3b8;">Tidak ada data program ditemukan.</td></tr>');
             return;
         }
 
         let html = '';
-        events.forEach(event => {
-            let dotClass = event.is_active ? 'dot-active' : 'dot-inactive';
+        programs.forEach(program => {
+            let dotClass = program.is_active ? 'dot-active' : 'dot-inactive';
             let editBtn = '';
             let deleteBtn = '';
 
             if (isAdmin) {
-                editBtn = `<a href="${event.edit_url}" class="btn-icon btn-edit" title="Edit"><i class="fas fa-pen text-xs"></i></a>`;
-                if (event.participants_count == 0) {
-                    deleteBtn = `<button onclick="deleteEvent('${event.name}', '${event.delete_url}')" class="btn-icon btn-delete" title="Hapus"><i class="fas fa-trash text-xs"></i></button>`;
+                editBtn = `<a href="${program.edit_url}" class="btn-icon btn-edit" title="Edit"><i class="fas fa-pen text-xs"></i></a>`;
+                if (program.participants_count == 0) {
+                    deleteBtn = `<button onclick="deleteProgram('${program.name}', '${program.delete_url}')" class="btn-icon btn-delete" title="Hapus"><i class="fas fa-trash text-xs"></i></button>`;
                 }
             }
 
-            let maxPart = event.max_participants ? event.max_participants : '∞';
-            let picName = event.pic_name ? event.pic_name : 'Belum ada PIC';
-            let company = event.company ? event.company : '-';
+            let maxPart = program.max_participants ? program.max_participants : '∞';
 
             html += `<tr>
                 <td>
-                    <div class="event-info">
-                        <div class="event-name">
+                    <div class="program-info">
+                        <div class="program-name">
                             <span class="status-dot ${dotClass}"></span>
-                            ${event.name}
+                            ${program.name}
                         </div>
-                        <div class="event-code">${event.event_code}</div>
+                        <div class="program-code">${program.Program_code}</div>
                     </div>
                 </td>
-                <td style="color: #64748b; font-weight: 500;">${company}</td>
-                <td style="color: #64748b;">${picName}</td>
+                <td style="color: #64748b; font-weight: 500;">${program.company}</td>
+                <td style="color: #64748b;">${program.mitra_name}</td>
                 <td>
-                    <span style="font-weight: 700; color: #22c55e;">${event.participants_count}</span>
+                    <span style="font-weight: 700; color: #22c55e;">${program.participants_count}</span>
                     <span style="color: #cbd5e1;">/</span>
                     <span style="color: #94a3b8;">${maxPart}</span>
                 </td>
                 <td>
                     <div class="action-buttons">
-                        <a href="${event.show_url}" class="btn-icon btn-view" title="Detail"><i class="fas fa-eye text-xs"></i></a>
+                        <a href="${program.show_url}" class="btn-icon btn-view" title="Detail"><i class="fas fa-eye text-xs"></i></a>
                         ${editBtn}
                         ${deleteBtn}
                     </div>
@@ -241,10 +244,10 @@
         tbody.html(html);
     }
 
-    function deleteEvent(name, url) {
+    function deleteProgram(name, url) {
         Swal.fire({
-            title: 'Hapus Event?',
-            html: `Yakin ingin menghapus event <b>${name}</b>?`,
+            title: 'Hapus Program?',
+            html: `Yakin ingin menghapus program <b>${name}</b>?`,
             icon: 'warning',
             showCancelButton: true, confirmButtonColor: '#dc2626', cancelButtonColor: '#f1f5f9',
             confirmButtonText: 'Ya, Hapus', cancelButtonText: '<span style="color:black">Batal</span>',

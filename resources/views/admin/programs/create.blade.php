@@ -1,6 +1,6 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Buat Event Baru')
+@section('title', 'Buat Program Baru')
 
 @push('styles')
 <style>
@@ -39,44 +39,46 @@
         <div>
             <h1 style="font-size: 1.5rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px;">
                 <i class="fas fa-plus-circle" style="color: #22c55e; background: #dcfce7; padding: 8px; border-radius: 10px;"></i>
-                Buat Event Baru
+                Buat Program Baru
             </h1>
         </div>
-        <a href="{{ route('admin.events.index') }}" class="btn-cancel"><i class="fas fa-arrow-left"></i> Kembali</a>
+        <a href="{{ route('admin.Programs.index') }}" class="btn-cancel"><i class="fas fa-arrow-left"></i> Kembali</a>
     </div>
 @endsection
 
 @section('content')
 <div class="form-card">
-    <form action="{{ route('admin.events.store') }}" method="POST">
+    <form action="{{ route('admin.Programs.store') }}" method="POST">
         @csrf
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 3rem;">
 
             <div>
-                <div class="form-section-title"><i class="fas fa-info-circle text-green-500"></i> Informasi Event</div>
+                <div class="form-section-title"><i class="fas fa-info-circle text-green-500"></i> Informasi Program</div>
 
                 <div class="form-group">
-                    <label class="form-label required">Nama Event</label>
-                    <input type="text" name="name" class="form-control @error('name') border-red-500 @enderror" value="{{ old('name') }}" placeholder="Contoh: Recruitment Batch 1 2024" required>
-                    @error('name') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                    <label class="form-label required">Nama Program</label>
+                    <input type="text" name="nama" class="form-control @error('nama') border-red-500 @enderror" value="{{ old('nama') }}" placeholder="Contoh: Recruitment Batch 1 2026" required>
+                    @error('nama') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label required">Kode Event (Unik)</label>
-                    <input type="text" name="event_code" id="event_code" class="form-control @error('event_code') border-red-500 @enderror" value="{{ old('event_code') }}" placeholder="Contoh: REC-B1-24" required>
+                    <label class="form-label required">Kode Program (Unik)</label>
+                    <input type="text" name="kode_program" id="kode_program" class="form-control @error('kode_program') border-red-500 @enderror" value="{{ old('kode_program') }}" placeholder="Contoh: REC-B1-26" required>
                     <div class="form-text">Akan otomatis diubah menjadi huruf besar.</div>
-                    @error('event_code') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                    @error('kode_program') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Nama Instansi / Perusahaan</label>
-                    <input type="text" name="company" class="form-control" value="{{ old('company') }}" placeholder="Contoh: PT. Maju Jaya Sejahtera">
+                    <label class="form-label">Nama Perusahaan / Instansi</label>
+                    <input type="text" name="perusahaan" class="form-control @error('perusahaan') border-red-500 @enderror" value="{{ old('perusahaan') }}" placeholder="Contoh: PT. Maju Jaya Sejahtera">
+                    @error('perusahaan') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Deskripsi Singkat</label>
-                    <textarea name="description" class="form-control" rows="4" placeholder="Jelaskan detail event secara singkat...">{{ old('description') }}</textarea>
+                    <textarea name="deskripsi" class="form-control @error('deskripsi') border-red-500 @enderror" rows="4" placeholder="Jelaskan detail program secara singkat...">{{ old('deskripsi') }}</textarea>
+                    @error('deskripsi') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                 </div>
             </div>
 
@@ -86,43 +88,44 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group">
                         <label class="form-label required">Tanggal Mulai</label>
-                        <input type="date" name="start_date" id="start_date" class="form-control @error('start_date') border-red-500 @enderror" value="{{ old('start_date') }}" required>
-                        @error('start_date') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                        <input type="date" name="tanggal_mulai" id="tanggal_mulai" class="form-control @error('tanggal_mulai') border-red-500 @enderror" value="{{ old('tanggal_mulai') }}" required>
+                        @error('tanggal_mulai') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                     </div>
                     <div class="form-group">
                         <label class="form-label required">Tanggal Selesai</label>
-                        <input type="date" name="end_date" id="end_date" class="form-control @error('end_date') border-red-500 @enderror" value="{{ old('end_date') }}" required>
-                        @error('end_date') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                        <input type="date" name="tanggal_selesai" id="tanggal_selesai" class="form-control @error('tanggal_selesai') border-red-500 @enderror" value="{{ old('tanggal_selesai') }}" required>
+                        @error('tanggal_selesai') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Person In Charge (PIC)</label>
-                    <select name="pic_id" class="form-control" style="background-image: none;">
-                        <option value="">-- Pilih PIC (Opsional) --</option>
-                        @foreach($pics as $pic)
-                            <option value="{{ $pic->id }}" {{ old('pic_id') == $pic->id ? 'selected' : '' }}>{{ $pic->name }}</option>
+                    <label class="form-label">Mitra Penyelenggara</label>
+                    <select name="id_mitra" class="form-control @error('id_mitra') border-red-500 @enderror" style="background-image: none;">
+                        <option value="">-- Pilih Mitra (Opsional) --</option>
+                        @foreach($mitras as $mitra)
+                            <option value="{{ $mitra->id }}" {{ old('id_mitra') == $mitra->id ? 'selected' : '' }}>{{ $mitra->nama }}</option>
                         @endforeach
                     </select>
-                    <div class="form-text">Hanya menampilkan user dengan role 'PIC' yang aktif.</div>
+                    <div class="form-text">Menampilkan pengguna dengan peran 'Mitra'.</div>
+                    @error('id_mitra') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Batas Maksimal Peserta</label>
-                    <input type="number" name="max_participants" class="form-control" value="{{ old('max_participants') }}" placeholder="Contoh: 100 (Kosongkan jika tidak terbatas)" min="1">
+                    <input type="number" name="maks_peserta" class="form-control @error('maks_peserta') border-red-500 @enderror" value="{{ old('maks_peserta') }}" placeholder="Kosongkan jika tidak terbatas" min="1">
+                    @error('maks_peserta') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="form-group" style="margin-top: 2rem;">
                     <label class="form-label">Status Publikasi</label>
                     <div class="toggle-wrapper">
                         <label class="switch">
-                            {{-- Input checkbox tersembunyi --}}
-                            <input type="checkbox" name="is_active" value="1" {{ old('is_active', 1) ? 'checked' : '' }}>
+                            <input type="checkbox" name="aktif" value="1" {{ old('aktif', 1) ? 'checked' : '' }}>
                             <span class="slider"></span>
                         </label>
                         <div>
-                            <div style="font-weight: 600; font-size: 0.9rem; color: #0f172a;">Aktifkan Event Segera?</div>
-                            <div style="font-size: 0.75rem; color: #64748b;">Jika non-aktif, event tidak akan terlihat oleh peserta.</div>
+                            <div style="font-weight: 600; font-size: 0.9rem; color: #0f172a;">Aktifkan Program Segera?</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">Jika non-aktif, program tidak akan terlihat oleh peserta.</div>
                         </div>
                     </div>
                 </div>
@@ -130,8 +133,8 @@
         </div>
 
         <div class="form-actions">
-            <a href="{{ route('admin.events.index') }}" class="btn-cancel">Batal</a>
-            <button type="submit" class="btn-save"><i class="fas fa-save"></i> Simpan Event</button>
+            <a href="{{ route('admin.Programs.index') }}" class="btn-cancel">Batal</a>
+            <button type="submit" class="btn-save"><i class="fas fa-save"></i> Simpan Program</button>
         </div>
     </form>
 </div>
@@ -139,14 +142,12 @@
 
 @push('scripts')
 <script>
-    // Auto Uppercase untuk Kode Event
-    $('#event_code').on('input', function() {
-        $(this).val($(this).val().toUpperCase().replace(/\s+/g, '')); // Uppercase & hapus spasi
+    $('#kode_program').on('input', function() {
+        $(this).val($(this).val().toUpperCase().replace(/\s+/g, ''));
     });
 
-    // Validasi Tanggal: Tanggal Selesai minimal harus sama dengan Tanggal Mulai
-    $('#start_date').on('change', function() {
-        $('#end_date').attr('min', $(this).val());
+    $('#tanggal_mulai').on('change', function() {
+        $('#tanggal_selesai').attr('min', $(this).val());
     });
 </script>
 @endpush

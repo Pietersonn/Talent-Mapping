@@ -4,11 +4,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\QuestionController as AdminQuestionController;
 use App\Http\Controllers\Admin\ST30QuestionController;
-use App\Http\Controllers\Admin\SJTQuestionController;
+use App\Http\Controllers\Admin\TalentCompetencyController; 
 use App\Http\Controllers\Admin\CompetencyController;
 use App\Http\Controllers\Admin\TypologyController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
-use App\Http\Controllers\Admin\programController as AdminprogramController;
+use App\Http\Controllers\Admin\ProgramController as AdminprogramController;
 use App\Http\Controllers\Admin\ResultController;
 use App\Http\Controllers\Admin\ScoreController;
 use App\Http\Controllers\Admin\ResendRequestController;
@@ -32,11 +32,10 @@ Route::middleware(['auth', 'role:admin,staff'])
             Route::get('/create', [AdminQuestionController::class, 'create'])->name('create')->middleware('role:admin');
             Route::post('/', [AdminQuestionController::class, 'store'])->name('store')->middleware('role:admin');
 
-            // 2. ROUTE EXPORT PDF GLOBAL (REKAP) - PERBAIKAN DISINI
-            // Ditaruh SEBELUM route dinamis {questionVersion} dan TANPA parameter {questionVersion}
+            // 2. ROUTE EXPORT PDF GLOBAL (REKAP)
             Route::get('/export/pdf', [AdminQuestionController::class, 'exportPdf'])->name('export.pdf');
 
-            // 3. Route Group Statis (st30, sjt, dll)
+            // 3. Route Group Statis (st30, tk, dll)
             Route::prefix('st30')->name('st30.')->group(function () {
                 Route::get('/', [ST30QuestionController::class, 'index'])->name('index');
                 Route::get('/create', [ST30QuestionController::class, 'create'])->name('create')->middleware('role:admin');
@@ -52,18 +51,19 @@ Route::middleware(['auth', 'role:admin,staff'])
                 Route::delete('/{st30Question}', [ST30QuestionController::class, 'destroy'])->name('destroy')->middleware('role:admin');
             });
 
-            Route::prefix('sjt')->name('sjt.')->group(function () {
-                Route::get('/', [SJTQuestionController::class, 'index'])->name('index');
-                Route::get('/create', [SJTQuestionController::class, 'create'])->name('create')->middleware('role:admin');
-                Route::post('/', [SJTQuestionController::class, 'store'])->name('store')->middleware('role:admin');
+            // ROUTE TALENTA KOMPETENSI (TK) - Pengganti SJT
+            Route::prefix('tk')->name('tk.')->group(function () {
+                Route::get('/', [TalentCompetencyController::class, 'index'])->name('index');
+                Route::get('/create', [TalentCompetencyController::class, 'create'])->name('create')->middleware('role:admin');
+                Route::post('/', [TalentCompetencyController::class, 'store'])->name('store')->middleware('role:admin');
 
-                Route::get('/export', [SJTQuestionController::class, 'export'])->name('export');
-                Route::post('/import', [SJTQuestionController::class, 'import'])->name('import')->middleware('role:admin');
+                Route::get('/export', [TalentCompetencyController::class, 'export'])->name('export');
+                Route::post('/import', [TalentCompetencyController::class, 'import'])->name('import')->middleware('role:admin');
 
-                Route::get('/{sjtQuestion}', [SJTQuestionController::class, 'show'])->name('show');
-                Route::get('/{sjtQuestion}/edit', [SJTQuestionController::class, 'edit'])->name('edit')->middleware('role:admin');
-                Route::put('/{sjtQuestion}', [SJTQuestionController::class, 'update'])->name('update')->middleware('role:admin');
-                Route::delete('/{sjtQuestion}', [SJTQuestionController::class, 'destroy'])->name('destroy')->middleware('role:admin');
+                Route::get('/{id}', [TalentCompetencyController::class, 'show'])->name('show');
+                Route::get('/{id}/edit', [TalentCompetencyController::class, 'edit'])->name('edit')->middleware('role:admin');
+                Route::put('/{id}', [TalentCompetencyController::class, 'update'])->name('update')->middleware('role:admin');
+                Route::delete('/{id}', [TalentCompetencyController::class, 'destroy'])->name('destroy')->middleware('role:admin');
             });
 
             Route::prefix('competencies')->name('competencies.')->group(function () {
@@ -100,7 +100,9 @@ Route::middleware(['auth', 'role:admin,staff'])
             Route::delete('/{questionVersion}', [AdminQuestionController::class, 'destroy'])->name('destroy')->middleware('role:admin');
         });
 
-        // Users, programs, dll tetap sama...
+        // ==========================
+        // LAIN-LAIN (USERS, PROGRAMS, HASIL)
+        // ==========================
         Route::prefix('users')->name('users.')->group(function () {
             Route::get('/', [AdminUserController::class, 'index'])->name('index');
             Route::get('/create', [AdminUserController::class, 'create'])->name('create');
