@@ -15,11 +15,12 @@ class TalentCompetencyController extends Controller
 {
     public function index(Request $request)
     {
-        $activeVersion   = QuestionVersion::getActive('tk');
+        $activeVersion   = QuestionVersion::where('jenis', 'tk')->where('aktif', true)->first();
         $selectedVersion = $request->has('version') ? QuestionVersion::find($request->version) : $activeVersion;
         $versions        = QuestionVersion::where('jenis', 'tk')->orderBy('versi', 'desc')->get();
 
-        $questions = collect(); $competencyStats = [];
+        $questions = collect();
+        $competencyStats = [];
 
         if ($selectedVersion) {
             $query = TalentCompetencyQuestion::where('id_versi', $selectedVersion->id)
@@ -29,36 +30,52 @@ class TalentCompetencyController extends Controller
             $questions       = $query->paginate(10);
         }
 
-        $competencies = CompetencyDescription::orderBy('kode_kompetensi')->get();
-        return view('admin.questions.talent-competency.index', compact('questions', 'selectedVersion', 'activeVersion', 'versions', 'competencyStats', 'competencies'));
+        $competencies = CompetencyDescription::orderBy('nama_kompetensi')->get();
+
+        return view('admin.questions.talentcompetency.index', compact('questions', 'selectedVersion', 'activeVersion', 'versions', 'competencyStats', 'competencies'));
     }
 
     public function create(Request $request)
     {
         $selectedVersion = $request->has('version')
             ? QuestionVersion::find($request->version)
-            : QuestionVersion::getActive('tk');
+            : QuestionVersion::where('jenis', 'tk')->where('aktif', true)->first();
 
-        if (!$selectedVersion) return redirect()->route('admin.questions.index')->with('error', 'Tidak ada versi TK. Buat versi terlebih dahulu.');
+        if (!$selectedVersion) {
+            return redirect()->route('admin.questions.index')->with('error', 'Tidak ada versi TK. Buat versi terlebih dahulu.');
+        }
 
-        $nextNumber = TalentCompetencyQuestion::where('id_versi', $selectedVersion->id)->max('nomor') + 1;
-        if ($nextNumber > 50) return redirect()->route('admin.questions.talent-competency.index', ['version' => $selectedVersion->id])->with('error', 'Versi ini sudah mencapai batas maksimum 50 pertanyaan.');
+        // PERBAIKAN 1: Hitung jumlah soal secara riil, bukan dari nomor max.
+        $existingNumbers = TalentCompetencyQuestion::where('id_versi', $selectedVersion->id)->pluck('nomor')->toArray();
+
+        if (count($existingNumbers) >= 50) {
+            return redirect()->route('admin.questions.tk.index', ['version' => $selectedVersion->id])
+                ->with('error', 'Versi ini sudah mencapai batas maksimum 50 pertanyaan.');
+        }
+
+        // PERBAIKAN 2: Cari otomatis nomor yang "bolong" / kosong dari 1 sampai 50
+        $nextNumber = 1;
+        while (in_array($nextNumber, $existingNumbers)) {
+            $nextNumber++;
+        }
 
         $competencies = CompetencyDescription::orderBy('nama_kompetensi')->get();
         $versions     = QuestionVersion::where('jenis', 'tk')->orderBy('versi', 'desc')->get();
-        return view('admin.questions.talent-competency.create', compact('selectedVersion', 'nextNumber', 'competencies', 'versions'));
+
+        return view('admin.questions.talentcompetency.create', compact('selectedVersion', 'nextNumber', 'competencies', 'versions'));
     }
 
     public function store(Request $request)
     {
+        // Validasi menyesuaikan input di create.blade.php (options.*.teks)
         $request->validate([
             'id_versi'        => 'required|exists:versi_soal,id',
             'nomor'           => 'required|integer|min:1|max:50',
             'teks_pertanyaan' => 'required|string|max:1000',
             'kode_kompetensi' => 'required|exists:deskripsi_kompetensi,kode_kompetensi',
             'options'         => 'required|array|size:5',
-            'options.*.teks_pilihan' => 'required|string|max:500',
-            'options.*.skor'         => 'required|integer|min:0|max:4',
+            'options.*.teks'  => 'required|string|max:500',
+            'options.*.skor'  => 'required|integer|min:0|max:5',
         ]);
 
         if (TalentCompetencyQuestion::where('id_versi', $request->id_versi)->where('nomor', $request->nomor)->exists()) {
@@ -71,49 +88,59 @@ class TalentCompetencyController extends Controller
                 'nomor'           => $request->nomor,
                 'teks_pertanyaan' => $request->teks_pertanyaan,
                 'kode_kompetensi' => $request->kode_kompetensi,
+                'aktif'           => $request->has('aktif') ? true : false,
             ]);
 
             foreach ($request->options as $index => $optionData) {
                 TalentCompetencyOption::create([
                     'id_soal'           => $question->id,
                     'huruf_pilihan'     => ['a','b','c','d','e'][$index],
-                    'teks_pilihan'      => $optionData['teks_pilihan'],
+                    'teks_pilihan'      => $optionData['teks'], // Menangkap name="...[teks]"
                     'skor'              => $optionData['skor'],
                     'target_kompetensi' => $request->kode_kompetensi,
                 ]);
             }
         });
 
-        return redirect()->route('admin.questions.talent-competency.index', ['version' => $request->id_versi])
+        return redirect()->route('admin.questions.tk.index', ['version' => $request->id_versi])
             ->with('success', 'Pertanyaan TK beserta opsi berhasil dibuat.');
     }
 
-    public function show(TalentCompetencyQuestion $talentCompetencyQuestion)
+    // PERBAIKAN 3: Tambahkan `string` pada $id untuk menghilangkan Error P1132
+    public function show(string $id)
     {
-        $talentCompetencyQuestion->load(['questionVersion', 'competencyDescription', 'options']);
-        return view('admin.questions.talent-competency.show', compact('talentCompetencyQuestion'));
+        $talentCompetencyQuestion = TalentCompetencyQuestion::with(['questionVersion', 'competencyDescription', 'options'])->findOrFail($id);
+        return view('admin.questions.talentcompetency.show', compact('talentCompetencyQuestion'));
     }
 
-    public function edit(TalentCompetencyQuestion $talentCompetencyQuestion)
+    // PERBAIKAN 3: Tambahkan `string` pada $id
+    public function edit(string $id)
     {
-        $talentCompetencyQuestion->load(['questionVersion', 'options']);
+        $talentCompetencyQuestion = TalentCompetencyQuestion::with(['questionVersion', 'options'])->findOrFail($id);
         $competencies = CompetencyDescription::orderBy('nama_kompetensi')->get();
         $versions     = QuestionVersion::where('jenis', 'tk')->orderBy('versi', 'desc')->get();
-        return view('admin.questions.talent-competency.edit', compact('talentCompetencyQuestion', 'competencies', 'versions'));
+
+        return view('admin.questions.talentcompetency.edit', compact('talentCompetencyQuestion', 'competencies', 'versions'));
     }
 
-    public function update(Request $request, TalentCompetencyQuestion $talentCompetencyQuestion)
+    // PERBAIKAN 3: Tambahkan `string` pada $id
+    public function update(Request $request, string $id)
     {
+        $talentCompetencyQuestion = TalentCompetencyQuestion::findOrFail($id);
+
+        // Validasi menyesuaikan input di edit.blade.php (options.*.teks_pilihan)
         $request->validate([
             'nomor'           => 'required|integer|min:1|max:50',
             'teks_pertanyaan' => 'required|string|max:1000',
             'kode_kompetensi' => 'required|exists:deskripsi_kompetensi,kode_kompetensi',
             'options'         => 'required|array|size:5',
             'options.*.teks_pilihan' => 'required|string|max:500',
-            'options.*.skor'         => 'required|integer|min:0|max:4',
+            'options.*.skor'         => 'required|integer|min:0|max:5',
         ]);
 
-        if (TalentCompetencyQuestion::where('id_versi', $talentCompetencyQuestion->id_versi)->where('nomor', $request->nomor)->where('id', '!=', $talentCompetencyQuestion->id)->exists()) {
+        if (TalentCompetencyQuestion::where('id_versi', $talentCompetencyQuestion->id_versi)
+                ->where('nomor', $request->nomor)
+                ->where('id', '!=', $talentCompetencyQuestion->id)->exists()) {
             return back()->withErrors(['nomor' => 'Nomor pertanyaan sudah ada di versi ini.'])->withInput();
         }
 
@@ -122,13 +149,14 @@ class TalentCompetencyController extends Controller
                 'nomor'           => $request->nomor,
                 'teks_pertanyaan' => $request->teks_pertanyaan,
                 'kode_kompetensi' => $request->kode_kompetensi,
+                'aktif'           => $request->has('aktif') ? true : false,
             ]);
 
             foreach ($request->options as $index => $optionData) {
                 $option = $talentCompetencyQuestion->options()->where('huruf_pilihan', ['a','b','c','d','e'][$index])->first();
                 if ($option) {
                     $option->update([
-                        'teks_pilihan'      => $optionData['teks_pilihan'],
+                        'teks_pilihan'      => $optionData['teks_pilihan'], // Menangkap name="...[teks_pilihan]"
                         'skor'              => $optionData['skor'],
                         'target_kompetensi' => $request->kode_kompetensi,
                     ]);
@@ -136,24 +164,30 @@ class TalentCompetencyController extends Controller
             }
         });
 
-        return redirect()->route('admin.questions.talent-competency.index', ['version' => $talentCompetencyQuestion->id_versi])
+        return redirect()->route('admin.questions.tk.index', ['version' => $talentCompetencyQuestion->id_versi])
             ->with('success', 'Pertanyaan TK berhasil diperbarui.');
     }
 
-    public function destroy(TalentCompetencyQuestion $talentCompetencyQuestion)
+    // PERBAIKAN 3: Tambahkan `string` pada $id
+    public function destroy(string $id)
     {
+        $talentCompetencyQuestion = TalentCompetencyQuestion::findOrFail($id);
         $versionId = $talentCompetencyQuestion->id_versi;
+
         DB::transaction(function () use ($talentCompetencyQuestion) {
             $talentCompetencyQuestion->options()->delete();
             $talentCompetencyQuestion->delete();
         });
-        return redirect()->route('admin.questions.talent-competency.index', ['version' => $versionId])
+
+        return redirect()->route('admin.questions.tk.index', ['version' => $versionId])
             ->with('success', 'Pertanyaan TK berhasil dihapus.');
     }
 
     public function export(Request $request)
     {
-        $versionId = $request->get('version') ?? QuestionVersion::getActive('tk')?->id;
+        $activeVersion = QuestionVersion::where('jenis', 'tk')->where('aktif', true)->first();
+        $versionId = $request->get('version') ?? ($activeVersion ? $activeVersion->id : null);
+
         if (!$versionId) return back()->with('error', 'Silakan pilih versi untuk diekspor.');
 
         $version = QuestionVersion::find($versionId);
@@ -167,10 +201,10 @@ class TalentCompetencyController extends Controller
                 ->orWhereHas('competencyDescription', fn($s) => $s->where('nama_kompetensi', 'like', "%{$search}%")));
         }
 
-        $pdf = Pdf::loadView('admin.questions.talent-competency.pdf.tkReport', [
+        $pdf = Pdf::loadView('admin.questions.talentcompetency.pdf.tkReport', [
             'reportTitle' => 'Laporan Bank Soal Talenta Kompetensi',
             'versionName' => $version->versi.' - '.$version->nama.($search ? " (Filter: {$search})" : ''),
-            'generatedBy' => Auth::user()->nama,
+            'generatedBy' => Auth::user()->nama ?? Auth::user()->name,
             'generatedAt' => now()->format('d/m/Y H:i'),
             'rows'        => $query->orderBy('nomor')->get(),
         ])->setPaper('a4', 'landscape');

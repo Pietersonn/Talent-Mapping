@@ -1,6 +1,7 @@
 @php
     use Carbon\Carbon;
 
+    // --- 1. Setup Logo ---
     $logoPath = public_path('assets/public/images/logo-bcti1.png');
     $logoBase64 = '';
     if (file_exists($logoPath)) {
@@ -9,12 +10,14 @@
         $logoBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
     }
 
+    // --- 2. Setup Tanggal & Lokasi ---
     Carbon::setLocale('id');
     $currentDate  = Carbon::now()->isoFormat('D MMMM Y');
     $generatedAt  = Carbon::now()->isoFormat('D MMMM Y');
     $cityLocation = 'Barito Kuala';
-    $generatedBy  = $generatedBy ?? 'Admin';
 
+    // --- 3. Data Default ---
+    $generatedBy    = $generatedBy ?? 'Admin';
     $companyName    = 'BUSINESS & COMMUNICATION TRAINING INSTITUTE';
     $companyAddr1   = 'Kompleks Sekolah Global Islamic Boarding School (GIBS)';
     $companyAddr2   = 'Gedung Nurhayati Kampus GIBS, Jl. Trans - Kalimantan Lantai 2,';
@@ -32,6 +35,9 @@
   body { font-family: "Times New Roman", Times, serif; font-size: 11px; color: #000; line-height: 1.3; }
 
   .clearfix:after { content:""; display: table; clear: both; }
+  .text-center{ text-align:center; }
+
+  /* Header */
   .header { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
   .h-left  { float:left;  width:12%; }
   .h-right { float:right; width:88%; text-align:right; }
@@ -39,19 +45,23 @@
   .company-name { font-weight: bold; font-size: 14px; text-transform:uppercase; letter-spacing:0.5px; }
   .company-sub  { font-size: 10px; }
 
+  /* Title */
   .title-wrap { text-align:center; margin-bottom: 25px; }
-  .title   { font-size: 16px; font-weight:bold; text-transform:uppercase; margin-bottom: 5px; text-decoration: underline; }
+  .title   { font-size: 16px; font-weight:700; text-transform:uppercase; margin-bottom: 5px; text-decoration: underline; }
   .subtitle{ font-size: 11px; }
 
+  /* Table */
   table { width:100%; border-collapse: collapse; margin-bottom: 10px; }
-  thead th { background:#e0e0e0; border:1px solid #000; font-weight:bold; font-size: 11px; padding: 8px 5px; text-align:center; }
+  thead th { background:#e0e0e0; border:1px solid #000; font-weight:700; font-size: 11px; padding: 8px 5px; text-align:center; }
   tbody td { border:1px solid #000; padding: 6px 5px; vertical-align: top; }
-  .text-center{ text-align:center; }
-  .opt-row { margin-bottom: 4px; }
+  .opt-row { margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px dotted #ccc; }
+  .opt-row:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
 
+  /* Footer */
   .footer { position: fixed; bottom: -10mm; left: 0; right: 0; text-align: right; font-size: 9px; font-style: italic; }
   .pagenum:before { content: counter(page); }
 
+  /* Signature */
   .signature-table { width: 100%; margin-top: 40px; border: none; page-break-inside: avoid; }
   .signature-table td { border: none; padding: 0; vertical-align: top; text-align: center; }
 </style>
@@ -76,9 +86,9 @@
   <table>
     <thead>
       <tr>
-        <th style="width:30px;">No</th>
-        <th style="width:35%;">Soal</th>
-        <th style="width:35%;">Opsi</th>
+        <th style="width:30px;">No.</th>
+        <th style="width:35%;">Pertanyaan / Kasus</th>
+        <th style="width:35%;">Opsi Pilihan</th>
         <th style="width:40px;">Skor</th>
         <th style="width:15%;">Kompetensi</th>
       </tr>
@@ -86,19 +96,19 @@
     <tbody>
       @forelse($rows as $q)
         <tr>
-          <td class="text-center">{{ $q->number }}</td>
-          <td>{{ $q->question_text }}</td>
+          <td class="text-center">{{ $q->nomor }}</td>
+          <td>{{ $q->teks_pertanyaan }}</td>
           <td>
              @foreach($q->options as $opt)
-                <div class="opt-row">{{ strtoupper($opt->option_letter) }}. {{ $opt->option_text }}</div>
+                <div class="opt-row"><strong>{{ strtoupper($opt->huruf_pilihan) }}.</strong> {{ $opt->teks_pilihan }}</div>
              @endforeach
           </td>
           <td class="text-center">
              @foreach($q->options as $opt)
-                <div class="opt-row">{{ $opt->score }}</div>
+                <div class="opt-row">{{ $opt->skor }}</div>
              @endforeach
           </td>
-          <td>{{ $q->competencyDescription->competency_name ?? '-' }}</td>
+          <td class="text-center">{{ $q->kompetensi->nama_kompetensi ?? $q->kode_kompetensi }}</td>
         </tr>
       @empty
         <tr><td colspan="5" class="text-center" style="padding:15px;">Tidak ada data soal pada versi ini.</td></tr>

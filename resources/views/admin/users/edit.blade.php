@@ -1,10 +1,13 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Edit User')
+@section('title', 'Edit Pengguna')
 
 @push('styles')
 <style>
-    /* --- STYLE TOMBOL (Sama dengan Create) --- */
+    .border-red-500 { border-color: #ef4444 !important; }
+    .text-red-500 { color: #ef4444 !important; }
+
+    /* --- STYLE TOMBOL --- */
     .btn-add {
         background: #22c55e;
         color: white;
@@ -33,7 +36,6 @@
     .form-card { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
     .form-group { margin-bottom: 1.5rem; }
     .form-label { display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 0.5rem; }
-    .form-label.required::after { content: "*"; color: #ef4444; margin-left: 4px; }
     .form-control { width: 100%; padding: 0.75rem 1rem; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 0.9rem; color: #0f172a; background-color: #f8fafc; transition: all 0.2s; }
     .form-control:focus { background-color: white; border-color: #22c55e; outline: none; box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1); }
 
@@ -58,9 +60,9 @@
 @endpush
 
 @section('header')
-    <div class="header-wrapper">
+    <div class="header-wrapper" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
         <div>
-            <h1 class="page-title"><i class="fas fa-user-edit"></i> Edit Pengguna</h1>
+            <h1 class="page-title" style="font-size: 1.5rem; font-weight: 800; color: #0f172a;"><i class="fas fa-user-edit text-green-500 mr-2"></i> Edit Pengguna</h1>
         </div>
         <a href="{{ route('admin.users.index') }}" class="btn-cancel">
             <i class="fas fa-arrow-left"></i> Kembali
@@ -77,44 +79,45 @@
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 3rem;">
 
             <div>
-                <div class="form-section-title"><i class="far fa-id-card mr-2"></i> Identitas Pengguna</div>
+                <div class="form-section-title"><i class="far fa-id-card mr-2 text-green-500"></i> Identitas Pengguna</div>
 
                 <div class="form-group">
                     <label class="form-label required">Nama Lengkap</label>
-                    <input type="text" name="name" class="form-control" value="{{ old('name', $user->name) }}" required>
-                    @error('name') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
+                    <input type="text" name="nama" class="form-control @error('nama') border-red-500 @enderror" value="{{ old('nama', $user->nama) }}" required>
+                    @error('nama') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="form-group">
                     <label class="form-label required">Alamat Email</label>
-                    <input type="email" name="email" class="form-control" value="{{ old('email', $user->email) }}" required>
+                    <input type="email" name="email" class="form-control @error('email') border-red-500 @enderror" value="{{ old('email', $user->email) }}" required>
                     @error('email') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Nomor Telepon / WhatsApp</label>
-                    <input type="text" name="phone_number" class="form-control" value="{{ old('phone_number', $user->phone_number) }}">
+                    <input type="text" name="nomor_telepon" class="form-control @error('nomor_telepon') border-red-500 @enderror" value="{{ old('nomor_telepon', $user->nomor_telepon) }}">
+                    @error('nomor_telepon') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
                 </div>
             </div>
 
             <div>
-                <div class="form-section-title"><i class="fas fa-user-shield mr-2"></i> Akses & Keamanan</div>
+                <div class="form-section-title"><i class="fas fa-user-shield mr-2 text-green-500"></i> Akses & Keamanan</div>
 
                 <div class="form-group">
                     <label class="form-label required">Peran (Role)</label>
-                    <select name="role" class="form-control" required>
-                        <option value="user" {{ old('role', $user->role) == 'user' ? 'selected' : '' }}>Pengguna</option>
-                        <option value="pic" {{ old('role', $user->role) == 'pic' ? 'selected' : '' }}>PIC (Manajer Event)</option>
-                        <option value="staff" {{ old('role', $user->role) == 'staff' ? 'selected' : '' }}>Staff</option>
-                        <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>Administrator</option>
+                    <select name="peran" class="form-control @error('peran') border-red-500 @enderror" required>
+                        <option value="peserta" {{ old('peran', $user->peran) == 'peserta' ? 'selected' : '' }}>Peserta</option>
+                        <option value="mitra" {{ old('peran', $user->peran) == 'mitra' ? 'selected' : '' }}>Mitra (PIC)</option>
+                        <option value="admin" {{ old('peran', $user->peran) == 'admin' ? 'selected' : '' }}>Administrator</option>
                     </select>
+                    @error('peran') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group">
-                        <label class="form-label">Kata Sandi Baru <span class="text-gray-400 font-normal text-xs ml-1">(Opsional)</span></label>
+                        <label class="form-label">Kata Sandi Baru <span style="color:#94a3b8; font-weight:normal; font-size:0.75rem;">(Opsional)</span></label>
                         <div class="password-wrapper">
-                            <input type="password" name="password" id="password" class="form-control" placeholder="Biarkan kosong jika tetap">
+                            <input type="password" name="password" id="password" class="form-control @error('password') border-red-500 @enderror">
                             <button type="button" class="btn-toggle-password" onclick="togglePassword('password', this)">
                                 <i class="fas fa-eye"></i>
                             </button>
@@ -123,11 +126,14 @@
                     <div class="form-group">
                         <label class="form-label">Ulangi Sandi</label>
                         <div class="password-wrapper">
-                            <input type="password" name="password_confirmation" id="password_confirm" class="form-control" placeholder="******">
+                            <input type="password" name="password_confirmation" id="password_confirm" class="form-control @error('password') border-red-500 @enderror">
                             <button type="button" class="btn-toggle-password" onclick="togglePassword('password_confirm', this)">
                                 <i class="fas fa-eye"></i>
                             </button>
                         </div>
+                    </div>
+                    <div style="grid-column: span 2; margin-top: -15px;">
+                        @error('password') <span class="text-xs text-red-500 block">{{ $message }}</span> @enderror
                     </div>
                 </div>
 
@@ -135,7 +141,7 @@
                     <label class="form-label">Status Akun</label>
                     <div class="toggle-wrapper">
                         <label class="switch">
-                            <input type="checkbox" name="is_active" value="1" {{ old('is_active', $user->is_active) ? 'checked' : '' }}>
+                            <input type="checkbox" name="aktif" value="1" {{ old('aktif', $user->aktif) ? 'checked' : '' }}>
                             <span class="slider"></span>
                         </label>
                         <div>

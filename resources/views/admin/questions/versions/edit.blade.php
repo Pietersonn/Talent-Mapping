@@ -11,7 +11,7 @@
     .form-label { display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 0.5rem; }
     .form-label.required::after { content: "*"; color: #ef4444; margin-left: 4px; }
     .form-control { width: 100%; padding: 0.75rem 1rem; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 0.9rem; color: #0f172a; background-color: #f8fafc; transition: all 0.2s; }
-    .form-control:focus { background-color: white; border-color: #d97706; outline: none; box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.1); } /* Amber focus for edit */
+    .form-control:focus { background-color: white; border-color: #d97706; outline: none; box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.1); }
     .form-control[readonly] { background-color: #f1f5f9; color: #64748b; cursor: not-allowed; }
 
     .form-actions { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 10px; }
@@ -36,7 +36,6 @@
 
 @section('content')
 <div class="form-card">
-    {{-- Asumsi route update menggunakan parameter $questionVersion --}}
     <form action="{{ route('admin.questions.update', $questionVersion->id) }}" method="POST" id="editForm">
         @csrf
         @method('PUT')
@@ -48,21 +47,21 @@
 
                 <div class="form-group">
                     <label class="form-label">Tipe Soal</label>
-                    <input type="text" class="form-control" value="{{ strtoupper($questionVersion->type) }}" readonly>
+                    <input type="text" class="form-control" value="{{ strtoupper($questionVersion->jenis) }}" readonly>
                     <div class="form-text">Tipe soal tidak dapat diubah setelah dibuat.</div>
                 </div>
 
                 <div class="form-group">
-                    <label for="name" class="form-label required">Nama Versi</label>
-                    <input type="text" name="name" id="name" class="form-control @error('name') border-red-500 @enderror"
-                           value="{{ old('name', $questionVersion->name) }}" maxlength="50" required>
-                    @error('name') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                    <label for="nama" class="form-label required">Nama Versi</label>
+                    <input type="text" name="nama" id="nama" class="form-control @error('nama') border-red-500 @enderror"
+                           value="{{ old('nama', $questionVersion->nama) }}" maxlength="50" required>
+                    @error('nama') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="form-group">
-                    <label for="description" class="form-label">Deskripsi / Catatan</label>
-                    <textarea name="description" id="description" class="form-control" rows="4"
-                              maxlength="500">{{ old('description', $questionVersion->description) }}</textarea>
+                    <label for="deskripsi" class="form-label">Deskripsi / Catatan</label>
+                    <textarea name="deskripsi" id="deskripsi" class="form-control" rows="4"
+                              maxlength="500">{{ old('deskripsi', $questionVersion->deskripsi) }}</textarea>
                     <div class="form-text text-right" id="charCount">0/500 karakter</div>
                 </div>
             </div>
@@ -73,7 +72,7 @@
                 <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4">
                     <div class="flex justify-between items-center mb-2">
                         <span class="text-sm font-semibold text-slate-600">Status Versi</span>
-                        @if($questionVersion->is_active)
+                        @if($questionVersion->aktif)
                             <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">AKTIF</span>
                         @else
                             <span class="px-2 py-1 bg-slate-200 text-slate-600 text-xs font-bold rounded-full">TIDAK AKTIF</span>
@@ -81,7 +80,9 @@
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-sm font-semibold text-slate-600">Jumlah Soal</span>
-                        <span class="font-mono font-bold text-slate-800">{{ $questionVersion->questions_count ?? 0 }} Soal</span>
+                        <span class="font-mono font-bold text-slate-800">
+                            {{ $questionVersion->jenis === 'st30' ? $questionVersion->st30Questions()->count() : $questionVersion->talentCompetencyQuestions()->count() }} Soal
+                        </span>
                     </div>
                 </div>
 
@@ -103,16 +104,14 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
-        // Init Char Count
-        let currentLen = $('#description').val().length;
+        let currentLen = $('#deskripsi').val().length;
         $('#charCount').text(`${currentLen}/500 karakter`);
 
-        $('#description').on('input', function() {
+        $('#deskripsi').on('input', function() {
             const len = $(this).val().length;
             $('#charCount').text(`${len}/500 karakter`);
         });
 
-        // SweetAlert Confirmation
         $('#editForm').on('submit', function(e) {
             e.preventDefault();
             Swal.fire({

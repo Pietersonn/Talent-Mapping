@@ -64,13 +64,23 @@ class QuestionController extends Controller
             $questionVersion->load('st30Questions');
             $typologyStats   = $questionVersion->st30Questions->groupBy('kode_tipologi')->map(fn($q) => $q->count())->toArray();
             $competencyStats = [];
+            $totalQuestions  = $questionVersion->st30Questions->count();
         } else {
-            $questionVersion->load('talentCompetencyQuestions');
+            $questionVersion->load(['talentCompetencyQuestions.options']);
             $competencyStats = $questionVersion->talentCompetencyQuestions->groupBy('kode_kompetensi')->map(fn($q) => $q->count())->toArray();
             $typologyStats   = [];
+            $totalQuestions  = $questionVersion->talentCompetencyQuestions->count();
         }
 
-        return view('admin.questions.versions.show', compact('questionVersion', 'typologyStats', 'competencyStats'));
+        $table = $questionVersion->jenis === 'st30' ? 'jawaban_st30' : 'jawaban_tk';
+        $usageCount = DB::table($table)->where('id_versi_soal', $questionVersion->id)->count();
+
+        $statistics = [
+            'total_questions' => $totalQuestions,
+            'usage_stats' => ['total_usage' => $usageCount]
+        ];
+
+        return view('admin.questions.versions.show', compact('questionVersion', 'typologyStats', 'competencyStats', 'statistics'));
     }
 
     public function edit(QuestionVersion $questionVersion)
@@ -105,7 +115,10 @@ class QuestionController extends Controller
 
     public function activate(QuestionVersion $questionVersion)
     {
-        $count    = $questionVersion->questions_count;
+        $count = $questionVersion->jenis === 'st30'
+            ? $questionVersion->st30Questions()->count()
+            : $questionVersion->talentCompetencyQuestions()->count();
+
         $required = $questionVersion->jenis === 'st30' ? 30 : 50;
 
         if ($count < $required) {
@@ -181,7 +194,7 @@ class QuestionController extends Controller
     public function exportPdf(Request $request)
     {
         $search = $request->query('search');
-        $query  = QuestionVersion::query();
+        $query  = QuestionVersion::query()->withCount(['st30Questions', 'talentCompetencyQuestions']);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -200,7 +213,7 @@ class QuestionController extends Controller
 
         $pdf = Pdf::loadView('admin.questions.versions.pdf.versionReport', [
             'reportTitle' => 'Laporan Versi Soal',
-            'generatedBy' => Auth::user()->nama,
+            'generatedBy' => Auth::user()->nama ?? Auth::user()->name,
             'generatedAt' => now()->format('d/m/Y H:i'),
             'versions'    => $versions,
             'search'      => $search,
@@ -211,6 +224,10 @@ class QuestionController extends Controller
 
     public function statistics(QuestionVersion $questionVersion)
     {
-        return response()->json(['questions_count' => $questionVersion->questions_count, 'aktif' => $questionVersion->aktif]);
+        $count = $questionVersion->jenis === 'st30'
+            ? $questionVersion->st30Questions()->count()
+            : $questionVersion->talentCompetencyQuestions()->count();
+
+        return response()->json(['questions_count' => $count, 'aktif' => $questionVersion->aktif]);
     }
 }

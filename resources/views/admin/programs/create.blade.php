@@ -10,24 +10,24 @@
 
     .form-group { margin-bottom: 1.5rem; }
     .form-label { display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 0.5rem; }
-    .form-label.required::after { content: "*"; color: #ef4444; margin-left: 4px; }
+    .form-label.required::after { content: "*"; color: #22c55e; margin-left: 4px; } /* Diubah ke hijau */
 
     .form-control { width: 100%; padding: 0.75rem 1rem; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 0.9rem; color: #0f172a; background-color: #f8fafc; transition: all 0.2s; }
     .form-control:focus { background-color: white; border-color: #22c55e; outline: none; box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1); }
     .form-text { font-size: 0.75rem; color: #94a3b8; margin-top: 4px; }
 
-    /* --- TOGGLE SWITCH MODERN --- */
+    /* Switch Custom */
     .toggle-wrapper { display: flex; align-items: center; gap: 12px; padding: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; }
     .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
-    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
     input:checked + .slider { background-color: #22c55e; }
     input:checked + .slider:before { transform: translateX(20px); }
 
-    /* --- BUTTONS --- */
+    /* Buttons */
     .form-actions { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 10px; }
-    .btn-save { background: #22c55e; color: white; border: none; padding: 10px 24px; border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
+    .btn-save { background: #22c55e; color: white; border: none; padding: 10px 24px; border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.3); }
     .btn-save:hover { background: #16a34a; transform: translateY(-1px); }
     .btn-cancel { background: white; color: #64748b; border: 1px solid #e2e8f0; padding: 10px 24px; border-radius: 12px; font-weight: 600; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
     .btn-cancel:hover { background: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
@@ -35,85 +35,78 @@
 @endpush
 
 @section('header')
-    <div class="header-wrapper" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-        <div>
-            <h1 style="font-size: 1.5rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px;">
-                <i class="fas fa-plus-circle" style="color: #22c55e; background: #dcfce7; padding: 8px; border-radius: 10px;"></i>
-                Buat Program Baru
-            </h1>
-        </div>
-        <a href="{{ route('admin.Programs.index') }}" class="btn-cancel"><i class="fas fa-arrow-left"></i> Kembali</a>
+<div class="header-wrapper" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div>
+        <h1 style="font-size: 1.5rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-plus-circle" style="color: #22c55e; background: #dcfce7; padding: 8px; border-radius: 10px;"></i>
+            Buat Program Baru
+        </h1>
     </div>
+    <a href="{{ route('admin.programs.index') }}" class="btn-cancel"><i class="fas fa-arrow-left"></i> Kembali</a>
+</div>
 @endsection
 
 @section('content')
 <div class="form-card">
-    <form action="{{ route('admin.Programs.store') }}" method="POST">
+    <form action="{{ route('admin.programs.store') }}" method="POST">
         @csrf
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 3rem;">
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 3rem;">
-
+            {{-- Kolom Kiri: Detail Utama --}}
             <div>
-                <div class="form-section-title"><i class="fas fa-info-circle text-green-500"></i> Informasi Program</div>
+                <div class="form-section-title"><i class="fas fa-file-alt text-green-500"></i> Detail Program</div>
 
                 <div class="form-group">
                     <label class="form-label required">Nama Program</label>
-                    <input type="text" name="nama" class="form-control @error('nama') border-red-500 @enderror" value="{{ old('nama') }}" placeholder="Contoh: Recruitment Batch 1 2026" required>
-                    @error('nama') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                    <input type="text" name="nama_program" class="form-control @error('nama_program') border-green-500 @enderror" value="{{ old('nama_program') }}" required placeholder="Contoh: BCTI Leadership Assessment 2026">
+                    @error('nama_program') <span class="text-xs text-green-600 mt-1 block">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label required">Kode Program (Unik)</label>
-                    <input type="text" name="kode_program" id="kode_program" class="form-control @error('kode_program') border-red-500 @enderror" value="{{ old('kode_program') }}" placeholder="Contoh: REC-B1-26" required>
-                    <div class="form-text">Akan otomatis diubah menjadi huruf besar.</div>
-                    @error('kode_program') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                    <label class="form-label">Nama Instansi / Perusahaan</label>
+                    <input type="text" name="instansi" class="form-control" value="{{ old('instansi') }}" placeholder="Contoh: PT. Hasnur Riung Sinergi">
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Nama Perusahaan / Instansi</label>
-                    <input type="text" name="perusahaan" class="form-control @error('perusahaan') border-red-500 @enderror" value="{{ old('perusahaan') }}" placeholder="Contoh: PT. Maju Jaya Sejahtera">
-                    @error('perusahaan') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                    <label class="form-label required">Pilih Mitra (PIC)</label>
+                    <select name="id_mitra" class="form-control @error('id_mitra') border-green-500 @enderror" required>
+                        <option value="">-- Pilih Akun Mitra --</option>
+                        @foreach($mitras as $mitra)
+                            <option value="{{ $mitra->id }}" {{ old('id_mitra') == $mitra->id ? 'selected' : '' }}>
+                                {{ $mitra->name }} ({{ $mitra->email }})
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('id_mitra') <span class="text-xs text-green-600 mt-1 block">{{ $message }}</span> @enderror
+                    <div class="form-text">Pengguna ini akan memiliki akses untuk mengelola peserta program.</div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Deskripsi Singkat</label>
-                    <textarea name="deskripsi" class="form-control @error('deskripsi') border-red-500 @enderror" rows="4" placeholder="Jelaskan detail program secara singkat...">{{ old('deskripsi') }}</textarea>
-                    @error('deskripsi') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                    <label class="form-label">Deskripsi & Tujuan</label>
+                    <textarea name="deskripsi" class="form-control" rows="4" placeholder="Tuliskan tujuan diadakannya program assessment ini...">{{ old('deskripsi') }}</textarea>
                 </div>
             </div>
 
+            {{-- Kolom Kanan: Jadwal & Kuota --}}
             <div>
                 <div class="form-section-title"><i class="fas fa-calendar-alt text-green-500"></i> Jadwal & Pengaturan</div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group">
                         <label class="form-label required">Tanggal Mulai</label>
-                        <input type="date" name="tanggal_mulai" id="tanggal_mulai" class="form-control @error('tanggal_mulai') border-red-500 @enderror" value="{{ old('tanggal_mulai') }}" required>
-                        @error('tanggal_mulai') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                        <input type="date" name="tanggal_mulai" id="tanggal_mulai" class="form-control @error('tanggal_mulai') border-green-500 @enderror" value="{{ old('tanggal_mulai') }}" required>
+                        @error('tanggal_mulai') <span class="text-xs text-green-600 mt-1 block">{{ $message }}</span> @enderror
                     </div>
                     <div class="form-group">
                         <label class="form-label required">Tanggal Selesai</label>
-                        <input type="date" name="tanggal_selesai" id="tanggal_selesai" class="form-control @error('tanggal_selesai') border-red-500 @enderror" value="{{ old('tanggal_selesai') }}" required>
-                        @error('tanggal_selesai') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                        <input type="date" name="tanggal_selesai" id="tanggal_selesai" class="form-control @error('tanggal_selesai') border-green-500 @enderror" value="{{ old('tanggal_selesai') }}" required>
+                        @error('tanggal_selesai') <span class="text-xs text-green-600 mt-1 block">{{ $message }}</span> @enderror
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Mitra Penyelenggara</label>
-                    <select name="id_mitra" class="form-control @error('id_mitra') border-red-500 @enderror" style="background-image: none;">
-                        <option value="">-- Pilih Mitra (Opsional) --</option>
-                        @foreach($mitras as $mitra)
-                            <option value="{{ $mitra->id }}" {{ old('id_mitra') == $mitra->id ? 'selected' : '' }}>{{ $mitra->nama }}</option>
-                        @endforeach
-                    </select>
-                    <div class="form-text">Menampilkan pengguna dengan peran 'Mitra'.</div>
-                    @error('id_mitra') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Batas Maksimal Peserta</label>
-                    <input type="number" name="maks_peserta" class="form-control @error('maks_peserta') border-red-500 @enderror" value="{{ old('maks_peserta') }}" placeholder="Kosongkan jika tidak terbatas" min="1">
-                    @error('maks_peserta') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                    <label class="form-label">Maksimal Peserta (Kuota)</label>
+                    <input type="number" name="maks_peserta" class="form-control" value="{{ old('maks_peserta') }}" placeholder="Kosongkan jika tidak terbatas" min="1">
                 </div>
 
                 <div class="form-group" style="margin-top: 2rem;">
@@ -133,7 +126,7 @@
         </div>
 
         <div class="form-actions">
-            <a href="{{ route('admin.Programs.index') }}" class="btn-cancel">Batal</a>
+            <a href="{{ route('admin.programs.index') }}" class="btn-cancel">Batal</a>
             <button type="submit" class="btn-save"><i class="fas fa-save"></i> Simpan Program</button>
         </div>
     </form>
@@ -142,10 +135,6 @@
 
 @push('scripts')
 <script>
-    $('#kode_program').on('input', function() {
-        $(this).val($(this).val().toUpperCase().replace(/\s+/g, ''));
-    });
-
     $('#tanggal_mulai').on('change', function() {
         $('#tanggal_selesai').attr('min', $(this).val());
     });

@@ -26,19 +26,20 @@
 
     .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
     .dot-active { background-color: #22c55e; }
-    .dot-inactive { background-color: #ef4444; }
+    .dot-inactive { background-color: #cbd5e1; } /* Diganti dari merah ke slate/abu-abu netral */
 
-    .badge-role { padding: 6px 12px; border-radius: 99px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
-    .role-admin { background: #f3e8ff; color: #7e22ce; }
-    .role-user { background: #f1f5f9; color: #475569; }
-    .role-pic { background: #ffedd5; color: #c2410c; }
-    .role-staff { background: #e0f2fe; color: #0369a1; }
+    /* Warna Badge Role menjadi gradasi hijau semua */
+    .badge-role { padding: 6px 12px; border-radius: 99px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; border: 1px solid transparent; }
+    .role-admin { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+    .role-pic { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+    .role-staff { background: #ecfdf5; color: #059669; border-color: #a7f3d0; }
+    .role-user { background: #f8fafc; color: #475569; border-color: #e2e8f0; }
 
     .action-buttons { display: flex; gap: 8px; justify-content: flex-end; }
-    .btn-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; text-decoration: none; transition: all 0.2s; }
-    .btn-view { background: #ecfdf5; color: #059669; }
-    .btn-edit { background: #eff6ff; color: #2563eb; }
-    .btn-delete { background: #fef2f2; color: #dc2626; }
+    .btn-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; text-decoration: none; transition: all 0.2s; border: 1px solid transparent; }
+    .btn-view { background: #ecfdf5; color: #059669; border-color: #d1fae5; }
+    .btn-edit { background: #f0fdf4; color: #15803d; border-color: #dcfce7; }
+    .btn-delete { background: #f8fafc; color: #64748b; border-color: #e2e8f0; } /* Diganti dari merah ke abu-abu netral */
     .btn-icon:hover { opacity: 0.8; transform: scale(1.05); }
 
     @media print { body { display: none; } }
@@ -208,7 +209,7 @@
                     </div>
                 </td>
                 <td style="color: #64748b;">${user.email}</td>
-                <td><span class="badge-role role-${user.role.toLowerCase()}">${user.role}</span></td>
+                <td><span class="badge-role role-${user.role.toLowerCase()}">${user.role === 'user' ? 'Pengguna' : user.role}</span></td>
                 <td style="font-family: monospace; font-weight: 600; color: #334155;">${phone}</td>
                 <td><div class="action-buttons">
                     <a href="${user.show_url}" class="btn-icon btn-view"><i class="fas fa-eye text-xs"></i></a>
@@ -222,8 +223,8 @@
     function deleteUser(name, url) {
         Swal.fire({
             title: 'Hapus User?', html: `Yakin ingin menghapus <b>${name}</b>?`, icon: 'warning',
-            showCancelButton: true, confirmButtonColor: '#dc2626', cancelButtonColor: '#f1f5f9',
-            confirmButtonText: 'Ya', cancelButtonText: '<span style="color:black">Batal</span>',
+            showCancelButton: true, confirmButtonColor: '#22c55e', cancelButtonColor: '#f8fafc',
+            confirmButtonText: '<span style="color:white">Ya, Hapus</span>', cancelButtonText: '<span style="color:black">Batal</span>',
             customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl px-4 py-2', cancelButton: 'rounded-xl px-4 py-2' }
         }).then((result) => {
             if (result.isConfirmed) {

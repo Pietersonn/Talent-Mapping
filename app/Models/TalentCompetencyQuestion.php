@@ -15,8 +15,18 @@ class TalentCompetencyQuestion extends Model
     protected $keyType = 'string';
     public $incrementing = false;
 
-    protected $fillable = ['id_versi', 'nomor', 'teks_pertanyaan', 'kode_kompetensi', 'aktif'];
-    protected $casts = ['aktif' => 'boolean', 'nomor' => 'integer'];
+    protected $fillable = [
+        'id_versi',
+        'nomor',
+        'teks_pertanyaan',
+        'kode_kompetensi',
+        'aktif'
+    ];
+
+    protected $casts = [
+        'aktif' => 'boolean',
+        'nomor' => 'integer'
+    ];
 
     protected static function booted(): void
     {

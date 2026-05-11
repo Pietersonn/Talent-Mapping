@@ -54,27 +54,27 @@
                 <div class="form-section-title"><i class="fas fa-pen text-blue-500"></i> Detail Versi</div>
 
                 <div class="form-group">
-                    <label for="type" class="form-label required">Tipe Soal</label>
-                    <select name="type" id="type" class="form-control @error('type') border-red-500 @enderror" required>
+                    <label for="jenis" class="form-label required">Tipe Soal</label>
+                    <select name="jenis" id="jenis" class="form-control @error('jenis') border-red-500 @enderror" required>
                         <option value="">-- Pilih Tipe Soal --</option>
-                        <option value="st30" {{ old('type') === 'st30' ? 'selected' : '' }}>ST-30 (Strength Typology)</option>
-                        <option value="sjt" {{ old('type') === 'sjt' ? 'selected' : '' }}>SJT (Situational Judgment Test)</option>
+                        <option value="st30" {{ old('jenis') === 'st30' ? 'selected' : '' }}>ST-30 (Strength Typology)</option>
+                        <option value="tk" {{ old('jenis') === 'tk' ? 'selected' : '' }}>TK (Talent Kompetensi)</option>
                     </select>
-                    @error('type') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                    @error('jenis') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="form-group">
-                    <label for="name" class="form-label required">Nama Versi</label>
-                    <input type="text" name="name" id="name" class="form-control @error('name') border-red-500 @enderror"
-                           placeholder="Contoh: ST-30 Batch 2024 V1" value="{{ old('name') }}" maxlength="50" required>
+                    <label for="nama" class="form-label required">Nama Versi</label>
+                    <input type="text" name="nama" id="nama" class="form-control @error('nama') border-red-500 @enderror"
+                           placeholder="Contoh: ST-30 Batch 2024 V1" value="{{ old('nama') }}" maxlength="50" required>
                     <div class="form-text" id="nameHelp">Berikan nama yang unik dan deskriptif.</div>
-                    @error('name') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                    @error('nama') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="form-group">
-                    <label for="description" class="form-label">Deskripsi / Catatan</label>
-                    <textarea name="description" id="description" class="form-control" rows="4"
-                              placeholder="Jelaskan perubahan atau tujuan versi ini..." maxlength="500">{{ old('description') }}</textarea>
+                    <label for="deskripsi" class="form-label">Deskripsi / Catatan</label>
+                    <textarea name="deskripsi" id="deskripsi" class="form-control" rows="4"
+                              placeholder="Jelaskan perubahan atau tujuan versi ini..." maxlength="500">{{ old('deskripsi') }}</textarea>
                     <div class="form-text text-right" id="charCount">0/500 karakter</div>
                 </div>
             </div>
@@ -97,7 +97,7 @@
                         <p class="text-xs text-slate-500">Membutuhkan tepat <strong>30 pertanyaan</strong>. Digunakan untuk memetakan potensi kekuatan personality peserta.</p>
                     </div>
                     <div>
-                        <div class="font-bold text-sm text-slate-700 mb-1">SJT (Situational Judgment)</div>
+                        <div class="font-bold text-sm text-slate-700 mb-1">TK (Talent Kompetensi)</div>
                         <p class="text-xs text-slate-500">Membutuhkan tepat <strong>50 pertanyaan</strong> studi kasus dengan 5 opsi jawaban berbobot.</p>
                     </div>
                 </div>
@@ -116,18 +116,18 @@
 <script>
     $(document).ready(function() {
         // Auto-generate name suggestion
-        $('#type').on('change', function() {
+        $('#jenis').on('change', function() {
             const type = $(this).val();
-            const nameInput = $('#name');
+            const nameInput = $('#nama');
             if (type && !nameInput.val()) {
                 const year = new Date().getFullYear();
-                const prefix = type === 'st30' ? 'ST-30' : 'SJT';
+                const prefix = type === 'st30' ? 'ST-30' : 'TK';
                 nameInput.val(`${prefix} ${year} Ver. 1.0`);
             }
         });
 
         // Character counter
-        $('#description').on('input', function() {
+        $('#deskripsi').on('input', function() {
             const len = $(this).val().length;
             $('#charCount').text(`${len}/500 karakter`);
         });

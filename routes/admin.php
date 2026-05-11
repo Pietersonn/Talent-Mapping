@@ -4,11 +4,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\QuestionController as AdminQuestionController;
 use App\Http\Controllers\Admin\ST30QuestionController;
-use App\Http\Controllers\Admin\TalentCompetencyController; 
+use App\Http\Controllers\Admin\TalentCompetencyController;
 use App\Http\Controllers\Admin\CompetencyController;
 use App\Http\Controllers\Admin\TypologyController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
-use App\Http\Controllers\Admin\ProgramController as AdminprogramController;
+use App\Http\Controllers\Admin\ProgramController as AdminProgramController; // <-- Diperbaiki kapitalisasinya
 use App\Http\Controllers\Admin\ResultController;
 use App\Http\Controllers\Admin\ScoreController;
 use App\Http\Controllers\Admin\ResendRequestController;
@@ -117,15 +117,15 @@ Route::middleware(['auth', 'role:admin,staff'])
         });
 
         Route::prefix('programs')->name('programs.')->group(function () {
-            Route::get('/', [AdminprogramController::class, 'index'])->name('index');
-            Route::get('/create', [AdminprogramController::class, 'create'])->name('create')->middleware('role:admin');
-            Route::post('/', [AdminprogramController::class, 'store'])->name('store')->middleware('role:admin');
-            Route::get('/export/pdf', [AdminprogramController::class, 'exportPdf'])->name('export.pdf');
-            Route::get('/{program}', [AdminprogramController::class, 'show'])->name('show');
-            Route::get('/{program}/edit', [AdminprogramController::class, 'edit'])->name('edit')->middleware('role:admin');
-            Route::put('/{program}', [AdminprogramController::class, 'update'])->name('update')->middleware('role:admin');
-            Route::delete('/{program}', [AdminprogramController::class, 'destroy'])->name('destroy')->middleware('role:admin');
-            Route::post('/{program}/toggle-status', [AdminprogramController::class, 'toggleStatus'])->name('toggle-status')->middleware('role:admin');
+            Route::get('/', [AdminProgramController::class, 'index'])->name('index');
+            Route::get('/create', [AdminProgramController::class, 'create'])->name('create')->middleware('role:admin');
+            Route::post('/', [AdminProgramController::class, 'store'])->name('store')->middleware('role:admin');
+            Route::get('/export/pdf', [AdminProgramController::class, 'exportPdf'])->name('export.pdf');
+            Route::get('/{program}', [AdminProgramController::class, 'show'])->name('show');
+            Route::get('/{program}/edit', [AdminProgramController::class, 'edit'])->name('edit')->middleware('role:admin');
+            Route::put('/{program}', [AdminProgramController::class, 'update'])->name('update')->middleware('role:admin');
+            Route::delete('/{program}', [AdminProgramController::class, 'destroy'])->name('destroy')->middleware('role:admin');
+            Route::post('/{program}/toggle-status', [AdminProgramController::class, 'toggleStatus'])->name('toggle-status')->middleware('role:admin');
         });
 
         Route::prefix('results')->name('results.')->group(function () {

@@ -17,7 +17,7 @@
     $cityLocation = 'Barito Kuala';
 
     // --- 3. Data Default ---
-    $reportTitle    = $reportTitle ?? 'Laporan Data Event';
+    $reportTitle    = $reportTitle ?? 'Laporan Data Program';
     $generatedBy    = $generatedBy ?? (auth()->user()->name ?? 'Admin');
 
     $companyName    = 'BUSINESS & COMMUNICATION TRAINING INSTITUTE';
@@ -33,6 +33,7 @@
 <meta charset="utf-8">
 <title>{{ $reportTitle }}</title>
 <style>
+  /* Base PDF Styles */
   @page { size: A4 landscape; margin: 20mm 15mm 15mm 15mm; }
   body { font-family: "Times New Roman", Times, serif; font-size: 11px; color: #000; line-height: 1.3; }
 
@@ -48,18 +49,17 @@
 
   /* Title */
   .title-wrap { text-align:center; margin-bottom: 25px; }
-  .title   { font-size: 16px; font-weight: bold; text-transform:uppercase; margin-bottom: 5px; text-decoration: underline; }
+  .title   { font-size: 16px; font-weight:bold; text-transform:uppercase; margin-bottom: 5px; text-decoration: underline; }
   .subtitle{ font-size: 11px; }
 
   /* Table */
   table { width:100%; border-collapse: collapse; margin-bottom: 10px; }
-  thead th { background:#e0e0e0; border:1px solid #000; font-weight: bold; font-size: 11px; padding: 8px 5px; text-align:center; vertical-align: middle; }
+  thead th { background:#e0e0e0; border:1px solid #000; font-weight:bold; font-size: 11px; padding: 8px 5px; text-align:center; }
   tbody td { border:1px solid #000; padding: 6px 5px; vertical-align: top; }
-
   .text-center{ text-align:center; }
-  .name-col { text-align:left; }
+  .name-col { font-weight:bold; }
 
-  /* Signature & Footer */
+  /* Footer & Signature */
   .signature-table { width: 100%; margin-top: 40px; border: none; page-break-inside: avoid; }
   .signature-table td { border: none; padding: 0; vertical-align: top; text-align: center; }
   .footer { position: fixed; bottom: -10mm; left: 0; right: 0; text-align: right; font-size: 9px; font-style: italic; }
@@ -70,7 +70,11 @@
 
   <div class="header clearfix">
     <div class="h-left">
-      @if(!empty($logoBase64)) <img class="h-logo" src="{{ $logoBase64 }}" alt="BCTI"> @else <strong>BCTI</strong> @endif
+      @if(!empty($logoBase64))
+        <img class="h-logo" src="{{ $logoBase64 }}" alt="BCTI Logo">
+      @else
+        <strong>BCTI</strong>
+      @endif
     </div>
     <div class="h-right">
       <div class="company-name">{{ $companyName }}</div>
@@ -87,33 +91,33 @@
     <thead>
       <tr>
         <th style="width:30px;">No.</th>
-        <th>Nama Event</th>
+        <th style="width:25%;">Nama Program</th>
         <th style="width:20%;">Instansi</th>
-        <th style="width:15%;">PIC</th>
-        <th style="width:18%;">Tanggal Pelaksanaan</th>
-        <th style="width:10%;">Peserta</th>
+        <th style="width:20%;">Mitra (PIC)</th>
+        <th style="width:17%;">Periode</th>
+        <th style="width:10%;">Kuota</th>
         <th style="width:8%;">Status</th>
       </tr>
     </thead>
     <tbody>
       @php $no = 1; @endphp
-      @forelse($rows as $ev)
+      @forelse($rows as $prog)
         <tr>
           <td class="text-center">{{ $no++ }}</td>
-          <td class="name-col">{{ $ev->name }}</td>
-          <td>{{ $ev->company ?? '-' }}</td>
-          <td>{{ $ev->pic->name ?? '-' }}</td>
+          <td class="name-col">{{ $prog->nama_program }}</td>
+          <td>{{ $prog->instansi ?? '-' }}</td>
+          <td>{{ $prog->mitra->name ?? '-' }}</td>
           <td class="text-center">
-              {{ \Carbon\Carbon::parse($ev->start_date)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($ev->end_date)->format('d/m/Y') }}
+              {{ \Carbon\Carbon::parse($prog->tanggal_mulai)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($prog->tanggal_selesai)->format('d/m/Y') }}
           </td>
           <td class="text-center">
-             {{ $ev->participants_count ?? 0 }}
-             @if($ev->max_participants) / {{ $ev->max_participants }} @endif
+             {{ $prog->participants_count ?? 0 }}
+             @if($prog->maks_peserta) / {{ $prog->maks_peserta }} @endif
           </td>
-          <td class="text-center">{{ $ev->is_active ? 'Aktif' : 'Tidak Aktif' }}</td>
+          <td class="text-center">{{ $prog->aktif ? 'Aktif' : 'Tidak Aktif' }}</td>
         </tr>
       @empty
-        <tr><td colspan="7" class="text-center" style="padding:15px;">Tidak ada data event ditemukan.</td></tr>
+        <tr><td colspan="7" class="text-center" style="padding:15px;">Tidak ada data program ditemukan.</td></tr>
       @endforelse
     </tbody>
   </table>

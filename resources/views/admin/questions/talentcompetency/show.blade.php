@@ -1,6 +1,6 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Detail Soal SJT')
+@section('title', 'Detail Soal TK')
 
 @push('styles')
 <style>
@@ -70,7 +70,7 @@
         border: 1px solid var(--border-color);
         border-radius: 12px; padding: 1rem;
         background: #fff;
-        display: flex; align-items: flex-start; gap: 1rem; /* Flex Row */
+        display: flex; align-items: flex-start; gap: 1rem;
         transition: 0.2s;
     }
     .opt-card:hover { border-color: #bae6fd; transform: translateY(-2px); }
@@ -87,7 +87,7 @@
     /* Teks Jawaban */
     .opt-text {
         font-size: 0.9rem; color: var(--text-main); font-weight: 500;
-        flex: 1; /* Mengisi ruang tengah */
+        flex: 1;
         line-height: 1.5;
     }
 
@@ -97,10 +97,10 @@
         border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
         font-weight: 700; font-size: 0.9rem;
-        margin-left: auto; /* Dorong ke kanan */
+        margin-left: auto;
     }
-    .s-high { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; } /* 3-4 */
-    .s-mid { background: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; } /* 2 */
+    .s-high { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; } /* 4-5 */
+    .s-mid { background: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; } /* 2-3 */
     .s-low { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; } /* 0-1 */
 
     /* --- SIDEBAR META --- */
@@ -148,25 +148,25 @@
         <div>
             <h1 style="font-size: 1.5rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px;">
                 <i class="fas fa-file-alt" style="color: #22c55e; background: #dcfce7; padding: 8px; border-radius: 10px;"></i>
-                Detail Soal SJT
+                Detail Soal TK
             </h1>
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
             <div style="display: flex; gap: 4px;">
                 @if (isset($prevQuestion))
-                    <a href="{{ route('admin.questions.sjt.show', $prevQuestion) }}" class="btn-nav-icon" title="Sebelumnya"><i class="fas fa-chevron-left text-xs"></i></a>
+                    <a href="{{ route('admin.questions.tk.show', $prevQuestion) }}" class="btn-nav-icon" title="Sebelumnya"><i class="fas fa-chevron-left text-xs"></i></a>
                 @else
                     <span class="btn-nav-icon disabled"><i class="fas fa-chevron-left text-xs"></i></span>
                 @endif
 
                 @if (isset($nextQuestion))
-                    <a href="{{ route('admin.questions.sjt.show', $nextQuestion) }}" class="btn-nav-icon" title="Selanjutnya"><i class="fas fa-chevron-right text-xs"></i></a>
+                    <a href="{{ route('admin.questions.tk.show', $nextQuestion) }}" class="btn-nav-icon" title="Selanjutnya"><i class="fas fa-chevron-right text-xs"></i></a>
                 @else
                     <span class="btn-nav-icon disabled"><i class="fas fa-chevron-right text-xs"></i></span>
                 @endif
             </div>
 
-            <a href="{{ route('admin.questions.sjt.index', ['version' => $sjtQuestion->version_id]) }}" class="btn-cancel">
+            <a href="{{ route('admin.questions.tk.index', ['version' => $talentCompetencyQuestion->id_versi]) }}" class="btn-cancel">
                 <i class="fas fa-arrow-left"></i> Kembali
             </a>
         </div>
@@ -177,41 +177,41 @@
 <div class="bento-grid">
 
     <div class="bento-card">
-        <div class="bento-title"><i class="fas fa-file-alt text-green-500"></i> Skenario Situasi</div>
+        <div class="bento-title"><i class="fas fa-file-alt text-green-500"></i> Kasus / Pertanyaan</div>
 
         <div class="statement-hero">
-            <i class="far fa-copy btn-copy-abs" onclick="copyToClipboard('{{ addslashes($sjtQuestion->question_text) }}')" title="Salin"></i>
-            "{{ $sjtQuestion->question_text }}"
+            <i class="far fa-copy btn-copy-abs" onclick="copyToClipboard('{{ addslashes($talentCompetencyQuestion->teks_pertanyaan) }}')" title="Salin"></i>
+            "{{ $talentCompetencyQuestion->teks_pertanyaan }}"
         </div>
 
         <div style="margin-top: 2rem;">
             <div class="bento-title"><i class="fas fa-award text-blue-500"></i> Kompetensi & Opsi</div>
 
-            @if ($sjtQuestion->competencyDescription)
+            @if ($talentCompetencyQuestion->competencyDescription)
                 <div class="typo-visual">
                     <div class="typo-code">
                         <i class="fas fa-star"></i>
                     </div>
                     <div>
-                        <h4 class="typo-name">{{ $sjtQuestion->competencyDescription->competency_name }}</h4>
-                        <span class="typo-tag">Kode: {{ $sjtQuestion->competency }}</span>
+                        <h4 class="typo-name">{{ $talentCompetencyQuestion->competencyDescription->nama_kompetensi }}</h4>
+                        <span class="typo-tag">Kode: {{ $talentCompetencyQuestion->kode_kompetensi }}</span>
                     </div>
                 </div>
             @endif
 
             <div class="option-list">
-                @foreach($sjtQuestion->options->sortBy('option_letter') as $option)
+                @foreach($talentCompetencyQuestion->options->sortBy('huruf_pilihan') as $option)
                     <div class="opt-card">
-                        <div class="opt-badge">{{ $option->option_letter }}</div>
+                        <div class="opt-badge">{{ strtoupper($option->huruf_pilihan) }}</div>
 
-                        <div class="opt-text">{{ $option->option_text }}</div>
+                        <div class="opt-text">{{ $option->teks_pilihan }}</div>
 
-                        @if($option->score >= 3)
-                            <div class="score-circle s-high">{{ $option->score }}</div>
-                        @elseif($option->score == 2)
-                            <div class="score-circle s-mid">{{ $option->score }}</div>
+                        @if($option->skor >= 4)
+                            <div class="score-circle s-high">{{ $option->skor }}</div>
+                        @elseif($option->skor >= 2)
+                            <div class="score-circle s-mid">{{ $option->skor }}</div>
                         @else
-                            <div class="score-circle s-low">{{ $option->score }}</div>
+                            <div class="score-circle s-low">{{ $option->skor }}</div>
                         @endif
                     </div>
                 @endforeach
@@ -225,16 +225,16 @@
         <div style="margin-bottom: 2rem;">
             <div class="meta-row">
                 <span class="mr-label">ID Database</span>
-                <span class="mr-val font-mono text-xs bg-gray-100 px-2 rounded">{{ $sjtQuestion->id }}</span>
+                <span class="mr-val font-mono text-xs bg-gray-100 px-2 rounded">{{ $talentCompetencyQuestion->id }}</span>
             </div>
             <div class="meta-row">
                 <span class="mr-label">Nomor Urut</span>
-                <span class="mr-val text-primary font-bold">#{{ $sjtQuestion->number }}</span>
+                <span class="mr-val text-primary font-bold">#{{ $talentCompetencyQuestion->nomor }}</span>
             </div>
             <div class="meta-row">
-                <span class="mr-label">Status Versi</span>
+                <span class="mr-label">Status Soal</span>
                 <span class="mr-val">
-                    @if($sjtQuestion->questionVersion->is_active)
+                    @if($talentCompetencyQuestion->aktif)
                         <span class="status-active">AKTIF</span>
                     @else
                         <span class="status-inactive">NON-AKTIF</span>
@@ -242,29 +242,31 @@
                 </span>
             </div>
             <div class="meta-row">
-                <span class="mr-label">Penggunaan</span>
-                <span class="mr-val text-success">{{ $sjtQuestion->usage_count }}x</span>
-            </div>
-            <div class="meta-row">
-                <span class="mr-label">Halaman</span>
-                <span class="mr-val">Hal. {{ $sjtQuestion->page_number }}</span>
+                <span class="mr-label">Status Versi</span>
+                <span class="mr-val">
+                    @if($talentCompetencyQuestion->questionVersion->aktif ?? false)
+                        <span class="status-active">AKTIF</span>
+                    @else
+                        <span class="status-inactive">NON-AKTIF</span>
+                    @endif
+                </span>
             </div>
             <div class="meta-row">
                 <span class="mr-label">Dibuat</span>
-                <span class="mr-val text-xs">{{ $sjtQuestion->created_at->format('d M Y') }}</span>
+                <span class="mr-val text-xs">{{ $talentCompetencyQuestion->created_at->format('d M Y') }}</span>
             </div>
             <div class="meta-row">
                 <span class="mr-label">Diupdate</span>
-                <span class="mr-val text-xs">{{ $sjtQuestion->updated_at->format('d M Y') }}</span>
+                <span class="mr-val text-xs">{{ $talentCompetencyQuestion->updated_at->format('d M Y') }}</span>
             </div>
         </div>
 
         @if (Auth::user()->role === 'admin')
             <div class="action-btn-group">
-                <a href="{{ route('admin.questions.sjt.edit', $sjtQuestion) }}" class="btn-act act-edit">
+                <a href="{{ route('admin.questions.tk.edit', $talentCompetencyQuestion->id) }}" class="btn-act act-edit">
                     <i class="fas fa-pen"></i> Edit
                 </a>
-                <button onclick="confirmDelete('{{ $sjtQuestion->number }}', '{{ route('admin.questions.sjt.destroy', $sjtQuestion) }}')"
+                <button onclick="confirmDelete('{{ $talentCompetencyQuestion->nomor }}', '{{ route('admin.questions.tk.destroy', $talentCompetencyQuestion->id) }}')"
                         class="btn-act act-del">
                     <i class="fas fa-trash"></i> Hapus
                 </button>
@@ -294,8 +296,8 @@
 
     function confirmDelete(num, url) {
         Swal.fire({
-            title: 'Hapus Soal?',
-            html: `Hapus permanen soal SJT <b>#${num}</b>?`,
+            title: 'Hapus Soal TK?',
+            html: `Hapus permanen soal TK <b>#${num}</b>?`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#ef4444', cancelButtonColor: '#f1f5f9',
@@ -314,7 +316,7 @@
     $(document).keydown(function(e) {
         if ((e.ctrlKey || e.metaKey) && e.which === 69) { // Ctrl+E
             e.preventDefault();
-            @if(Auth::user()->role === 'admin') window.location.href = '{{ route('admin.questions.sjt.edit', $sjtQuestion) }}'; @endif
+            @if(Auth::user()->role === 'admin') window.location.href = '{{ route('admin.questions.tk.edit', $talentCompetencyQuestion->id) }}'; @endif
         }
     });
 </script>

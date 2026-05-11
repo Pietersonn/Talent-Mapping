@@ -92,23 +92,23 @@
                     @forelse($competencies as $index => $item)
                         <tr>
                             <td class="text-center"><span style="color: #94a3b8; font-weight: 600;">{{ $competencies->firstItem() + $index }}</span></td>
-                            <td><span class="text-code">{{ $item->competency_code }}</span></td>
-                            <td><span class="text-name">{{ $item->competency_name }}</span></td>
+                            <td><span class="text-code">{{ $item->kode_kompetensi }}</span></td>
+                            <td><span class="text-name">{{ $item->nama_kompetensi }}</span></td>
                             <td>
                                 <div class="desc-text">
-                                    <span class="short-text">{{ Str::limit(strip_tags($item->strength_description), 60) }}</span>
-                                    @if(strlen(strip_tags($item->strength_description)) > 60)
+                                    <span class="short-text">{{ Str::limit(strip_tags($item->deskripsi_kekuatan), 60) }}</span>
+                                    @if(strlen(strip_tags($item->deskripsi_kekuatan)) > 60)
                                         <button class="text-expand-btn" onclick="toggleText(this)">Lihat</button>
-                                        <span class="full-text" style="display: none;">{{ strip_tags($item->strength_description) }}</span>
+                                        <span class="full-text" style="display: none;">{{ strip_tags($item->deskripsi_kekuatan) }}</span>
                                     @endif
                                 </div>
                             </td>
                             <td>
                                 <div class="desc-text">
-                                    <span class="short-text">{{ Str::limit(strip_tags($item->weakness_description), 60) }}</span>
-                                    @if(strlen(strip_tags($item->weakness_description)) > 60)
+                                    <span class="short-text">{{ Str::limit(strip_tags($item->deskripsi_kelemahan), 60) }}</span>
+                                    @if(strlen(strip_tags($item->deskripsi_kelemahan)) > 60)
                                         <button class="text-expand-btn" onclick="toggleText(this)">Lihat</button>
-                                        <span class="full-text" style="display: none;">{{ strip_tags($item->weakness_description) }}</span>
+                                        <span class="full-text" style="display: none;">{{ strip_tags($item->deskripsi_kelemahan) }}</span>
                                     @endif
                                 </div>
                             </td>
@@ -116,7 +116,7 @@
                                 <div class="action-buttons">
                                     <a href="{{ route('admin.questions.competencies.show', $item->id) }}" class="btn-icon btn-view"><i class="fas fa-eye text-xs"></i></a>
                                     <a href="{{ route('admin.questions.competencies.edit', $item->id) }}" class="btn-icon btn-edit"><i class="fas fa-pen text-xs"></i></a>
-                                    <button type="button" onclick="confirmDelete('{{ $item->competency_name }}', '{{ route('admin.questions.competencies.destroy', $item->id) }}')" class="btn-icon btn-delete"><i class="fas fa-trash text-xs"></i></button>
+                                    <button type="button" onclick="confirmDelete('{{ $item->nama_kompetensi }}', '{{ route('admin.questions.competencies.destroy', $item->id) }}')" class="btn-icon btn-delete"><i class="fas fa-trash text-xs"></i></button>
                                 </div>
                             </td>
                         </tr>

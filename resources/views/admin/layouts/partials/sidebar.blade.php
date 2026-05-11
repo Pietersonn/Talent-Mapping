@@ -52,11 +52,11 @@
             ST-30
         </a>
 
-        {{-- 3. SJT Questions --}}
-        <a href="{{ route('admin.questions.sjt.index') }}"
-           class="flex items-center px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 group {{ request()->routeIs('admin.questions.sjt.*') ? 'bg-green-50 text-green-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900' }}">
+        {{-- 3. TK Questions (Pengganti SJT) --}}
+        <a href="{{ route('admin.questions.tk.index') }}"
+           class="flex items-center px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 group {{ request()->routeIs('admin.questions.tk.*') ? 'bg-green-50 text-green-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900' }}">
             <div class="w-6 flex justify-center mr-3">
-                <i class="fas fa-tasks {{ request()->routeIs('admin.questions.sjt.*') ? 'text-green-500' : 'text-gray-300 group-hover:text-gray-500' }}"></i>
+                <i class="fas fa-tasks {{ request()->routeIs('admin.questions.tk.*') ? 'text-green-500' : 'text-gray-300 group-hover:text-gray-500' }}"></i>
             </div>
             Talent Kompetensi
         </a>

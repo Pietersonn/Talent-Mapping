@@ -10,7 +10,7 @@
     /* Header Profile */
     .profile-header { background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
     .profile-left { display: flex; align-items: center; gap: 1.5rem; }
-    .profile-avatar { width: 64px; height: 64px; background: #f1f5f9; color: #475569; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; border: 1px solid #e2e8f0; }
+    .profile-avatar { width: 64px; height: 64px; background: #f0fdf4; color: #15803d; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; border: 1px solid #dcfce7; }
     .profile-name { font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0; }
     .profile-email { color: var(--secondary); font-size: 0.9rem; }
 
@@ -40,14 +40,13 @@
     .clean-table td { padding: 0.75rem; border-bottom: 1px dashed #f1f5f9; color: #334155; }
     .badge-status { padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
     .status-completed { background: #dcfce7; color: #166534; }
-    .status-pending { background: #fef9c3; color: #854d0e; }
+    .status-pending { background: #f1f5f9; color: #475569; }
 
-    /* Action Buttons */
-    .btn-action { padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; border: none; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; }
-    .btn-edit { background: #eff6ff; color: #2563eb; }
-    .btn-toggle { background: #fefce8; color: #ca8a04; }
-    .btn-reset { background: #e0f2fe; color: #0369a1; }
-    .btn-delete { background: #fef2f2; color: #dc2626; }
+    /* Action Buttons (Warna Diubah ke hijau/netral) */
+    .btn-action { padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; border: none; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; border: 1px solid transparent; }
+    .btn-edit { background: #ecfdf5; color: #059669; border-color: #d1fae5; }
+    .btn-toggle { background: #f0fdf4; color: #15803d; border-color: #dcfce7; }
+    .btn-delete { background: #f8fafc; color: #475569; border-color: #e2e8f0; }
     .btn-action:hover { opacity: 0.9; transform: translateY(-1px); }
 </style>
 @endpush
@@ -93,14 +92,14 @@
 
         <div style="display: flex; flex-direction: column; gap: 1.5rem;">
             <div class="bento-card">
-                <div class="card-title"><i class="fas fa-info-circle"></i> Detail Akun</div>
+                <div class="card-title"><i class="fas fa-info-circle text-green-500"></i> Detail Akun</div>
                 <div class="info-item">
                     <span class="info-label">Status</span>
                     <span class="info-value">
                         @if($user->is_active)
                             <span style="color: #166534; background: #dcfce7; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">AKTIF</span>
                         @else
-                            <span style="color: #991b1b; background: #fee2e2; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">NONAKTIF</span>
+                            <span style="color: #475569; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">NONAKTIF</span>
                         @endif
                     </span>
                 </div>
@@ -121,7 +120,7 @@
                     <div class="stat-label">Selesai</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-val" style="color: #eab308;">{{ $stats['events_as_pic'] }}</div>
+                    <div class="stat-val" style="color: #15803d;">{{ $stats['events_as_pic'] }}</div>
                     <div class="stat-label">Event (PIC)</div>
                 </div>
                 <div class="stat-card">
@@ -131,7 +130,7 @@
             </div>
 
             <div class="bento-card">
-                <div class="card-title"><i class="fas fa-history"></i> Aktivitas Tes Terbaru</div>
+                <div class="card-title"><i class="fas fa-history text-green-500"></i> Aktivitas Tes Terbaru</div>
                 <div style="overflow-x: auto;">
                     <table class="clean-table">
                         <thead>
@@ -177,10 +176,11 @@
             text: "Data yang dihapus tidak dapat dikembalikan!",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#dc2626',
-            cancelButtonColor: '#64748b',
-            confirmButtonText: 'Ya, Hapus',
-            cancelButtonText: 'Batal'
+            confirmButtonColor: '#22c55e',
+            cancelButtonColor: '#e2e8f0',
+            confirmButtonText: '<span style="color:white">Ya, Hapus</span>',
+            cancelButtonText: '<span style="color:black">Batal</span>',
+            customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl px-4 py-2', cancelButton: 'rounded-xl px-4 py-2' }
         }).then((result) => {
             if (result.isConfirmed) {
                 let form = document.createElement('form');

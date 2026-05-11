@@ -12,8 +12,8 @@
 
     // --- 2. Setup Tanggal & Lokasi ---
     Carbon::setLocale('id');
-    $currentDate  = Carbon::now()->isoFormat('D MMMM Y'); // Untuk Tanda Tangan
-    $generatedAt  = Carbon::now()->isoFormat('D MMMM Y'); // Untuk Header (Tanpa Jam)
+    $currentDate  = Carbon::now()->isoFormat('D MMMM Y'); // Tanda Tangan
+    $generatedAt  = Carbon::now()->isoFormat('D MMMM Y'); // Header
     $cityLocation = 'Barito Kuala';
 
     // --- 3. Data Default ---
@@ -33,13 +33,11 @@
 <meta charset="utf-8">
 <title>{{ $reportTitle }}</title>
 <style>
-    /* A4 Landscape agar kolom deskripsi muat */
     @page { size: A4 landscape; margin: 20mm 15mm 15mm 15mm; }
     body { font-family: "Times New Roman", Times, serif; font-size: 10px; color: #000; line-height: 1.3; }
 
     .clearfix:after { content: ""; display: table; clear: both; }
 
-    /* Header Style */
     .header { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
     .h-left { float: left; width: 12%; }
     .h-right { float: right; width: 88%; text-align: right; }
@@ -48,48 +46,26 @@
     .company-name { font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
     .company-sub { font-size: 10px; }
 
-    /* Title Style */
     .title-wrap { text-align: center; margin-bottom: 25px; }
     .title { font-size: 16px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; text-decoration: underline; }
     .subtitle { font-size: 11px; }
 
-    /* Table Style */
     table { width: 100%; border-collapse: collapse; margin-bottom: 10px; table-layout: fixed; }
+    thead th { background: #e0e0e0; border: 1px solid #000; font-weight: bold; font-size: 10px; padding: 8px 4px; text-align: center; vertical-align: middle; }
+    tbody td { border: 1px solid #000; padding: 6px; vertical-align: top; font-size: 10px; word-wrap: break-word; }
 
-    thead th {
-        background: #e0e0e0;
-        border: 1px solid #000;
-        font-weight: bold;
-        font-size: 10px;
-        padding: 8px 4px;
-        text-align: center;
-        vertical-align: middle;
-    }
-
-    tbody td {
-        border: 1px solid #000;
-        padding: 6px;
-        vertical-align: top;
-        font-size: 10px;
-        word-wrap: break-word;
-    }
-
-    /* Helper Classes */
     .text-center { text-align: center; }
     .font-bold { font-weight: bold; }
 
-    /* Signature Style */
     .signature-table { width: 100%; margin-top: 30px; border: none; page-break-inside: avoid; }
     .signature-table td { border: none; padding: 0; vertical-align: top; text-align: center; }
 
-    /* Footer Style */
     .footer { position: fixed; bottom: -10mm; left: 0; right: 0; text-align: right; font-size: 9px; font-style: italic; }
     .pagenum:before { content: counter(page); }
 </style>
 </head>
 <body>
 
-    {{-- HEADER --}}
     <div class="header clearfix">
         <div class="h-left">
             @if(!empty($logoBase64))
@@ -104,20 +80,17 @@
         </div>
     </div>
 
-    {{-- JUDUL LAPORAN --}}
     <div class="title-wrap">
         <div class="title">{{ $reportTitle }}</div>
         <div class="subtitle">Dicetak oleh: {{ $generatedBy }} • {{ $generatedAt }}</div>
     </div>
 
-    {{-- TABEL DATA --}}
     <table>
         <thead>
             <tr>
-                {{-- Penyesuaian Lebar Kolom (Total 100%) --}}
                 <th style="width: 5%;">No</th>
                 <th style="width: 10%;">Kode</th>
-                <th style="width: 15%;">Nama Tipologi</th>
+                <th style="width: 15%;">Tipologi</th>
                 <th style="width: 35%;">Kekuatan (Strength)</th>
                 <th style="width: 35%;">Kelemahan (Weakness)</th>
             </tr>
@@ -126,10 +99,10 @@
             @forelse($rows as $index => $item)
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
-                    <td class="text-center font-bold">{{ $item->typology_code }}</td>
-                    <td class="font-bold">{{ $item->typology_name }}</td>
-                    <td>{{ $item->strength_description ?? '-' }}</td>
-                    <td>{{ $item->weakness_description ?? '-' }}</td>
+                    <td class="text-center font-bold">{{ $item->kode_tipologi }}</td>
+                    <td class="font-bold">{{ $item->nama_tipologi }}</td>
+                    <td>{{ $item->deskripsi_kekuatan ?? '-' }}</td>
+                    <td>{{ $item->deskripsi_kelemahan ?? '-' }}</td>
                 </tr>
             @empty
                 <tr><td colspan="5" class="text-center" style="padding:15px;">Tidak ada data tipologi.</td></tr>
@@ -137,13 +110,9 @@
         </tbody>
     </table>
 
-    {{-- TANDA TANGAN --}}
     <table class="signature-table">
         <tr>
-            {{-- Spacer Kiri (65%) --}}
             <td style="width: 65%;"></td>
-
-            {{-- Blok Tanda Tangan Kanan (35%) --}}
             <td style="width: 35%;">
                 <div style="margin-bottom: 5px;">{{ $cityLocation }}, {{ $currentDate }}</div>
                 <div style="margin-bottom: 60px;">Mengetahui, Pimpinan Unit</div>
@@ -153,8 +122,6 @@
         </tr>
     </table>
 
-    {{-- FOOTER --}}
     <div class="footer">Halaman <span class="pagenum"></span></div>
-
 </body>
 </html>

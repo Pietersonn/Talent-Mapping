@@ -38,30 +38,30 @@
         <div class="bento-card">
             <div class="bento-title"><i class="fas fa-info-circle text-green-500"></i> Informasi Utama</div>
             <div class="hero-box">
-                <div class="code-display">{{ $competency->competency_code }}</div>
+                <div class="code-display">{{ $competency->kode_kompetensi }}</div>
                 <div style="width: 2px; height: 50px; background: #cbd5e1;"></div>
-                <div class="name-display">{{ $competency->competency_name }}</div>
+                <div class="name-display">{{ $competency->nama_kompetensi }}</div>
             </div>
 
             <div class="desc-box">
                 <div class="desc-label" style="color: #16a34a;"><i class="fas fa-bolt"></i> Kekuatan (Strength)</div>
-                <div class="desc-content bg-strength">{!! nl2br(e($competency->strength_description)) !!}</div>
+                <div class="desc-content bg-strength">{!! nl2br(e($competency->deskripsi_kekuatan)) !!}</div>
             </div>
 
             <div class="desc-box">
                 <div class="desc-label" style="color: #dc2626;"><i class="fas fa-exclamation-triangle"></i> Kelemahan (Weakness)</div>
-                <div class="desc-content bg-weakness">{!! nl2br(e($competency->weakness_description)) !!}</div>
+                <div class="desc-content bg-weakness">{!! nl2br(e($competency->deskripsi_kelemahan)) !!}</div>
             </div>
 
             <div class="desc-box">
                 <div class="desc-label" style="color: #2563eb;"><i class="fas fa-walking"></i> Aktivitas Pengembangan</div>
-                <div class="desc-content bg-blue">{!! nl2br(e($competency->improvement_activity)) !!}</div>
+                <div class="desc-content bg-blue">{!! nl2br(e($competency->aktivitas_pengembangan)) !!}</div>
             </div>
 
-            @if($competency->training_recommendations)
+            @if($competency->rekomendasi_pelatihan)
             <div class="desc-box">
                 <div class="desc-label" style="color: #4b5563;"><i class="fas fa-chalkboard-teacher"></i> Rekomendasi Training</div>
-                <div class="desc-content">{!! nl2br(e($competency->training_recommendations)) !!}</div>
+                <div class="desc-content">{!! nl2br(e($competency->rekomendasi_pelatihan)) !!}</div>
             </div>
             @endif
         </div>

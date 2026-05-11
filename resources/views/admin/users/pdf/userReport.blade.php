@@ -103,13 +103,13 @@
 
   <table class="signature-table">
     <tr>
-      <td style="width: 60%;"></td>
-      <td style="width: 40%;">
-        <div style="margin-bottom: 5px;">{{ $cityLocation }}, {{ $currentDate }}</div>
-        <div style="margin-bottom: 60px;">Mengetahui, Pimpinan Unit</div>
-        <div style="font-weight: bold; text-decoration: underline;">Muhammad Zain Mahbuby, B.Eng</div>
-        <div>Koordinator BCTI</div>
-      </td>
+        <td style="width: 60%;"></td>
+        <td style="width: 40%;">
+            <div style="margin-bottom: 5px;">{{ $cityLocation }}, {{ $currentDate }}</div>
+            <div style="margin-bottom: 60px;">Mengetahui, Pimpinan Unit</div>
+            <div style="font-weight: bold; text-decoration: underline;">Muhammad Zain Mahbuby, B.Eng</div>
+            <div>Koordinator BCTI</div>
+        </td>
     </tr>
   </table>
 

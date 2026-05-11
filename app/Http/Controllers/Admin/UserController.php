@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -15,7 +14,7 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::withCount(['testSessions', 'acaraSebagaiMitra']);
+        $query = User::withCount(['testSessions', 'programSebagaiMitra']);
 
         if ($request->filled('search')) {
             $term = $request->search;
@@ -27,8 +26,8 @@ class UserController extends Controller
             });
         }
 
-        if ($request->filled('role')) {
-            $query->where('peran', $request->role);
+        if ($request->filled('peran')) {
+            $query->where('peran', $request->peran);
         }
 
         $users = $query->latest()->paginate(10);
@@ -37,7 +36,7 @@ class UserController extends Controller
             $users->getCollection()->transform(function ($user) {
                 return [
                     'id'            => $user->id,
-                    'name'          => $user->nama,
+                    'name'          => $user->nama, // Tetap menggunakan format key name/role sesuai JavaScript View
                     'email'         => $user->email,
                     'phone_number'  => $user->nomor_telepon ?? '-',
                     'role'          => ucfirst($user->peran),
@@ -67,13 +66,24 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
+        $messages = [
+            'nama.required'      => 'Wajib diisi.',
+            'email.required'     => 'Wajib diisi.',
+            'email.unique'       => 'Email ini sudah terdaftar.',
+            'peran.required'     => 'Peran harus dipilih.',
+            'peran.in'           => 'Peran tidak valid.',
+            'password.required'  => 'Wajib diisi.',
+            'password.min'       => 'Minimal 8 karakter.',
+            'password.confirmed' => 'Sandi konfirmasi tidak cocok.',
+        ];
+
         $request->validate([
-            'nama'           => ['required', 'string', 'max:100'],
-            'email'          => ['required', 'email', 'unique:pengguna,email'],
-            'nomor_telepon'  => ['nullable', 'string', 'max:20'],
-            'peran'          => ['required', 'in:admin,mitra,peserta'],
-            'password'       => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+            'nama'          => ['required', 'string', 'max:100'],
+            'email'         => ['required', 'email', 'unique:pengguna,email'],
+            'nomor_telepon' => ['nullable', 'string', 'max:20'],
+            'peran'         => ['required', 'in:admin,mitra,peserta'],
+            'password'      => ['required', 'min:8', 'confirmed'],
+        ], $messages);
 
         $user = User::create([
             'nama'          => $request->nama,
@@ -81,7 +91,7 @@ class UserController extends Controller
             'nomor_telepon' => $request->nomor_telepon,
             'peran'         => $request->peran,
             'password'      => Hash::make($request->password),
-            'aktif'         => true,
+            'aktif'         => $request->has('aktif') ? true : false,
         ]);
 
         return redirect()->route('admin.users.show', $user->id)
@@ -91,7 +101,15 @@ class UserController extends Controller
     public function show(User $user)
     {
         $user->load('testSessions.testResult');
-        return view('admin.users.show', compact('user'));
+
+        $stats = [
+            'account_age'         => $user->created_at ? $user->created_at->locale('id')->diffForHumans(null, true) : '-',
+            'total_test_sessions' => $user->testSessions->count(),
+            'completed_tests'     => $user->testSessions->where('is_completed', true)->count(),
+            'events_as_pic'       => $user->programSebagaiMitra->count(),
+        ];
+
+        return view('admin.users.show', compact('user', 'stats'));
     }
 
     public function edit(User $user)
@@ -101,19 +119,40 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
+        $messages = [
+            'nama.required'      => 'Wajib diisi.',
+            'email.required'     => 'Wajib diisi.',
+            'email.unique'       => 'Email ini sudah terdaftar.',
+            'peran.required'     => 'Peran harus dipilih.',
+            'peran.in'           => 'Peran tidak valid.',
+            'password.min'       => 'Minimal 8 karakter.',
+            'password.confirmed' => 'Sandi konfirmasi tidak cocok.',
+        ];
+
         $request->validate([
             'nama'          => ['required', 'string', 'max:100'],
             'email'         => ['required', 'email', \Illuminate\Validation\Rule::unique('pengguna', 'email')->ignore($user->id)],
             'nomor_telepon' => ['nullable', 'string', 'max:20'],
             'peran'         => ['required', 'in:admin,mitra,peserta'],
-        ]);
+        ], $messages);
 
-        $user->update([
+        $dataUpdate = [
             'nama'          => $request->nama,
             'email'         => $request->email,
             'nomor_telepon' => $request->nomor_telepon,
             'peran'         => $request->peran,
-        ]);
+            'aktif'         => $request->has('aktif') ? true : false,
+        ];
+
+        if ($request->filled('password')) {
+            $request->validate([
+                'password' => ['min:8', 'confirmed'],
+            ], $messages);
+
+            $dataUpdate['password'] = Hash::make($request->password);
+        }
+
+        $user->update($dataUpdate);
 
         return redirect()->route('admin.users.show', $user->id)
             ->with('success', 'Data pengguna berhasil diperbarui.');
@@ -152,14 +191,14 @@ class UserController extends Controller
     public function exportPdf(Request $request)
     {
         $query = User::query();
-        if ($request->filled('role')) {
-            $query->where('peran', $request->role);
+        if ($request->filled('peran')) {
+            $query->where('peran', $request->peran);
         }
         $users = $query->orderBy('nama')->get();
 
         $pdf = Pdf::loadView('admin.users.pdf.userReport', [
             'reportTitle' => 'Laporan Daftar Pengguna',
-            'generatedBy' => Auth::user()->nama,
+            'generatedBy' => Auth::user()->nama ?? 'Admin',
             'generatedAt' => now()->format('d/m/Y H:i'),
             'rows'        => $users,
         ])->setPaper('a4', 'portrait');

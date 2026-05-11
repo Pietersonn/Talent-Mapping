@@ -31,7 +31,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
-<title>{{ $reportTitle }}</title>
+<title>{{ $reportTitle ?? 'Laporan Kompetensi' }}</title>
 <style>
     /* Menggunakan A4 Landscape */
     @page { size: A4 landscape; margin: 20mm 15mm 15mm 15mm; }
@@ -107,7 +107,6 @@
     {{-- JUDUL LAPORAN --}}
     <div class="title-wrap">
         <div class="title">LAPORAN KOMPETENSI</div>
-        {{-- UPDATE: Menambahkan Versi --}}
         <div class="subtitle">Versi: {{ $versionName }} • Dicetak oleh: {{ $generatedBy }} • {{ $generatedAt }}</div>
     </div>
 
@@ -128,12 +127,12 @@
             @forelse($rows as $index => $item)
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
-                    <td class="text-center font-bold">{{ $item->competency_code }}</td>
-                    <td class="font-bold">{{ $item->competency_name }}</td>
-                    <td>{{ $item->strength_description ?? '-' }}</td>
-                    <td>{{ $item->weakness_description ?? '-' }}</td>
-                    <td>{{ $item->improvement_activity ?? '-' }}</td>
-                    <td>{{ $item->training_recommendations ?? '-' }}</td>
+                    <td class="text-center font-bold">{{ $item->kode_kompetensi }}</td>
+                    <td class="font-bold">{{ $item->nama_kompetensi }}</td>
+                    <td>{{ $item->deskripsi_kekuatan ?? '-' }}</td>
+                    <td>{{ $item->deskripsi_kelemahan ?? '-' }}</td>
+                    <td>{{ $item->aktivitas_pengembangan ?? '-' }}</td>
+                    <td>{{ $item->rekomendasi_pelatihan ?? '-' }}</td>
                 </tr>
             @empty
                 <tr><td colspan="7" class="text-center" style="padding:15px;">Tidak ada data kompetensi.</td></tr>

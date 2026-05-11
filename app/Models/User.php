@@ -34,11 +34,20 @@ class User extends Authenticatable
     public function scopeMitras($q)              { return $q->where('peran', 'mitra'); }
     public function scopePesertas($q)            { return $q->where('peran', 'peserta'); }
 
+    // --- JEMBATAN UNTUK AKSESORIS ROLE ---
+    public function getRoleAttribute()
+    {
+        return $this->peran;
+    }
+    // ------------------------------------
+
     public function getRoleDisplayAttribute(): string
     {
         return match ($this->peran) {
-            'admin' => 'Administrator', 'mitra' => 'Mitra',
-            'peserta' => 'Peserta', default => 'Tidak Diketahui',
+            'admin' => 'Administrator',
+            'mitra' => 'Mitra',
+            'peserta' => 'Peserta',
+            default => 'Tidak Diketahui',
         };
     }
 

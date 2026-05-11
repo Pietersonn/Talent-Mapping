@@ -4,7 +4,9 @@
 
 @push('styles')
 <style>
-    /* --- STYLE TOMBOL (FIXED) --- */
+    .border-red-500 { border-color: #ef4444 !important; }
+    .text-red-500 { color: #ef4444 !important; }
+
     .btn-add {
         background: #22c55e;
         color: white;
@@ -46,7 +48,6 @@
         border-color: #cbd5e1;
     }
 
-    /* --- FORM CARD & INPUTS --- */
     .form-card {
         background: white;
         border: 1px solid #e2e8f0;
@@ -57,20 +58,9 @@
 
     .form-group { margin-bottom: 1.5rem; }
     .form-label { display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 0.5rem; }
-    .form-label.required::after { content: "*"; color: #ef4444; margin-left: 4px; }
+    .form-control { width: 100%; padding: 0.75rem 1rem; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 0.9rem; color: #0f172a; background-color: #f8fafc; transition: all 0.2s; }
+    .form-control:focus { background-color: white; border-color: #22c55e; outline: none; box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1); }
 
-    .form-control {
-        width: 100%; padding: 0.75rem 1rem;
-        border: 1px solid #e2e8f0; border-radius: 10px;
-        font-size: 0.9rem; color: #0f172a;
-        background-color: #f8fafc; transition: all 0.2s;
-    }
-    .form-control:focus {
-        background-color: white; border-color: #22c55e;
-        outline: none; box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
-    }
-
-    /* Password Eye */
     .password-wrapper { position: relative; }
     .btn-toggle-password {
         position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
@@ -79,7 +69,6 @@
     }
     .btn-toggle-password:hover { color: #22c55e; }
 
-    /* Switch Custom */
     .toggle-wrapper {
         display: flex; align-items: center; gap: 12px;
         padding: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
@@ -91,14 +80,12 @@
     input:checked + .slider { background-color: #22c55e; }
     input:checked + .slider:before { transform: translateX(20px); }
 
-    /* Section Divider */
     .form-section-title {
         font-size: 0.85rem; font-weight: 700; color: #94a3b8;
         text-transform: uppercase; letter-spacing: 0.05em;
         border-bottom: 1px dashed #e2e8f0; padding-bottom: 0.5rem; margin-bottom: 1.5rem;
     }
 
-    /* Action Buttons Area */
     .form-actions {
         margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #f1f5f9;
         display: flex; justify-content: flex-end; gap: 10px;
@@ -107,9 +94,9 @@
 @endpush
 
 @section('header')
-    <div class="header-wrapper">
+    <div class="header-wrapper" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
         <div>
-            <h1 class="page-title"><i class="fas fa-user-plus"></i> Tambah Pengguna Baru</h1>
+            <h1 class="page-title" style="font-size: 1.5rem; font-weight: 800; color: #0f172a;"><i class="fas fa-user-plus text-green-500 mr-2"></i> Tambah Pengguna Baru</h1>
         </div>
         <a href="{{ route('admin.users.index') }}" class="btn-cancel">
             <i class="fas fa-arrow-left"></i> Kembali
@@ -125,45 +112,46 @@
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 3rem;">
 
             <div>
-                <div class="form-section-title"><i class="far fa-id-card mr-2"></i> Identitas Pengguna</div>
+                <div class="form-section-title"><i class="far fa-id-card mr-2 text-green-500"></i> Identitas Pengguna</div>
 
                 <div class="form-group">
                     <label class="form-label required">Nama Lengkap</label>
-                    <input type="text" name="name" class="form-control" value="{{ old('name') }}" placeholder="Contoh: Budi Santoso" required>
-                    @error('name') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
+                    <input type="text" name="nama" class="form-control @error('nama') border-red-500 @enderror" value="{{ old('nama') }}" placeholder="Contoh: Budi Santoso" required>
+                    @error('nama') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="form-group">
                     <label class="form-label required">Alamat Email</label>
-                    <input type="email" name="email" class="form-control" value="{{ old('email') }}" placeholder="nama@perusahaan.com" required>
+                    <input type="email" name="email" class="form-control @error('email') border-red-500 @enderror" value="{{ old('email') }}" placeholder="nama@perusahaan.com" required>
                     @error('email') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Nomor Telepon / WhatsApp</label>
-                    <input type="text" name="phone_number" class="form-control" value="{{ old('phone_number') }}" placeholder="0812xxxx">
+                    <input type="text" name="nomor_telepon" class="form-control @error('nomor_telepon') border-red-500 @enderror" value="{{ old('nomor_telepon') }}" placeholder="0812xxxx">
+                    @error('nomor_telepon') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
                 </div>
             </div>
 
             <div>
-                <div class="form-section-title"><i class="fas fa-user-shield mr-2"></i> Akses & Keamanan</div>
+                <div class="form-section-title"><i class="fas fa-user-shield mr-2 text-green-500"></i> Akses & Keamanan</div>
 
                 <div class="form-group">
                     <label class="form-label required">Peran (Role)</label>
-                    <select name="role" class="form-control" style="background-image: none;" required>
+                    <select name="peran" class="form-control @error('peran') border-red-500 @enderror" style="background-image: none;" required>
                         <option value="">-- Pilih Peran --</option>
-                        <option value="user" {{ old('role') == 'user' ? 'selected' : '' }}>Pengguna (Peserta)</option>
-                        <option value="pic" {{ old('role') == 'pic' ? 'selected' : '' }}>PIC (Event Manager)</option>
-                        <option value="staff" {{ old('role') == 'staff' ? 'selected' : '' }}>Staff</option>
-                        <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Administrator</option>
+                        <option value="peserta" {{ old('peran') == 'peserta' ? 'selected' : '' }}>Peserta</option>
+                        <option value="mitra" {{ old('peran') == 'mitra' ? 'selected' : '' }}>Mitra (PIC)</option>
+                        <option value="admin" {{ old('peran') == 'admin' ? 'selected' : '' }}>Administrator</option>
                     </select>
+                    @error('peran') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group">
                         <label class="form-label required">Kata Sandi</label>
                         <div class="password-wrapper">
-                            <input type="password" name="password" id="password" class="form-control" placeholder="******" required>
+                            <input type="password" name="password" id="password" class="form-control @error('password') border-red-500 @enderror" placeholder="******" required>
                             <button type="button" class="btn-toggle-password" onclick="togglePassword('password', this)">
                                 <i class="fas fa-eye"></i>
                             </button>
@@ -172,11 +160,14 @@
                     <div class="form-group">
                         <label class="form-label required">Ulangi Sandi</label>
                         <div class="password-wrapper">
-                            <input type="password" name="password_confirmation" id="password_confirm" class="form-control" placeholder="******" required>
+                            <input type="password" name="password_confirmation" id="password_confirm" class="form-control @error('password') border-red-500 @enderror" placeholder="******" required>
                             <button type="button" class="btn-toggle-password" onclick="togglePassword('password_confirm', this)">
                                 <i class="fas fa-eye"></i>
                             </button>
                         </div>
+                    </div>
+                    <div style="grid-column: span 2; margin-top: -15px;">
+                        @error('password') <span class="text-xs text-red-500 block">{{ $message }}</span> @enderror
                     </div>
                 </div>
 
@@ -184,7 +175,7 @@
                     <label class="form-label">Status Akun</label>
                     <div class="toggle-wrapper">
                         <label class="switch">
-                            <input type="checkbox" name="is_active" value="1" {{ old('is_active', 1) ? 'checked' : '' }}>
+                            <input type="checkbox" name="aktif" value="1" {{ old('aktif', 1) ? 'checked' : '' }}>
                             <span class="slider"></span>
                         </label>
                         <div>

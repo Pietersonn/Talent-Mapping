@@ -37,27 +37,27 @@
 
                     <div class="form-group">
                         <label class="form-label required">Nama Kompetensi</label>
-                        <input type="text" name="competency_name" class="form-control" value="{{ old('competency_name') }}" required placeholder="Misal: Integritas, Kerjasama...">
+                        <input type="text" name="nama_kompetensi" class="form-control" value="{{ old('nama_kompetensi') }}" required placeholder="Misal: Integritas, Kerjasama...">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label required">Kekuatan (Strength Description)</label>
-                        <textarea name="strength_description" class="form-control" required placeholder="Deskripsikan kekuatan kompetensi ini...">{{ old('strength_description') }}</textarea>
+                        <textarea name="deskripsi_kekuatan" class="form-control" required placeholder="Deskripsikan kekuatan kompetensi ini...">{{ old('deskripsi_kekuatan') }}</textarea>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label required">Kelemahan (Weakness Description)</label>
-                        <textarea name="weakness_description" class="form-control" required placeholder="Deskripsikan area kelemahan/risiko...">{{ old('weakness_description') }}</textarea>
+                        <textarea name="deskripsi_kelemahan" class="form-control" required placeholder="Deskripsikan area kelemahan/risiko...">{{ old('deskripsi_kelemahan') }}</textarea>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label required">Aktivitas Pengembangan (Improvement Activity)</label>
-                        <textarea name="improvement_activity" class="form-control" required placeholder="Saran aktivitas untuk mengembangkan kompetensi ini...">{{ old('improvement_activity') }}</textarea>
+                        <textarea name="aktivitas_pengembangan" class="form-control" required placeholder="Saran aktivitas untuk mengembangkan kompetensi ini...">{{ old('aktivitas_pengembangan') }}</textarea>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Rekomendasi Training</label>
-                        <textarea name="training_recommendations" class="form-control" placeholder="Daftar training yang disarankan (opsional)...">{{ old('training_recommendations') }}</textarea>
+                        <textarea name="rekomendasi_pelatihan" class="form-control" placeholder="Daftar training yang disarankan (opsional)...">{{ old('rekomendasi_pelatihan') }}</textarea>
                     </div>
                 </div>
 
@@ -65,7 +65,7 @@
                     <div class="form-section-title"><i class="fas fa-cog text-green-500"></i> Identifikasi</div>
                     <div class="form-group">
                         <label class="form-label required">Kode Kompetensi</label>
-                        <input type="text" name="competency_code" class="form-control font-mono font-bold text-center" value="{{ old('competency_code') }}" maxlength="30" style="text-transform: uppercase;" required placeholder="INT">
+                        <input type="text" name="kode_kompetensi" class="form-control font-mono font-bold text-center" value="{{ old('kode_kompetensi') }}" maxlength="30" style="text-transform: uppercase;" required placeholder="INT">
                         <small class="form-text">Kode unik maksimal 30 karakter.</small>
                     </div>
 

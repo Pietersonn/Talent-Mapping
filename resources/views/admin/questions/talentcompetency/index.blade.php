@@ -1,6 +1,6 @@
 @extends('admin.layouts.app')
 
-@section('title', 'SJT Questions')
+@section('title', 'Talent Kompetensi')
 
 @push('styles')
 <style>
@@ -11,7 +11,7 @@
     .loading-spinner { position: absolute; right: 14px; top: 33%; transform: translateY(-50%); display: none; color: #22c55e; font-size: 1.1rem; pointer-events: none; }
     .search-icon { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 1rem; pointer-events: none; transition: opacity 0.2s; }
 
-    .select-version { height: 46px; padding: 0 35px 0 12px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 0.9rem; background: white; cursor: pointer; outline: none; min-width: 200px; color: #334155; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; }
+    .select-version { height: 46px; padding: 0 35px 0 12px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 0.9rem; background: white; cursor: pointer; outline: none; min-width: 200px; color: #334155; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; }
     .select-version:focus { border-color: #22c55e; box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15); }
 
     .btn-print { width: 46px; height: 46px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #64748b; cursor: pointer; transition: all 0.2s; text-decoration: none; }
@@ -75,7 +75,7 @@
             Talent Kompetensi
         </h1>
         <p style="font-size: 0.9rem; color: #64748b; margin-left: 54px; margin-top: -5px;">
-            Manajemen soal Situational Judgment Test
+            Manajemen soal Pemetaan Kompetensi Peserta
         </p>
     </div>
 
@@ -85,7 +85,7 @@
                 <option value="">-- Pilih Versi --</option>
                 @foreach($versions as $version)
                     <option value="{{ $version->id }}" {{ $selectedVersion && $selectedVersion->id == $version->id ? 'selected' : '' }}>
-                        {{ $version->name }} {{ $version->is_active ? '(Active)' : '' }}
+                        {{ $version->nama }} {{ $version->aktif ? '(Active)' : '' }}
                     </option>
                 @endforeach
             </select>
@@ -103,7 +103,7 @@
             </button>
 
             @if(Auth::user()->role === 'admin')
-                <a href="{{ route('admin.questions.sjt.create', ['version' => $selectedVersion->id]) }}" class="btn-add">
+                <a href="{{ route('admin.questions.tk.create', ['version' => $selectedVersion->id]) }}" class="btn-add">
                     <i class="fas fa-plus"></i> Tambah
                 </a>
             @endif
@@ -117,7 +117,6 @@
         <div class="stats-container">
             <div class="stat-card">
                 <div>
-                    {{-- Total Soal: Gunakan total() karena paginator object --}}
                     <div class="stat-value">{{ $questions instanceof \Illuminate\Pagination\LengthAwarePaginator ? $questions->total() : $questions->count() }}</div>
                     <div class="stat-label">Total Soal</div>
                 </div>
@@ -125,8 +124,8 @@
             </div>
             <div class="stat-card">
                 <div>
-                    <div class="stat-value" style="color: {{ $selectedVersion->is_active ? '#22c55e' : '#94a3b8' }}">
-                        {{ $selectedVersion->is_active ? 'Aktif' : 'Tidak Aktif' }}
+                    <div class="stat-value" style="color: {{ $selectedVersion->aktif ? '#22c55e' : '#94a3b8' }}">
+                        {{ $selectedVersion->aktif ? 'Aktif' : 'Tidak Aktif' }}
                     </div>
                     <div class="stat-label">Status Versi</div>
                 </div>
@@ -160,7 +159,7 @@
                         <thead>
                             <tr>
                                 <th width="80">No.</th>
-                                <th width="40%">Situation (Situasi)</th>
+                                <th width="40%">Pertanyaan / Kasus</th>
                                 <th width="20%">Kompetensi</th>
                                 <th width="10%">Opsi</th>
                                 <th width="10%">Status</th>
@@ -172,29 +171,29 @@
                                 <tr>
                                     <td>
                                         <span style="font-family: monospace; font-weight: 600; color: #64748b;">
-                                            #{{ str_pad($question->number, 2, '0', STR_PAD_LEFT) }}
+                                            #{{ str_pad($question->nomor, 2, '0', STR_PAD_LEFT) }}
                                         </span>
                                     </td>
                                     <td>
                                         <div class="statement-text">
-                                            <span class="short-text">{{ Str::limit($question->question_text, 80) }}</span>
-                                            @if(strlen($question->question_text) > 80)
+                                            <span class="short-text">{{ Str::limit($question->teks_pertanyaan, 80) }}</span>
+                                            @if(strlen($question->teks_pertanyaan) > 80)
                                                 <button class="text-expand-btn" onclick="toggleText(this)">
                                                     Lihat
                                                 </button>
                                                 <span class="full-text" style="display: none;">
-                                                    {{ $question->question_text }}
+                                                    {{ $question->teks_pertanyaan }}
                                                 </span>
                                             @endif
                                         </div>
                                     </td>
                                     <td>
                                         <span class="badge-typology">
-                                            {{ $question->competency }}
+                                            {{ $question->kode_kompetensi }}
                                         </span>
                                         @if($question->competencyDescription)
                                             <span class="typology-desc">
-                                                {{ Str::limit($question->competencyDescription->competency_name, 25) }}
+                                                {{ Str::limit($question->competencyDescription->nama_kompetensi, 25) }}
                                             </span>
                                         @endif
                                     </td>
@@ -204,7 +203,7 @@
                                         </span>
                                     </td>
                                     <td>
-                                        @if($question->questionVersion->is_active)
+                                        @if($question->questionVersion->aktif)
                                             <span class="status-dot dot-active"></span> <span style="font-size: 0.85rem; color: #0f172a;">Aktif</span>
                                         @else
                                             <span class="status-dot dot-inactive"></span> <span style="font-size: 0.85rem; color: #94a3b8;">Tidak Aktif</span>
@@ -212,16 +211,16 @@
                                     </td>
                                     <td>
                                         <div class="action-buttons">
-                                            <a href="{{ route('admin.questions.sjt.show', $question) }}" class="btn-icon btn-view" title="View">
+                                            <a href="{{ route('admin.questions.tk.show', $question) }}" class="btn-icon btn-view" title="View">
                                                 <i class="fas fa-eye text-xs"></i>
                                             </a>
                                             @if(Auth::user()->role === 'admin')
-                                                <a href="{{ route('admin.questions.sjt.edit', $question) }}" class="btn-icon btn-edit" title="Edit">
+                                                <a href="{{ route('admin.questions.tk.edit', $question) }}" class="btn-icon btn-edit" title="Edit">
                                                     <i class="fas fa-pen text-xs"></i>
                                                 </a>
                                                 <button type="button" class="btn-icon btn-delete"
-                                                        data-question-number="{{ $question->number }}"
-                                                        data-delete-url="{{ route('admin.questions.sjt.destroy', $question) }}"
+                                                        data-question-number="{{ $question->nomor }}"
+                                                        data-delete-url="{{ route('admin.questions.tk.destroy', $question) }}"
                                                         title="Delete">
                                                     <i class="fas fa-trash text-xs"></i>
                                                 </button>
@@ -233,14 +232,12 @@
                         </tbody>
                     </table>
 
-                    {{-- --- CUSTOM PAGINATION (GREEN STYLE) --- --}}
                     @if($questions instanceof \Illuminate\Pagination\LengthAwarePaginator && $questions->hasPages())
                     <div class="pagination-wrapper">
                         <div style="font-size: 0.85rem; color: #64748b;">
                             Halaman <span style="font-weight: 700; color: #22c55e;">{{ $questions->currentPage() }}</span> dari {{ $questions->lastPage() }}
                         </div>
                         <div style="display: flex; gap: 10px;">
-                            {{-- Tombol Sebelumnya --}}
                             @if ($questions->onFirstPage())
                                 <span class="btn-paginate disabled"><i class="fas fa-chevron-left"></i> Sebelumnya</span>
                             @else
@@ -249,7 +246,6 @@
                                 </a>
                             @endif
 
-                            {{-- Tombol Selanjutnya --}}
                             @if ($questions->hasMorePages())
                                 <a href="{{ $questions->appends(request()->query())->nextPageUrl() }}" class="btn-paginate">
                                     Selanjutnya <i class="fas fa-chevron-right"></i>
@@ -267,9 +263,9 @@
                             <i class="fas fa-folder-open fa-2x" style="color: #94a3b8;"></i>
                         </div>
                         <h5 style="color: #0f172a; font-weight: 700; margin-bottom: 0.5rem;">Belum ada Data</h5>
-                        <p style="color: #64748b;">Versi ini belum memiliki soal SJT.</p>
+                        <p style="color: #64748b;">Versi ini belum memiliki soal TK.</p>
                         @if(Auth::user()->role === 'admin')
-                            <a href="{{ route('admin.questions.sjt.create', ['version' => $selectedVersion->id]) }}" class="btn-add" style="margin-top: 1rem;">
+                            <a href="{{ route('admin.questions.tk.create', ['version' => $selectedVersion->id]) }}" class="btn-add" style="margin-top: 1rem;">
                                 <i class="fas fa-plus"></i> Tambah Soal Pertama
                             </a>
                         @endif
@@ -283,31 +279,29 @@
             <div style="background: #f0fdf4; width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem; box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.1);">
                 <i class="fas fa-clipboard-check fa-3x" style="color: #22c55e;"></i>
             </div>
-            <h3 style="font-weight: 800; color: #0f172a; margin-bottom: 1rem;">Pilih Versi SJT</h3>
-            <p style="color: #64748b; max-width: 400px; margin: 0 auto 2rem;">Silakan pilih versi soal di atas untuk melihat, mengelola, atau menambah pertanyaan SJT.</p>
+            <h3 style="font-weight: 800; color: #0f172a; margin-bottom: 1rem;">Pilih Versi TK</h3>
+            <p style="color: #64748b; max-width: 400px; margin: 0 auto 2rem;">Silakan pilih versi soal di atas untuk melihat, mengelola, atau menambah pertanyaan Talent Kompetensi.</p>
         </div>
     @endif
 @endsection
 
 @push('scripts')
     <script>
-        // Version change handler
         function changeVersion() {
             var versionId = document.getElementById('version_select').value;
             if (versionId) {
-                window.location.href = '{{ route('admin.questions.sjt.index') }}?version=' + versionId;
+                window.location.href = '{{ route('admin.questions.tk.index') }}?version=' + versionId;
             } else {
-                window.location.href = '{{ route('admin.questions.sjt.index') }}';
+                window.location.href = '{{ route('admin.questions.tk.index') }}';
             }
         }
 
-        // Export questions
         function exportQuestions() {
             var versionId = '{{ $selectedVersion ? $selectedVersion->id : '' }}';
             var searchValue = $('#searchQuestions').val();
 
             if (versionId) {
-                var url = '{{ route('admin.questions.sjt.export') }}';
+                var url = '{{ route('admin.questions.tk.export') }}';
                 var params = new URLSearchParams();
                 params.append('version', versionId);
 
@@ -317,11 +311,10 @@
 
                 window.open(url + '?' + params.toString(), '_blank');
             } else {
-                Swal.fire('Error', 'Please select a version to export.', 'error');
+                Swal.fire('Error', 'Silakan pilih versi yang akan diekspor.', 'error');
             }
         }
 
-        // Toggle Expand Text Logic
         function toggleText(btn) {
             const shortText = $(btn).siblings('.short-text');
             const fullText = $(btn).siblings('.full-text');
@@ -341,7 +334,6 @@
             let searchTimeout;
             const searchInput = $('#searchQuestions');
 
-            // Client-side Search Functionality
             searchInput.on('keyup', function() {
                 const query = $(this).val().toLowerCase();
 
@@ -360,14 +352,13 @@
                 }, 300);
             });
 
-            // Delete confirmation with SweetAlert2
             $(document).on('click', '.btn-delete', function(e) {
                 e.preventDefault();
                 var questionNumber = $(this).data('question-number');
                 var deleteUrl = $(this).data('delete-url');
 
                 Swal.fire({
-                    title: 'Hapus Soal SJT?',
+                    title: 'Hapus Soal TK?',
                     html: `Yakin ingin menghapus Soal <b>#${questionNumber}</b>?<br><small class="text-muted">Tindakan ini tidak dapat dibatalkan.</small>`,
                     icon: 'warning',
                     showCancelButton: true,
