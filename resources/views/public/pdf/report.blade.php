@@ -30,6 +30,7 @@
             return 'file://'.str_replace('\\','/', $p);
         }
     }
+
     if (!function_exists('safe_text')) {
         function safe_text(?string $t): string
         {
@@ -145,76 +146,80 @@
       <div class="box p1-name">{{ $user['name'] ?? '' }}</div>
     @endif
 
-    {{-- PERSON (5) --}}
+    {{-- PERSON (5) -- TOP 3 KOMPETENSI --}}
     @if ($label === 'person 5')
-      @if(isset($sjt_top3[1])) <div class="box p5comp p5comp2">{{ $sjt_top3[1]['name'] ?? '' }}</div> @endif
-      @if(isset($sjt_top3[0])) <div class="box p5comp p5comp1">{{ $sjt_top3[0]['name'] ?? '' }}</div> @endif
-      @if(isset($sjt_top3[2])) <div class="box p5comp p5comp3">{{ $sjt_top3[2]['name'] ?? '' }}</div> @endif
+      @if(isset($tk_top3[1])) <div class="box p5comp p5comp2">{{ $tk_top3[1]['name'] ?? '' }}</div> @endif
+      @if(isset($tk_top3[0])) <div class="box p5comp p5comp1">{{ $tk_top3[0]['name'] ?? '' }}</div> @endif
+      @if(isset($tk_top3[2])) <div class="box p5comp p5comp3">{{ $tk_top3[2]['name'] ?? '' }}</div> @endif
 
-      @if(isset($sjt_top3[0])) <div class="box p5desc p5desc1">{!! safe_text($sjt_top3[0]['strength'] ?? '') !!}</div> @endif
-      @if(isset($sjt_top3[1])) <div class="box p5desc p5desc2">{!! safe_text($sjt_top3[1]['strength'] ?? '') !!}</div> @endif
-      @if(isset($sjt_top3[2])) <div class="box p5desc p5desc3">{!! safe_text($sjt_top3[2]['strength'] ?? '') !!}</div> @endif
+      @if(isset($tk_top3[0])) <div class="box p5desc p5desc1">{!! safe_text($tk_top3[0]['strength'] ?? '') !!}</div> @endif
+      @if(isset($tk_top3[1])) <div class="box p5desc p5desc2">{!! safe_text($tk_top3[1]['strength'] ?? '') !!}</div> @endif
+      @if(isset($tk_top3[2])) <div class="box p5desc p5desc3">{!! safe_text($tk_top3[2]['strength'] ?? '') !!}</div> @endif
     @endif
 
-    {{-- PERSON (6) --}}
+    {{-- PERSON (6) -- BOTTOM 3 KOMPETENSI --}}
     @if ($label === 'person 6')
-      @if(isset($sjt_bottom3[0]))
-        <div class="box p6name  p6name1">{{ $sjt_bottom3[0]['name'] ?? '' }}</div>
-        <div class="box p6score p6score1">{{ $sjt_bottom3[0]['score'] ?? '-' }}</div>
-        <div class="box p6weak  p6weak1">{!! safe_text($sjt_bottom3[0]['weakness'] ?? '') !!}</div>
+      @if(isset($tk_bottom3[0]))
+        <div class="box p6name  p6name1">{{ $tk_bottom3[0]['name'] ?? '' }}</div>
+        <div class="box p6score p6score1">{{ $tk_bottom3[0]['score'] ?? '0' }}</div>
+        <div class="box p6weak  p6weak1">{!! safe_text($tk_bottom3[0]['weakness'] ?? '') !!}</div>
       @endif
-      @if(isset($sjt_bottom3[1]))
-        <div class="box p6name  p6name2">{{ $sjt_bottom3[1]['name'] ?? '' }}</div>
-        <div class="box p6score p6score2">{{ $sjt_bottom3[1]['score'] ?? '-' }}</div>
-        <div class="box p6weak  p6weak2">{!! safe_text($sjt_bottom3[1]['weakness'] ?? '') !!}</div>
+      @if(isset($tk_bottom3[1]))
+        <div class="box p6name  p6name2">{{ $tk_bottom3[1]['name'] ?? '' }}</div>
+        <div class="box p6score p6score2">{{ $tk_bottom3[1]['score'] ?? '0' }}</div>
+        <div class="box p6weak  p6weak2">{!! safe_text($tk_bottom3[1]['weakness'] ?? '') !!}</div>
       @endif
-      @if(isset($sjt_bottom3[2]))
-        <div class="box p6name  p6name3">{{ $sjt_bottom3[2]['name'] ?? '' }}</div>
-        <div class="box p6score p6score3">{{ $sjt_bottom3[2]['score'] ?? '-' }}</div>
-        <div class="box p6weak  p6weak3">{!! safe_text($sjt_bottom3[2]['weakness'] ?? '') !!}</div>
+      @if(isset($tk_bottom3[2]))
+        <div class="box p6name  p6name3">{{ $tk_bottom3[2]['name'] ?? '' }}</div>
+        <div class="box p6score p6score3">{{ $tk_bottom3[2]['score'] ?? '0' }}</div>
+        <div class="box p6weak  p6weak3">{!! safe_text($tk_bottom3[2]['weakness'] ?? '') !!}</div>
       @endif
     @endif
 
-    {{-- PERSON (7) --}}
+    {{-- PERSON (7) -- REKOMENDASI AKTIVITAS --}}
     @if ($label === 'person 7')
-      @if(isset($reco_activity[0])) <div class="box p7act p7act1">{!! safe_text($reco_activity[0]) !!}</div> @endif
-      @if(isset($reco_activity[1])) <div class="box p7act p7act2">{!! safe_text($reco_activity[1]) !!}</div> @endif
-      @if(isset($reco_activity[2])) <div class="box p7act p7act3">{!! safe_text($reco_activity[2]) !!}</div> @endif
+      @if(!empty($reco_activity[0])) <div class="box p7act p7act1">{!! safe_text($reco_activity[0]) !!}</div> @endif
+      @if(!empty($reco_activity[1])) <div class="box p7act p7act2">{!! safe_text($reco_activity[1]) !!}</div> @endif
+      @if(!empty($reco_activity[2])) <div class="box p7act p7act3">{!! safe_text($reco_activity[2]) !!}</div> @endif
     @endif
 
-    {{-- PERSON (9) --}}
+    {{-- PERSON (9) -- TIPOLOGI ST30 --}}
     @if ($label === 'person 9')
-      <div class="box p9strong">{{ $strengthCodes }}</div>
-      <div class="box p9weak">{{ $weaknessCodes }}</div>
+      <div class="box p9strong">{{ $strengthCodes ?? '' }}</div>
+      <div class="box p9weak">{{ $weaknessCodes ?? '' }}</div>
     @endif
 
-    {{-- PERSON (10) --}}
+    {{-- PERSON (10) -- DETAIL KEKUATAN ST30 --}}
     @if ($label === 'person 10')
-      @foreach ($st30_strengths as $i => $row)
-        @php $k = $i + 1; if ($k > 7) break; @endphp
-        <div class="box p10name-base p10-name-{{ $k }}">
-          {{ $row->name ?? '' }}<br>({{ $row->code ?? '' }})
-        </div>
-        <div class="box p10desc-base p10-desc-{{ $k }}">{!! safe_text($row->desc ?? '') !!}</div>
-      @endforeach
+      @if(!empty($st30_strengths))
+          @foreach ($st30_strengths as $i => $row)
+            @php $k = $i + 1; if ($k > 7) break; @endphp
+            <div class="box p10name-base p10-name-{{ $k }}">
+              {{ $row->name ?? '' }}<br>({{ $row->code ?? '' }})
+            </div>
+            <div class="box p10desc-base p10-desc-{{ $k }}">{!! safe_text($row->desc ?? '') !!}</div>
+          @endforeach
+      @endif
     @endif
 
-    {{-- PERSON (11) --}}
+    {{-- PERSON (11) -- DETAIL KELEMAHAN ST30 --}}
     @if ($label === 'person 11')
-      @foreach ($st30_weakness as $i => $row)
-        @php $k = $i + 1; if ($k > 7) break; @endphp
-        <div class="box p11name-base p11-name-{{ $k }}">
-          {{ $row->name ?? '' }}<br>({{ $row->code ?? '' }})
-        </div>
-        <div class="box p11desc-base p11-desc-{{ $k }}">{!! safe_text($row->desc ?? '') !!}</div>
-      @endforeach
+      @if(!empty($st30_weakness))
+          @foreach ($st30_weakness as $i => $row)
+            @php $k = $i + 1; if ($k > 7) break; @endphp
+            <div class="box p11name-base p11-name-{{ $k }}">
+              {{ $row->name ?? '' }}<br>({{ $row->code ?? '' }})
+            </div>
+            <div class="box p11desc-base p11-desc-{{ $k }}">{!! safe_text($row->desc ?? '') !!}</div>
+          @endforeach
+      @endif
     @endif
 
-    {{-- PERSON (12) --}}
+    {{-- PERSON (12) -- REKOMENDASI PELATIHAN --}}
     @if ($label === 'person 12')
-      @if(isset($reco_training[0])) <div class="box p12tr p12tr1">{!! safe_text($reco_training[0]) !!}</div> @endif
-      @if(isset($reco_training[1])) <div class="box p12tr p12tr2">{!! safe_text($reco_training[1]) !!}</div> @endif
-      @if(isset($reco_training[2])) <div class="box p12tr p12tr3">{!! safe_text($reco_training[2]) !!}</div> @endif
+      @if(!empty($reco_training[0])) <div class="box p12tr p12tr1">{!! safe_text($reco_training[0]) !!}</div> @endif
+      @if(!empty($reco_training[1])) <div class="box p12tr p12tr2">{!! safe_text($reco_training[1]) !!}</div> @endif
+      @if(!empty($reco_training[2])) <div class="box p12tr p12tr3">{!! safe_text($reco_training[2]) !!}</div> @endif
     @endif
 
   </div>

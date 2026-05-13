@@ -24,7 +24,7 @@
 
         {{-- PROGRESS: stepper --}}
         @php
-            $totalPages = 5; // Asumsi total halaman adalah 5, sama seperti di logic controller
+            $totalPages = 5;
             $progress = 50 + (($page / $totalPages) * 50)
         @endphp
         @include('public.test.partials.progress-stepper', ['progress' => $progress])
@@ -43,12 +43,10 @@
                             </div>
                             <div class="tk-question-content">
                                 <div class="tk-options-list">
-                                    {{-- Mengambil nilai $answered dari existingResponses untuk mengecek apa yang dipilih --}}
                                     @php
                                         $answeredOpt = isset($existingResponses[$question->id]) ? $existingResponses[$question->id]->pilihan_dipilih : null;
                                     @endphp
 
-                                    {{-- Lakukan looping dari tabel pilihan_tk melalui relasi 'options' --}}
                                     @foreach($question->options as $option)
                                         @php
                                             $isSelected = ($answeredOpt === $option->huruf_pilihan);
@@ -56,10 +54,11 @@
 
                                         <label class="tk-option-item {{ $isSelected ? 'selected' : '' }}"
                                             data-question="{{ $question->id }}">
-                                            <input type="radio" name="answers[{{ $question->id }}][option_id]"
+                                            {{-- UBAH: name disesuaikan dengan validasi Controller (responses[ID_SOAL]) --}}
+                                            <input type="radio" name="responses[{{ $question->id }}]"
                                                 value="{{ $option->huruf_pilihan }}" class="tk-radio"
                                                 data-question="{{ $question->id }}" {{ $isSelected ? 'checked' : '' }}>
-                                            <input type="hidden" name="answers[{{ $question->id }}][question_id]" value="{{ $question->id }}">
+
                                             <span class="tk-option-letter">{{ strtoupper($option->huruf_pilihan) }}.</span>
                                             <span class="tk-option-text">{{ $option->teks_pilihan }}</span>
                                         </label>
@@ -144,37 +143,46 @@
 
                     form.addEventListener('submit', async e => {
                         e.preventDefault();
+
                         submitBtn.disabled = true;
                         submitBtn.textContent = 'Menyimpan...';
 
-                        const answers = [];
-                        const formData = new FormData(form);
-                        for(let [key, value] of formData.entries()) {
-                            if(key.includes('[option_id]')) {
-                                let questionId = key.match(/\[(.*?)\]/)[1];
-                                answers.push({
-                                    question_id: questionId,
-                                    option_id: value
-                                });
-                            }
-                        }
-
+                        const fd = new FormData(form);
                         try {
                             const res = await fetch(form.action, {
                                 method: 'POST',
                                 headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'X-Requested-With': 'XMLHttpRequest',
                                     'Accept': 'application/json'
                                 },
-                                body: JSON.stringify({
-                                    answers: answers,
-                                    version_id: form.querySelector('input[name="version_id"]').value
-                                })
+                                body: fd,
+                                credentials: 'same-origin'
                             });
 
+                            // --- INI KUNCI PERBAIKANNYA: TANGKAP ERROR DARI SERVER ---
+                            if (!res.ok) {
+                                const errorData = await res.json().catch(() => null);
+                                let errorMessage = "Terjadi kesalahan saat memproses jawaban Anda.";
+
+                                if (errorData && errorData.message) {
+                                    errorMessage = errorData.message;
+                                }
+
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Gagal Melanjutkan',
+                                    text: errorMessage
+                                });
+
+                                // Aktifkan tombol kembali agar user tidak stuck
+                                submitBtn.disabled = false;
+                                submitBtn.textContent = isLastPage ? 'Selesaikan Test' : 'Kirim & Lanjutkan';
+                                return; // Hentikan eksekusi di sini, JANGAN RELOAD HALAMAN!
+                            }
+                            // --------------------------------------------------------
+
                             const data = await res.json();
-                            const next = data.redirect || res.url;
+                            const next = data.next || res.url;
 
                             if (isLastPage) {
                                 Swal.fire({
@@ -195,7 +203,7 @@
 
                         } catch (err) {
                             console.error('Submit gagal:', err);
-                            alert('Terjadi kesalahan. Silakan coba lagi.');
+                            alert('Terjadi kesalahan jaringan. Silakan coba lagi.');
                             submitBtn.disabled = false;
                             submitBtn.textContent = isLastPage ? 'Selesaikan Test' : 'Kirim & Lanjutkan';
                         }

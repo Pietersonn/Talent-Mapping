@@ -231,9 +231,6 @@ class TestController extends BaseController
         $startNumber = (($page - 1) * 10) + 1;
         $endNumber   = $page * 10;
 
-        // --- INILAH KUNCI PERBAIKANNYA ---
-        // Tambahkan with(['options' => ...]) agar tabel pilihan ditarik.
-        // Beri juga filter aktif = true agar opsi yang tidak aktif tidak muncul.
         $questions = TalentCompetencyQuestion::with(['options' => function ($query) {
             $query->where('aktif', true)->orderBy('huruf_pilihan', 'asc');
         }])
@@ -329,8 +326,8 @@ class TestController extends BaseController
         $lastPageNumber = 5;
         if ($page < $lastPageNumber) {
             $next = $page + 1;
-
             $session->update(['langkah_saat_ini' => 'tk_page' . $next]);
+
             $nextUrl = route('test.tk.page', ['page' => $next]);
 
             if ($request->expectsJson()) {
@@ -340,20 +337,24 @@ class TestController extends BaseController
         }
 
         // --- TES SELESAI ---
+
+        // 1. Tandai session completed
         $session->update([
             'langkah_saat_ini'  => 'thanks',
             'selesai'           => true,
             'diselesaikan_pada' => now(),
         ]);
 
+        // 2. Hitung hasil (Scoring)
         try {
             ScoringHelper::calculateAndSaveResults($session->id);
         } catch (\Throwable $e) {
             Log::error('ScoringHelper failed: ' . $e->getMessage(), ['session' => $session->id]);
         }
 
+        // 3. Dispatch Job & Kirim Email (Background Menggunakan Queue Database)
         try {
-            GenerateAssessmentReport::dispatch($session->id);
+            GenerateAssessmentReport::dispatchSync($session->id);
         } catch (\Throwable $e) {
             Log::error('Failed to dispatch report generation: ' . $e->getMessage());
         }
@@ -364,7 +365,7 @@ class TestController extends BaseController
             return response()->json(['next' => $nextUrl], 200);
         }
 
-        return redirect()->route('test.thank-you')->with('success', 'Tes berhasil diselesaikan!');
+        return redirect()->route('test.thank-you')->with('success', 'Tes berhasil diselesaikan! Hasil Anda sedang diproses dan akan dikirim ke email secara otomatis.');
     }
 
     public function completed(): View|RedirectResponse
@@ -430,16 +431,35 @@ class TestController extends BaseController
         return TestSession::where('token_sesi', $sessionToken)->first();
     }
 
+    /**
+     * Generator ID respons ST30/TK Berurutan
+     */
     private function generateResponseId(string $prefix): string
     {
-        do {
-            $id = $prefix . str_pad(rand(1, 99999), 5, '0', STR_PAD_LEFT);
-        } while (
-            ST30Response::where('id', $id)->exists() ||
-            TalentCompetencyResponse::where('id', $id)->exists()
-        );
+        // 1. Tentukan tabel mana yang akan dicek ID terakhirnya
+        if ($prefix === 'ST30') {
+            // Ambil ID terakhir dari jawaban ST30
+            $lastRecord = ST30Response::latest('created_at')->first();
+        } else {
+            // Ambil ID terakhir dari jawaban TK (prefix TKR)
+            $lastRecord = TalentCompetencyResponse::latest('created_at')->first();
+        }
 
-        return $id;
+        // 2. Jika belum ada data sama sekali, nomor dimulai dari 1
+        if (!$lastRecord) {
+            $nextNumber = 1;
+        } else {
+
+            $lastId = $lastRecord->id;
+            $onlyNumber = (int) substr($lastId, strlen($prefix));
+
+            // Tambahkan 1 untuk ID selanjutnya
+            $nextNumber = $onlyNumber + 1;
+        }
+
+        // 4. Gabungkan prefix dengan angka baru (Format 3 digit, misal: 001, 002, 015, 100)
+        // Jika ingin panjangnya 5 digit (00001), ubah angka 3 di bawah ini menjadi 5
+        return $prefix . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
     }
 
     private function redirectToCurrentStep(TestSession $session): RedirectResponse
