@@ -1,20 +1,19 @@
 @extends('public.layouts.app', ['hideFooter' => true])
 
 @section('content')
-    {{-- PASTIKAN CSS STYLES DILOAD DI SINI ATAU DI LAYOUT --}}
     @push('styles')
-        <link rel="stylesheet" href="{{ asset('assets/public/css/pages/sjt-test.css') }}">
+        <link rel="stylesheet" href="{{ asset('assets/public/css/pages/tk-test.css') }}">
     @endpush
 
-    <div class="sjt-test-container">
-        <div class="sjt-hero">
-            <div class="sjt-hero-content">
-                <h1 class="sjt-title">Talenta Kompetensi </h1>
-                <p class="sjt-instruction">
+    <div class="tk-test-container">
+        <div class="tk-hero">
+            <div class="tk-hero-content">
+                <h1 class="tk-title">Talenta Kompetensi (TK)</h1>
+                <p class="tk-instruction">
                     Mohon mengisi dengan jujur dan sesuai keadaan Anda saat ini. Tidak ada jawaban yang benar atau
                     salah, karena seluruh isian mencerminkan diri Anda secara pribadi.
                 </p>
-                <p class="sjt-reminder-text">
+                <p class="tk-reminder-text">
                     <strong class="highlight-red">Harap diingat:</strong>
                     Jawaban yang Anda berikan akan mempengaruhi hasil akhir, sehingga penting untuk menjawab dengan
                     reflektif dan apa adanya, agar hasil yang diperoleh benar-benar sesuai dengan karakter, kekuatan,
@@ -24,60 +23,66 @@
         </div>
 
         {{-- PROGRESS: stepper --}}
-        @php($progress = 50 + (($page / $totalPages) * 50))
+        @php
+            $totalPages = 5; // Asumsi total halaman adalah 5, sama seperti di logic controller
+            $progress = 50 + (($page / $totalPages) * 50)
+        @endphp
         @include('public.test.partials.progress-stepper', ['progress' => $progress])
 
-        <div class="sjt-questions-section">
-            <form id="sjtForm" action="{{ route('test.tk.page.store', $page) }}" method="POST" class="js-loading-form">
+        <div class="tk-questions-section">
+            <form id="tkForm" action="{{ route('test.tk.page.store', $page) }}" method="POST" class="js-loading-form">
                 @csrf
                 <input type="hidden" name="session_id" value="{{ $session->id ?? '' }}">
-                <input type="hidden" name="version_id" value="{{ $tkVersion->id }}">
+                <input type="hidden" name="version_id" value="{{ $activeVersion->id }}">
 
-                <div class="sjt-questions-list">
+                <div class="tk-questions-list">
                     @foreach ($questions as $question)
-                        <div class="sjt-question-block">
-                            <div class="sjt-question-header">
+                        <div class="tk-question-block">
+                            <div class="tk-question-header">
                                 {{ $question->nomor }}. {{ $question->teks_pertanyaan }}
                             </div>
-                            <div class="sjt-question-content">
-                                <div class="sjt-options-list">
-                                    {{-- Menggunakan kolom pilihan_a, pilihan_b, dll --}}
-                                    @foreach(['a', 'b', 'c', 'd', 'e'] as $opt)
-                                        @if(isset($question->{'pilihan_'.$opt}))
-                                            @php
-                                                $isSelected = in_array($opt, $answered) && array_search($opt, $answered) == $question->id;
-                                            @endphp
+                            <div class="tk-question-content">
+                                <div class="tk-options-list">
+                                    {{-- Mengambil nilai $answered dari existingResponses untuk mengecek apa yang dipilih --}}
+                                    @php
+                                        $answeredOpt = isset($existingResponses[$question->id]) ? $existingResponses[$question->id]->pilihan_dipilih : null;
+                                    @endphp
 
-                                            <label class="sjt-option-item {{ $isSelected ? 'selected' : '' }}"
-                                                data-question="{{ $question->id }}">
-                                                <input type="radio" name="answers[{{ $question->id }}][option_id]"
-                                                    value="{{ $opt }}" class="sjt-radio"
-                                                    data-question="{{ $question->id }}" {{ $isSelected ? 'checked' : '' }}>
-                                                <input type="hidden" name="answers[{{ $question->id }}][question_id]" value="{{ $question->id }}">
-                                                <span class="sjt-option-letter">{{ strtoupper($opt) }}.</span>
-                                                <span class="sjt-option-text">{{ $question->{'pilihan_'.$opt} }}</span>
-                                            </label>
-                                        @endif
+                                    {{-- Lakukan looping dari tabel pilihan_tk melalui relasi 'options' --}}
+                                    @foreach($question->options as $option)
+                                        @php
+                                            $isSelected = ($answeredOpt === $option->huruf_pilihan);
+                                        @endphp
+
+                                        <label class="tk-option-item {{ $isSelected ? 'selected' : '' }}"
+                                            data-question="{{ $question->id }}">
+                                            <input type="radio" name="answers[{{ $question->id }}][option_id]"
+                                                value="{{ $option->huruf_pilihan }}" class="tk-radio"
+                                                data-question="{{ $question->id }}" {{ $isSelected ? 'checked' : '' }}>
+                                            <input type="hidden" name="answers[{{ $question->id }}][question_id]" value="{{ $question->id }}">
+                                            <span class="tk-option-letter">{{ strtoupper($option->huruf_pilihan) }}.</span>
+                                            <span class="tk-option-text">{{ $option->teks_pilihan }}</span>
+                                        </label>
                                     @endforeach
                                 </div>
                             </div>
                         </div>
                     @endforeach
-                    <div class="sjt-answer-status incomplete" id="answerStatus">
+                    <div class="tk-answer-status incomplete" id="answerStatus">
                         Lengkapi semua jawaban untuk melanjutkan (0/{{ $questions->count() }} dijawab)
                     </div>
                 </div>
 
-                <div class="sjt-actions">
+                <div class="tk-actions">
                     @if ($page > 1)
-                        <a href="{{ route('test.tk.page', $page - 1) }}" class="sjt-btn sjt-btn-back js-loading-link">
+                        <a href="{{ route('test.tk.page', $page - 1) }}" class="tk-btn tk-btn-back js-loading-link">
                             Kembali
                         </a>
                     @else
                         <div></div>
                     @endif
 
-                    <button type="submit" id="submitBtn" class="sjt-btn sjt-btn-primary" disabled>
+                    <button type="submit" id="submitBtn" class="tk-btn tk-btn-primary" disabled>
                         @if ($page < $totalPages)
                             Kirim & Lanjutkan
                         @else
@@ -96,14 +101,14 @@
                     history.scrollRestoration = 'manual';
                 }
 
-                const initSJT = () => {
-                    const container = document.querySelector('.sjt-test-container');
+                const initTK = () => {
+                    const container = document.querySelector('.tk-test-container');
                     if (!container) return;
 
-                    const form = container.querySelector('#sjtForm');
+                    const form = container.querySelector('#tkForm');
                     const submitBtn = container.querySelector('#submitBtn');
                     const answerStatus = container.querySelector('#answerStatus');
-                    const radios = Array.from(container.querySelectorAll('.sjt-radio'));
+                    const radios = Array.from(container.querySelectorAll('.tk-radio'));
                     const totalQuestions = Number({{ $questions->count() }});
                     const currentPage = Number({{ $page }});
                     const isLastPage = currentPage === Number({{ $totalPages }});
@@ -120,17 +125,17 @@
                             `Semua pertanyaan telah dijawab (${answeredCount}/${totalQuestions})` :
                             `Lengkapi semua jawaban (${answeredCount}/${totalQuestions} dijawab)`;
 
-                        answerStatus.className = allAnswered ? 'sjt-answer-status complete' :
-                            'sjt-answer-status incomplete';
+                        answerStatus.className = allAnswered ? 'tk-answer-status complete' :
+                            'tk-answer-status incomplete';
                         submitBtn.disabled = !allAnswered;
                     };
 
                     radios.forEach(radio => {
                         radio.addEventListener('change', e => {
-                            const questionBlock = e.target.closest('.sjt-question-block');
-                            questionBlock.querySelectorAll('.sjt-option-item')
+                            const questionBlock = e.target.closest('.tk-question-block');
+                            questionBlock.querySelectorAll('.tk-option-item')
                                 .forEach(i => i.classList.remove('selected'));
-                            e.target.closest('.sjt-option-item').classList.add('selected');
+                            e.target.closest('.tk-option-item').classList.add('selected');
                             updateAnswerStatus();
                         });
                     });
@@ -142,7 +147,6 @@
                         submitBtn.disabled = true;
                         submitBtn.textContent = 'Menyimpan...';
 
-                        // Format array of objects untuk sesuai dengan request validate
                         const answers = [];
                         const formData = new FormData(form);
                         for(let [key, value] of formData.entries()) {
@@ -198,8 +202,8 @@
                     });
                 };
 
-                initSJT();
-                window.addEventListener('popstate', () => setTimeout(initSJT, 50));
+                initTK();
+                window.addEventListener('popstate', () => setTimeout(initTK, 50));
             });
         </script>
     @endpush

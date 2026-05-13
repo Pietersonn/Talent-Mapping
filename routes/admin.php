@@ -59,11 +59,12 @@ Route::middleware(['auth', 'role:admin,staff'])
 
                 Route::get('/export', [TalentCompetencyController::class, 'export'])->name('export');
                 Route::post('/import', [TalentCompetencyController::class, 'import'])->name('import')->middleware('role:admin');
-
+                
                 Route::get('/{id}', [TalentCompetencyController::class, 'show'])->name('show');
                 Route::get('/{id}/edit', [TalentCompetencyController::class, 'edit'])->name('edit')->middleware('role:admin');
                 Route::put('/{id}', [TalentCompetencyController::class, 'update'])->name('update')->middleware('role:admin');
                 Route::delete('/{id}', [TalentCompetencyController::class, 'destroy'])->name('destroy')->middleware('role:admin');
+
             });
 
             Route::prefix('competencies')->name('competencies.')->group(function () {

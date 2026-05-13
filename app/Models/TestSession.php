@@ -1,64 +1,83 @@
 <?php
+
 namespace App\Models;
 
 use App\Traits\HasCustomId;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * PHPDoc ini ditambahkan agar ekstensi PHP/Intelephense di VS Code
+ * mengenali properti database tanpa memunculkan error PHP0416
+ * * @property string $id
+ * @property int $id_pengguna
+ * @property int|null $id_program
+ * @property string $token_sesi
+ * @property string $nama_peserta
+ * @property string|null $tempat_kerja
+ * @property string|null $jabatan
+ * @property string $langkah_saat_ini
+ * @property bool $selesai
+ * @property \Illuminate\Support\Carbon|null $diselesaikan_pada
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * * @property-read \App\Models\User $user
+ * @property-read \App\Models\Program|null $program
+ */
 class TestSession extends Model
 {
-    use HasCustomId;
+    use HasFactory, HasCustomId;
 
+    // Arahkan ke tabel Bahasa Indonesia
     protected $table = 'sesi_tes';
-    protected $keyType = 'string';
-    public $incrementing = false;
-    protected string $customIdPrefix = 'TS';
-    protected int $customIdLength = 3;
 
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    // Sesuaikan fillable dengan nama kolom baru
     protected $fillable = [
-        'id_pengguna', 'id_program', 'token_sesi', 'langkah_saat_ini',
-        'id_versi_st30', 'nama_peserta', 'latar_belakang', 'jabatan',
-        'selesai', 'selesai_pada',
+        'id_pengguna',
+        'id_program',
+        'token_sesi',
+        'nama_peserta',
+        'latar_belakang',
+        'jabatan',
+        'langkah_saat_ini',
+        'selesai',
+        'diselesaikan_pada',
     ];
 
     protected $casts = [
-        'selesai'      => 'boolean',
-        'selesai_pada' => 'datetime',
+        'selesai' => 'boolean',
+        'diselesaikan_pada' => 'datetime',
     ];
 
-    public function user(): BelongsTo
+    // --- Relasi (Tentukan Foreign Key Secara Eksplisit) ---
+
+    public function user()
     {
         return $this->belongsTo(User::class, 'id_pengguna');
     }
 
-    public function Program(): BelongsTo
+    public function program()
     {
+        // Menggantikan relasi Event lama
         return $this->belongsTo(Program::class, 'id_program');
     }
 
-    public function st30Responses(): HasMany
+    public function st30Responses()
     {
-        return $this->hasMany(ST30Response::class, 'id_sesi', 'id');
+        return $this->hasMany(ST30Response::class, 'id_sesi');
     }
 
-    public function talentCompetencyResponses(): HasMany
+    public function tkResponses()
     {
-        return $this->hasMany(TalentCompetencyResponse::class, 'id_sesi', 'id');
+        // Menggantikan SJT Responses lama
+        return $this->hasMany(TalentCompetencyResponse::class, 'id_sesi');
     }
 
-    public function testResult(): HasOne
+    public function testResult()
     {
-        return $this->hasOne(TestResult::class, 'id_sesi', 'id');
-    }
-
-    public function getProgressDisplayAttribute(): string
-    {
-        $step = $this->langkah_saat_ini;
-        if (str_starts_with($step, 'st30')) return 'ST-30 Assessment';
-        if (str_starts_with($step, 'sjt'))  return 'TK Assessment';
-        if ($this->selesai)                 return 'Assessment Selesai';
-        return 'Belum dimulai';
+        return $this->hasOne(TestResult::class, 'id_sesi');
     }
 }

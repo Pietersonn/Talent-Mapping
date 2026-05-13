@@ -15,15 +15,15 @@ class ScoringHelper
             return;
         }
 
-        // -------- Agregasi TK (SJT) --------
-        $agg = DB::table('jawaban_tk as sr')
-            ->join('pilihan_tk as so', function ($j) {
-                $j->on('sr.id_soal', '=', 'so.id_soal')
-                    ->on('sr.pilihan_dipilih', '=', 'so.huruf_pilihan');
+        // -------- Agregasi TK (SJT) DENGAN FULL NAME, NO ALIAS --------
+        $agg = DB::table('jawaban_tk')
+            ->join('pilihan_tk', function ($j) {
+                $j->on('jawaban_tk.id_soal', '=', 'pilihan_tk.id_soal')
+                  ->on('jawaban_tk.pilihan_dipilih', '=', 'pilihan_tk.huruf_pilihan');
             })
-            ->where('sr.id_sesi', $sessionId)
-            ->select('so.target_kompetensi', DB::raw('SUM(so.skor) as skor'))
-            ->groupBy('so.target_kompetensi')
+            ->where('jawaban_tk.id_sesi', $sessionId)
+            ->select('pilihan_tk.target_kompetensi', DB::raw('SUM(pilihan_tk.skor) as skor'))
+            ->groupBy('pilihan_tk.target_kompetensi')
             ->get()
             ->keyBy('target_kompetensi');
 
@@ -48,7 +48,6 @@ class ScoringHelper
         $bottom3 = $ranked->sortBy('score')->take(3)->values()->all();
 
         // -------- ST-30 processing --------
-        // PERHATIAN: Asumsi ST30 punya tahap/fase. Sesuaikan jika tabel jawaban_st30 tidak punya kolom ini.
         $st1Raw = (string) DB::table('jawaban_st30')
             ->where('id_sesi', $sessionId)
             ->where('nomor_tahap', 1)
@@ -72,20 +71,20 @@ class ScoringHelper
 
         $st1Typos = collect();
         if (!empty($st1Ids)) {
-            $st1Typos = DB::table('soal_st30 as q')
-                ->join('deskripsi_tipologi as t', 't.kode_tipologi', '=', 'q.kode_tipologi')
-                ->whereIn('q.id', $st1Ids)
-                ->select('t.kode_tipologi AS code', 't.nama_tipologi AS name', 't.deskripsi_kekuatan AS desc')
+            $st1Typos = DB::table('soal_st30')
+                ->join('deskripsi_tipologi', 'deskripsi_tipologi.kode_tipologi', '=', 'soal_st30.kode_tipologi')
+                ->whereIn('soal_st30.id', $st1Ids)
+                ->select('deskripsi_tipologi.kode_tipologi AS code', 'deskripsi_tipologi.nama_tipologi AS name', 'deskripsi_tipologi.deskripsi_kekuatan AS desc')
                 ->distinct()
                 ->get();
         }
 
         $st2Typos = collect();
         if (!empty($st2Ids)) {
-            $st2Typos = DB::table('soal_st30 as q')
-                ->join('deskripsi_tipologi as t', 't.kode_tipologi', '=', 'q.kode_tipologi')
-                ->whereIn('q.id', $st2Ids)
-                ->select('t.kode_tipologi AS code', 't.nama_tipologi AS name', 't.deskripsi_kelemahan AS desc')
+            $st2Typos = DB::table('soal_st30')
+                ->join('deskripsi_tipologi', 'deskripsi_tipologi.kode_tipologi', '=', 'soal_st30.kode_tipologi')
+                ->whereIn('soal_st30.id', $st2Ids)
+                ->select('deskripsi_tipologi.kode_tipologi AS code', 'deskripsi_tipologi.nama_tipologi AS name', 'deskripsi_tipologi.deskripsi_kelemahan AS desc')
                 ->distinct()
                 ->get();
         }

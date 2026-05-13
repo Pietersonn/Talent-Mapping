@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Jobs;
 
 use App\Helpers\QuestionHelper;
@@ -24,12 +25,11 @@ class GenerateAssessmentReport implements ShouldQueue
     public int $tries   = 3;
     public int $timeout = 120;
 
-    public function __construct(public readonly string $sessionId)
-    {}
+    public function __construct(public readonly string $sessionId) {}
 
     public function handle(): void
     {
-        // Load relasi menggunakan huruf kecil (program)
+        // Load relasi menggunakan function bahasa Inggris
         $session = TestSession::with(['user', 'program'])->find($this->sessionId);
 
         if (!$session) {
@@ -59,7 +59,7 @@ class GenerateAssessmentReport implements ShouldQueue
                 'hasil_st30'         => $st30Scores,
                 'hasil_tk'           => $tkPayload,
                 'tipologi_dominan'   => $dominantTypology,
-                'laporan_dibuat_pada'=> now(),
+                'laporan_dibuat_pada' => now(),
             ]
         );
 
@@ -67,7 +67,7 @@ class GenerateAssessmentReport implements ShouldQueue
         $pdfData = [
             'session'          => $session,
             'user'             => $session->user,
-            'program'          => $session->program, // huruf kecil
+            'program'          => $session->program,
             'st30Scores'       => $st30Scores,
             'tkPayload'        => $tkPayload,
             'dominantTypology' => $dominantTypology,
@@ -75,10 +75,10 @@ class GenerateAssessmentReport implements ShouldQueue
             'competencyDescs'  => $competencyDescs,
         ];
 
-        $pdf = Pdf::loadView('pdf.assessment-report', $pdfData)->setPaper('a4', 'portrait');
+        $pdf = Pdf::loadView('public.pdf.report', $pdfData)->setPaper('a4', 'portrait');
 
-        // Simpan ke disk local (bukan public — tidak perlu symlink)
-        $filename  = 'reports/'.date('Y/m').'/'.$session->id.'.pdf';
+        // Simpan ke disk local
+        $filename  = 'reports/' . date('Y/m') . '/' . $session->id . '.pdf';
         Storage::disk('local')->put($filename, $pdf->output());
 
         // Update path_pdf
@@ -93,24 +93,23 @@ class GenerateAssessmentReport implements ShouldQueue
                     "Halo {$user->nama},\n\nTerima kasih telah menyelesaikan Talent Assessment.\nBerikut kami lampirkan hasil assessment Anda.\n\nSalam,\nTim BCTI",
                     function ($m) use ($user, $pdfPath, $session) {
                         $m->to($user->email, $user->nama)
-                          ->subject('Hasil Talent Assessment - '.($session->program?->nama_program ?? 'BCTI'))
-                          ->attach($pdfPath, ['as' => 'hasil-asesmen.pdf', 'mime' => 'application/pdf']);
+                            ->subject('Hasil Talent Assessment - ' . ($session->program?->nama_program ?? 'BCTI'))
+                            ->attach($pdfPath, ['as' => 'hasil-asesmen.pdf', 'mime' => 'application/pdf']);
                     }
                 );
                 $testResult->update(['email_terkirim_pada' => now()]);
 
-                // Update pivot hasil_terkirim menggunakan id_pengguna dan relasi program
                 if ($session->program) {
                     $session->program->participants()->updateExistingPivot($session->id_pengguna, ['hasil_terkirim' => true]);
                 }
             } catch (\Exception $e) {
-                Log::error("GenerateAssessmentReport: gagal kirim email ke {$user->email} — ".$e->getMessage());
+                Log::error("GenerateAssessmentReport: gagal kirim email ke {$user->email} — " . $e->getMessage());
             }
         }
     }
 
     public function failed(\Throwable $exception): void
     {
-        Log::error("GenerateAssessmentReport GAGAL untuk sesi {$this->sessionId}: ".$exception->getMessage());
+        Log::error("GenerateAssessmentReport GAGAL untuk sesi {$this->sessionId}: " . $exception->getMessage());
     }
 }

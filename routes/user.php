@@ -28,13 +28,12 @@ Route::middleware(['auth'])->prefix('test')->name('test.')->group(function () {
         Route::post('/stage/{stage}', [TestController::class, 'storeST30Stage'])->name('stage.store');
     });
 
-    // SJT DIUBAH MENJADI TK (Talenta Kompetensi)
     Route::prefix('tk')->name('tk.')->group(function () {
-        // PERHATIAN: Masih memanggil sjtPage dan storeSJTPage agar fungsi di Controller tidak berubah
-        Route::get('/page/{page}', [TestController::class, 'sjtPage'])->name('page');
-        Route::post('/page/{page}', [TestController::class, 'storeSJTPage'])->name('page.store');
+        // PERHATIAN: Method di Controller sudah diubah ke tkPage dan storeTKPage
+        Route::get('/page/{page}', [TestController::class, 'tkPage'])->name('page');
+        Route::post('/page/{page}', [TestController::class, 'storeTKPage'])->name('page.store');
     });
-
+    
     Route::get('/thank-you', [TestController::class, 'thankYou'])->name('thank-you');
     Route::post('/complete', [TestController::class, 'complete'])->name('complete');
 });

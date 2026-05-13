@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class PilihanTkTableSeeder extends Seeder
+class PilihanTKSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -369,21 +369,17 @@ class PilihanTkTableSeeder extends Seeder
             ['id_soal' => 'SOALTK050', 'huruf_pilihan' => 'd', 'teks_pilihan' => 'saya akan meminta tolong kepada teman saya yang menguasai untuk membantu saya', 'skor' => 3, 'target_kompetensi' => 'GH', 'aktif' => 1],
             ['id_soal' => 'SOALTK050', 'huruf_pilihan' => 'e', 'teks_pilihan' => 'saya akan meminta rekan/atasan mengajari saya dan mencari sumber pembelajaran', 'skor' => 4, 'target_kompetensi' => 'GH', 'aktif' => 1],
         ];
-
+        // --- TAMBAHKAN SCRIPT INI ---
+        // Looping otomatis untuk membuat 'id' (PILT001, PILT002, dst) dan waktu
         $counter = 1;
-        $waktuSekarang = now()->toDateTimeString(); // Format waktu string yang aman untuk DB::table
-
-        foreach ($options as $key => $option) {
-            $options[$key]['id'] = 'PILT' . str_pad($counter, 3, '0', STR_PAD_LEFT);
-            $options[$key]['created_at'] = $waktuSekarang;
-            $options[$key]['updated_at'] = $waktuSekarang;
+        foreach ($options as &$option) {
+            $option['id'] = 'PILT' . str_pad($counter, 3, '0', STR_PAD_LEFT);
+            $option['created_at'] = now();
+            $option['updated_at'] = now();
             $counter++;
         }
 
-        // 2. PERINTAH INSERT (Harus diletakkan di PALING BAWAH)
-        // Gunakan array chunkSize agar tidak memberatkan memori jika datanya banyak
-        foreach (array_chunk($options, 100) as $chunk) {
-            DB::table('pilihan_tk')->insert($chunk);
-        }
+        // Masukkan data ke tabel pilihan_tk (sekarang sudah lengkap dengan ID)
+        DB::table('pilihan_tk')->insert($options);
     }
 }

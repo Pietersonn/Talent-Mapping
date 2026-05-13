@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Helpers;
 
 use App\Models\ST30Response;
@@ -14,15 +15,11 @@ class QuestionHelper
 {
     // ─── ST-30: Hitung Tipologi Dominan ───────────────────────────────────────
 
-    /**
-     * Hitung skor tipologi dari jawaban ST-30 sesi tertentu.
-     * Return: ['TIPE_CODE' => total_skor, ...]
-     */
     public static function calculateST30Scores(string $sessionId): array
     {
         $responses = ST30Response::where('id_sesi', $sessionId)
-            ->join('soal_st30 as q', 'q.id', '=', 'jawaban_st30.id_soal')
-            ->select('q.kode_tipologi', 'jawaban_st30.skor_dipilih')
+            ->join('soal_st30', 'soal_st30.id', '=', 'jawaban_st30.id_soal')
+            ->select('soal_st30.kode_tipologi', 'jawaban_st30.skor_dipilih')
             ->get();
 
         $scores = [];
@@ -33,18 +30,12 @@ class QuestionHelper
         return $scores;
     }
 
-    /**
-     * Dapatkan tipologi dominan (kode dengan skor tertinggi).
-     */
     public static function getDominantTypology(string $sessionId): ?string
     {
         $scores = self::calculateST30Scores($sessionId);
         return array_key_first($scores);
     }
 
-    /**
-     * Dapatkan top-N tipologi.
-     */
     public static function getTopTypologies(string $sessionId, int $n = 3): array
     {
         $scores = self::calculateST30Scores($sessionId);
@@ -53,38 +44,31 @@ class QuestionHelper
 
     // ─── TK: Hitung Skor Kompetensi ───────────────────────────────────────────
 
-    /**
-     * Hitung skor kompetensi dari jawaban TK sesi tertentu.
-     * Return: ['KODE_KOMPETENSI' => total_skor, ...]
-     */
     public static function calculateTKScores(string $sessionId): array
     {
         $responses = TalentCompetencyResponse::where('id_sesi', $sessionId)
-            ->join('soal_tk as q', 'q.id', '=', 'jawaban_tk.id_soal')
-            ->join('pilihan_tk as o', function ($j) {
-                $j->on('o.id_soal', '=', 'jawaban_tk.id_soal')
-                  ->whereColumn('o.huruf_pilihan', 'jawaban_tk.pilihan_dipilih');
+            ->join('soal_tk', 'soal_tk.id', '=', 'jawaban_tk.id_soal')
+            ->join('pilihan_tk', function ($j) {
+                $j->on('pilihan_tk.id_soal', '=', 'jawaban_tk.id_soal')
+                    ->whereColumn('pilihan_tk.huruf_pilihan', 'jawaban_tk.pilihan_dipilih');
             })
-            ->select('q.kode_kompetensi', 'o.skor')
+            // UBAH BARIS INI: Gunakan target_kompetensi dari tabel pilihan_tk
+            ->select('pilihan_tk.target_kompetensi', 'pilihan_tk.skor')
             ->get();
 
         $scores = [];
         foreach ($responses as $r) {
-            $scores[$r->kode_kompetensi] = ($scores[$r->kode_kompetensi] ?? 0) + $r->skor;
+            // UBAH BARIS INI: Mengikuti alias yang di-select di atas
+            $scores[$r->target_kompetensi] = ($scores[$r->target_kompetensi] ?? 0) + $r->skor;
         }
         arsort($scores);
         return $scores;
     }
 
-    /**
-     * Hitung skor TK & format untuk disimpan ke kolom hasil_tk (JSON).
-     * Struktur: { "all": [...], "top3": [...] }
-     */
     public static function buildTKResultPayload(string $sessionId): array
     {
         $rawScores = self::calculateTKScores($sessionId);
 
-        // Ambil semua deskripsi kompetensi sekali query
         $descs = CompetencyDescription::whereIn('kode_kompetensi', array_keys($rawScores))
             ->pluck('nama_kompetensi', 'kode_kompetensi');
 
@@ -97,23 +81,32 @@ class QuestionHelper
             ];
         }
 
-        // Sudah urut desc karena arsort
         $top3 = array_slice($all, 0, 3);
 
         return ['all' => $all, 'top3' => $top3];
     }
 
-    // ─── ST-30: Hitung skor per tahap (untuk tampilan stage summary) ──────────
+    // ─── BANTUAN FUNGSI MAPPING / VALIDASI LAINNYA ────────────────────────────
 
-    /**
-     * Hitung skor ST-30 dikelompokkan per nomor tahap (1-6, setiap 5 soal).
-     */
+    public static function getSelectedQuestionIds($session, array $stages): array
+    {
+        $selected = [];
+        $responses = ST30Response::where('id_sesi', $session->id)
+            ->whereIn('nomor_tahap', $stages)
+            ->get();
+
+        foreach ($responses as $r) {
+            $selected = array_merge($selected, is_array($r->item_dipilih) ? $r->item_dipilih : json_decode($r->item_dipilih, true));
+        }
+        return array_unique($selected);
+    }
+
     public static function calculateST30ByStage(string $sessionId, int $questionsPerStage = 5): array
     {
         $responses = ST30Response::where('id_sesi', $sessionId)
-            ->join('soal_st30 as q', 'q.id', '=', 'jawaban_st30.id_soal')
-            ->select('q.nomor', 'q.kode_tipologi', 'jawaban_st30.skor_dipilih')
-            ->orderBy('q.nomor')
+            ->join('soal_st30', 'soal_st30.id', '=', 'jawaban_st30.id_soal')
+            ->select('soal_st30.nomor', 'soal_st30.kode_tipologi', 'jawaban_st30.skor_dipilih')
+            ->orderBy('soal_st30.nomor')
             ->get();
 
         $stages = [];
@@ -127,35 +120,31 @@ class QuestionHelper
         return array_values($stages);
     }
 
-    // ─── Validasi Kelengkapan Jawaban ─────────────────────────────────────────
-
     public static function isST30Complete(string $sessionId, string $versionId): bool
     {
-        $total    = ST30Question::where('id_versi', $versionId)->count();
+        $total    = ST30Question::where('id_versi', $versionId)->where('aktif', true)->count();
         $answered = ST30Response::where('id_sesi', $sessionId)->count();
         return $answered >= $total;
     }
 
     public static function isTKComplete(string $sessionId): bool
     {
-        $activeVersion = QuestionVersion::getActive('tk');
+        $activeVersion = QuestionVersion::where('jenis', 'tk')->where('aktif', true)->first();
         if (!$activeVersion) return false;
 
-        $total    = TalentCompetencyQuestion::where('id_versi', $activeVersion->id)->count();
+        $total    = TalentCompetencyQuestion::where('id_versi', $activeVersion->id)->where('aktif', true)->count();
         $answered = TalentCompetencyResponse::where('id_sesi', $sessionId)->count();
         return $answered >= $total;
     }
 
-    // ─── Ambil Progress Peserta ───────────────────────────────────────────────
-
     public static function getProgress(string $sessionId, string $st30VersionId): array
     {
-        $tkVersion  = QuestionVersion::getActive('tk');
+        $tkVersion  = QuestionVersion::where('jenis', 'tk')->where('aktif', true)->first();
 
-        $totalST30  = ST30Question::where('id_versi', $st30VersionId)->count();
+        $totalST30  = ST30Question::where('id_versi', $st30VersionId)->where('aktif', true)->count();
         $doneST30   = ST30Response::where('id_sesi', $sessionId)->count();
 
-        $totalTK    = $tkVersion ? TalentCompetencyQuestion::where('id_versi', $tkVersion->id)->count() : 0;
+        $totalTK    = $tkVersion ? TalentCompetencyQuestion::where('id_versi', $tkVersion->id)->where('aktif', true)->count() : 0;
         $doneTK     = TalentCompetencyResponse::where('id_sesi', $sessionId)->count();
 
         return [

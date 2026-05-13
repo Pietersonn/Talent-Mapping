@@ -22,24 +22,22 @@
 
                 <div class="st30-instruction">
                     @if ($stage == 1)
-                        Dari pernyataan berikut, <strong>pilihlah 5 -7 pernyataan yang paling cocok </strong>dengan gambaran
-                        diri anda.
+                        Dari pernyataan berikut, <strong>pilihlah 5 -7 pernyataan yang paling cocok </strong>dengan gambaran diri anda.
                     @elseif($stage == 2)
-                        Dari pernyataan berikut, <strong>pilihlah 5 -7 pernyataan yang paling tidak cocok </strong>dengan
-                        gambaran diri anda.
+                        Dari pernyataan berikut, <strong>pilihlah 5 -7 pernyataan yang paling tidak cocok </strong>dengan gambaran diri anda.
                     @elseif($stage == 3)
-                        Dari pernyataan berikut, <strong>pilihlah 5 -7 pernyataan yang cocok </strong>dengan gambaran diri
-                        anda.
+                        Dari pernyataan berikut, <strong>pilihlah 5 -7 pernyataan yang cocok </strong>dengan gambaran diri anda.
                     @else
-                        Dari pernyataan berikut, <strong>pilihlah 5 -7 pernyataan yang tidak cocok </strong>dengan gambaran
-                        diri anda.
+                        Dari pernyataan berikut, <strong>pilihlah 5 -7 pernyataan yang tidak cocok </strong>dengan gambaran diri anda.
                     @endif
                 </div>
             </div>
         </div>
 
         {{-- PROGRESS: stepper pendek & seragam --}}
-        @php($progress = 10 + ($stage * 10))
+        @php
+            $progress = 10 + ($stage * 10);
+        @endphp
         @include('public.test.partials.progress-stepper', ['progress' => $progress])
 
         <div class="st30-selection-note st30-selection-note--inline">
@@ -58,17 +56,12 @@
         </div>
 
         <div class="st30-questions-section">
-            <form id="st30Form" action="{{ route('test.st30.stage.store', $stage) }}" method="POST"
-                class="js-loading-form">
+            <form id="st30Form" action="{{ route('test.st30.stage.store', $stage) }}" method="POST" class="js-loading-form">
                 @csrf
                 <div class="st30-questions-list">
-                    @foreach ($availableQuestions as $question)
-                        {{-- MENGECEK APAKAH SOAL SUDAH TERPILIH (DISESUAIKAN DENGAN FORMAT LAMA) --}}
+                    @foreach($availableQuestions as $question)
                         @php
-                            $isChecked = false;
-                            if(isset($answeredIds) && in_array($question->id, $answeredIds)){
-                                $isChecked = true;
-                            }
+                            $isChecked = isset($answeredIds) && is_array($answeredIds) && in_array($question->id, $answeredIds);
                         @endphp
 
                         <div class="st30-question-item {{ $isChecked ? 'selected' : '' }}">
@@ -84,7 +77,6 @@
                     @endforeach
                 </div>
 
-                {{-- Counter dipindah ke JS persis seperti file lama --}}
                 <div class="st30-counter" role="status" aria-live="polite" data-total="7">
                     <span class="st30-count">0</span>/<span class="st30-total">7</span>
                 </div>
@@ -109,42 +101,28 @@
     @push('scripts')
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                console.log('DOM loaded');
-
                 const checkboxes = document.querySelectorAll('.st30-checkbox');
                 const submitBtn = document.getElementById('submitBtn');
                 const form = document.getElementById('st30Form');
                 const counter = document.querySelector('.st30-count');
 
-                console.log('Found checkboxes:', checkboxes.length);
-                console.log('Found submit button:', !!submitBtn);
-                console.log('Found counter:', !!counter);
-
                 function updateSubmitButton() {
                     const checkedCount = document.querySelectorAll('.st30-checkbox:checked').length;
                     const isValid = checkedCount >= 5 && checkedCount <= 7;
-
-                    console.log('Checked count:', checkedCount, 'Valid:', isValid);
 
                     if (submitBtn) {
                         submitBtn.disabled = !isValid;
                     }
 
                     if (counter) {
-                        // Menggunakan style sesuai counter asli
                         counter.parentElement.textContent = `${checkedCount}/7 dipilih`;
                         counter.parentElement.className = `st30-counter ${isValid ? 'valid' : 'invalid'}`;
                     }
                 }
 
-                checkboxes.forEach((checkbox, index) => {
-                    console.log('Adding listener to checkbox', index);
-
+                checkboxes.forEach((checkbox) => {
                     checkbox.addEventListener('change', function(e) {
-                        console.log('Checkbox changed:', this.checked, this.value);
-
                         updateSubmitButton();
-
                         const questionItem = this.closest('.st30-question-item');
                         if (questionItem) {
                             if (this.checked) {
@@ -159,13 +137,9 @@
                 if (form) {
                     form.addEventListener('submit', function(e) {
                         const checkedCount = document.querySelectorAll('.st30-checkbox:checked').length;
-
-                        console.log('Form submit - checked count:', checkedCount);
-
                         if (checkedCount < 5 || checkedCount > 7) {
                             e.preventDefault();
-                            alert('Anda harus memilih 5-7 pernyataan. Saat ini: ' + checkedCount +
-                                ' pernyataan.');
+                            alert('Anda harus memilih 5-7 pernyataan. Saat ini: ' + checkedCount + ' pernyataan.');
                             return false;
                         }
 
@@ -173,21 +147,10 @@
                             submitBtn.disabled = true;
                             submitBtn.textContent = 'Menyimpan...';
                         }
-
-                        // TIDAK ADA FETCH JS, MURNI MENGGUNAKAN FORM SUBMIT STANDAR
                     });
                 }
 
                 updateSubmitButton();
-
-                // Backup manual click detection
-                document.addEventListener('click', function(e) {
-                    if (e.target && e.target.classList.contains('st30-checkbox')) {
-                        console.log('Manual click detection:', e.target.checked, e.target.value);
-                        setTimeout(updateSubmitButton, 10);
-                    }
-                });
-
             });
         </script>
     @endpush

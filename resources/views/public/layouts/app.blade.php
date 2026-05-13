@@ -25,7 +25,7 @@
     @if (request()->routeIs('test.*'))
         <link rel="stylesheet" href="{{ asset('assets/public/css/pages/test.css') }}">
         <link rel="stylesheet" href="{{ asset('assets/public/css/pages/st30-test.css') }}">
-        <link rel="stylesheet" href="{{ asset('assets/public/css/pages/sjt-test.css') }}">
+        <link rel="stylesheet" href="{{ asset('assets/public/css/pages/tk-test.css') }}">
         <link rel="stylesheet" href="{{ asset('assets/public/css/pages/thanks.css') }}">
         <link rel="stylesheet" href="{{ asset('assets/public/css/profile.css') }}">
         <link rel="stylesheet" href="{{ asset('assets/public/css/components/stepper.css') }}">
