@@ -29,7 +29,8 @@ class GenerateAssessmentReport implements ShouldQueue
 
     public function handle(): void
     {
-        $session = TestSession::with(['user', 'Program'])->find($this->sessionId);
+        // Load relasi menggunakan huruf kecil (program)
+        $session = TestSession::with(['user', 'program'])->find($this->sessionId);
 
         if (!$session) {
             Log::warning("GenerateAssessmentReport: sesi {$this->sessionId} tidak ditemukan.");
@@ -66,7 +67,7 @@ class GenerateAssessmentReport implements ShouldQueue
         $pdfData = [
             'session'          => $session,
             'user'             => $session->user,
-            'Program'            => $session->Program,
+            'program'          => $session->program, // huruf kecil
             'st30Scores'       => $st30Scores,
             'tkPayload'        => $tkPayload,
             'dominantTypology' => $dominantTypology,
@@ -92,15 +93,15 @@ class GenerateAssessmentReport implements ShouldQueue
                     "Halo {$user->nama},\n\nTerima kasih telah menyelesaikan Talent Assessment.\nBerikut kami lampirkan hasil assessment Anda.\n\nSalam,\nTim BCTI",
                     function ($m) use ($user, $pdfPath, $session) {
                         $m->to($user->email, $user->nama)
-                          ->subject('Hasil Talent Assessment - '.($session->Program?->nama ?? 'BCTI'))
+                          ->subject('Hasil Talent Assessment - '.($session->program?->nama_program ?? 'BCTI'))
                           ->attach($pdfPath, ['as' => 'hasil-asesmen.pdf', 'mime' => 'application/pdf']);
                     }
                 );
                 $testResult->update(['email_terkirim_pada' => now()]);
 
-                // Update pivot hasil_terkirim
-                if ($session->Program) {
-                    $session->Program->participants()->updateExistingPivot($session->id_pengguna, ['hasil_terkirim' => true]);
+                // Update pivot hasil_terkirim menggunakan id_pengguna dan relasi program
+                if ($session->program) {
+                    $session->program->participants()->updateExistingPivot($session->id_pengguna, ['hasil_terkirim' => true]);
                 }
             } catch (\Exception $e) {
                 Log::error("GenerateAssessmentReport: gagal kirim email ke {$user->email} — ".$e->getMessage());

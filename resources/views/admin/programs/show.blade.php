@@ -45,7 +45,10 @@
 
     .status-badge { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
     .badge-active { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-    .badge-inactive { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; } /* Warna abu-abu netral */
+    .badge-inactive { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+
+    .btn-del { display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; font-weight: 600; border-radius: 10px; padding: 8px 16px; border: 1px solid transparent; transition: 0.2s; cursor: pointer; background: #fef2f2; color: #ef4444; border-color: #fecaca; }
+    .btn-del:hover { background: #fee2e2; }
 </style>
 @endpush
 
@@ -56,10 +59,10 @@
 
 <div class="detail-header">
     <div>
-        <h1 class="program-title">{{ $program->nama_program }}</h1>
+        <h1 class="program-title">{{ $program->nama }}</h1>
         <div class="program-meta">
-            <div class="meta-item"><i class="far fa-building text-green-500"></i> {{ $program->instansi ?? 'Tidak ada nama instansi' }}</div>
-            <div class="meta-item"><i class="far fa-calendar-alt text-green-500"></i> {{ \Carbon\Carbon::parse($program->tanggal_mulai)->format('d M Y') }} - {{ \Carbon\Carbon::parse($program->tanggal_selesai)->format('d M Y') }}</div>
+            <div class="meta-item"><i class="fas fa-key text-green-500"></i> Kode Akses: <b class="font-mono text-green-700 ml-1">{{ $program->kode_program }}</b></div>
+            <div class="meta-item"><i class="far fa-building text-green-500"></i> {{ $program->perusahaan ?? 'Tanpa Instansi' }}</div>
             <div class="meta-item">
                 @if($program->aktif)
                     <span class="status-badge badge-active"><i class="fas fa-check-circle mr-1"></i> Aktif Berjalan</span>
@@ -70,16 +73,36 @@
         </div>
     </div>
 
-    @if(Auth::user()->role === 'admin')
-        <a href="{{ route('admin.programs.edit', $program->id) }}" style="background: #ecfdf5; color: #059669; border: 1px solid #d1fae5; padding: 8px 16px; border-radius: 10px; font-weight: 600; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; transition: 0.2s;">
-            <i class="fas fa-pen"></i> Edit Program
-        </a>
+    @if(Auth::user()->peran === 'admin')
+        <div style="display: flex; gap: 8px;">
+            <a href="{{ route('admin.programs.edit', $program->id) }}" style="background: #ecfdf5; color: #059669; border: 1px solid #d1fae5; padding: 8px 16px; border-radius: 10px; font-weight: 600; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; transition: 0.2s;">
+                <i class="fas fa-pen"></i> Edit
+            </a>
+            <button onclick="confirmDelete('{{ $program->id }}', '{{ $program->nama }}')" class="btn-del">
+                <i class="fas fa-trash"></i> Hapus
+            </button>
+        </div>
     @endif
 </div>
 
 <div class="dashboard-grid">
     {{-- SIDEBAR KIRI --}}
     <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+        {{-- Card Jadwal --}}
+        <div class="bento-card">
+            <div class="card-title"><i class="far fa-calendar-alt text-green-500"></i> Jadwal Program</div>
+            <div class="info-list">
+                <div class="info-item">
+                    <span class="info-label">Tanggal Mulai</span>
+                    <span class="info-value" style="color: #0f172a;">{{ \Carbon\Carbon::parse($program->tanggal_mulai)->format('d M Y') }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Tanggal Selesai</span>
+                    <span class="info-value" style="color: #0f172a;">{{ \Carbon\Carbon::parse($program->tanggal_selesai)->format('d M Y') }}</span>
+                </div>
+            </div>
+        </div>
 
         {{-- Card Kuota --}}
         <div class="bento-card">
@@ -124,10 +147,10 @@
             <div class="card-title"><i class="fas fa-user-tie text-green-500"></i> Informasi Mitra (PIC)</div>
             <div style="display: flex; align-items: center; gap: 15px; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;">
                 <div style="width: 48px; height: 48px; background: #dcfce7; color: #166534; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 700;">
-                    {{ $program->mitra ? substr($program->mitra->name, 0, 1) : '?' }}
+                    {{ $program->mitra ? substr($program->mitra->nama, 0, 1) : '?' }}
                 </div>
                 <div>
-                    <div style="font-weight: 700; color: #0f172a; margin-bottom: 2px;">{{ $program->mitra->name ?? 'Mitra Tidak Ditemukan' }}</div>
+                    <div style="font-weight: 700; color: #0f172a; margin-bottom: 2px;">{{ $program->mitra->nama ?? 'Mitra Tidak Ditemukan' }}</div>
                     <div style="font-size: 0.8rem; color: #64748b;"><i class="fas fa-envelope mr-1"></i> {{ $program->mitra->email ?? '-' }}</div>
                 </div>
             </div>
@@ -165,7 +188,7 @@
                                     $isFinished = $completedTests == 2;
                                 @endphp
                                 <tr>
-                                    <td style="font-weight: 600; color: #0f172a;">{{ $participant->name }}</td>
+                                    <td style="font-weight: 600; color: #0f172a;">{{ $participant->nama }}</td>
                                     <td style="color: #64748b; font-size: 0.85rem;">{{ $participant->email }}</td>
                                     <td style="text-align: right;">
                                         @if($isFinished)
@@ -194,3 +217,27 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    function confirmDelete(id, name) {
+        Swal.fire({
+            title: 'Hapus Program?',
+            html: `Yakin ingin menghapus program <b>${name}</b>?`,
+            icon: 'warning',
+            showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#f1f5f9',
+            confirmButtonText: 'Ya, Hapus', cancelButtonText: '<span style="color:black">Batal</span>',
+            customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl px-4 py-2', cancelButton: 'rounded-xl px-4 py-2' }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `{{ url('admin/programs') }}/${id}`;
+                form.innerHTML = '@csrf @method("DELETE")';
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+</script>
+@endpush

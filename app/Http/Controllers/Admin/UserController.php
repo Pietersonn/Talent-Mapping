@@ -36,12 +36,12 @@ class UserController extends Controller
             $users->getCollection()->transform(function ($user) {
                 return [
                     'id'            => $user->id,
-                    'name'          => $user->nama, // Tetap menggunakan format key name/role sesuai JavaScript View
+                    'nama'          => $user->nama, // Murni dari DB
                     'email'         => $user->email,
-                    'phone_number'  => $user->nomor_telepon ?? '-',
-                    'role'          => ucfirst($user->peran),
-                    'role_raw'      => $user->peran,
-                    'is_active'     => $user->aktif,
+                    'nomor_telepon' => $user->nomor_telepon ?? '-',
+                    'peran_display' => ucfirst($user->peran),
+                    'peran'         => $user->peran, // Murni dari DB
+                    'aktif'         => $user->aktif, // Murni dari DB
                     'avatar_letter' => substr($user->nama, 0, 1),
                     'edit_url'      => route('admin.users.edit', $user->id),
                     'delete_url'    => route('admin.users.destroy', $user->id),

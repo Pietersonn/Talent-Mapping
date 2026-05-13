@@ -22,11 +22,7 @@
         gap: 8px;
         box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.3);
     }
-    .btn-add:hover {
-        background: #16a34a;
-        transform: translateY(-1px);
-        box-shadow: 0 6px 8px -1px rgba(34, 197, 94, 0.4);
-    }
+    .btn-add:hover { background: #16a34a; transform: translateY(-1px); box-shadow: 0 6px 8px -1px rgba(34, 197, 94, 0.4); }
 
     .btn-cancel {
         background: white;
@@ -42,37 +38,30 @@
         gap: 8px;
         transition: all 0.2s;
     }
-    .btn-cancel:hover {
-        background: #f8fafc;
-        color: #0f172a;
-        border-color: #cbd5e1;
-    }
+    .btn-cancel:hover { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
 
-    .form-card {
-        background: white;
-        border: 1px solid #e2e8f0;
-        border-radius: 16px;
-        padding: 2rem;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    }
+    .form-card { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
 
     .form-group { margin-bottom: 1.5rem; }
     .form-label { display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 0.5rem; }
-    .form-control { width: 100%; padding: 0.75rem 1rem; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 0.9rem; color: #0f172a; background-color: #f8fafc; transition: all 0.2s; }
+    .form-label.required::after { content: "*"; color: #ef4444; margin-left: 4px; }
+
+    .form-control {
+        width: 100%; padding: 0.75rem 1rem;
+        border: 1px solid #e2e8f0; border-radius: 10px;
+        font-size: 0.9rem; color: #0f172a;
+        background-color: #f8fafc; transition: all 0.2s;
+    }
     .form-control:focus { background-color: white; border-color: #22c55e; outline: none; box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1); }
 
     .password-wrapper { position: relative; }
     .btn-toggle-password {
         position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-        background: none; border: none; color: #94a3b8; cursor: pointer;
-        transition: color 0.2s;
+        background: none; border: none; color: #94a3b8; cursor: pointer; transition: color 0.2s;
     }
     .btn-toggle-password:hover { color: #22c55e; }
 
-    .toggle-wrapper {
-        display: flex; align-items: center; gap: 12px;
-        padding: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
-    }
+    .toggle-wrapper { display: flex; align-items: center; gap: 12px; padding: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; }
     .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
@@ -80,16 +69,8 @@
     input:checked + .slider { background-color: #22c55e; }
     input:checked + .slider:before { transform: translateX(20px); }
 
-    .form-section-title {
-        font-size: 0.85rem; font-weight: 700; color: #94a3b8;
-        text-transform: uppercase; letter-spacing: 0.05em;
-        border-bottom: 1px dashed #e2e8f0; padding-bottom: 0.5rem; margin-bottom: 1.5rem;
-    }
-
-    .form-actions {
-        margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #f1f5f9;
-        display: flex; justify-content: flex-end; gap: 10px;
-    }
+    .form-section-title { font-size: 0.85rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px dashed #e2e8f0; padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
+    .form-actions { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 10px; }
 </style>
 @endpush
 
@@ -98,9 +79,7 @@
         <div>
             <h1 class="page-title" style="font-size: 1.5rem; font-weight: 800; color: #0f172a;"><i class="fas fa-user-plus text-green-500 mr-2"></i> Tambah Pengguna Baru</h1>
         </div>
-        <a href="{{ route('admin.users.index') }}" class="btn-cancel">
-            <i class="fas fa-arrow-left"></i> Kembali
-        </a>
+        <a href="{{ route('admin.users.index') }}" class="btn-cancel"><i class="fas fa-arrow-left"></i> Kembali</a>
     </div>
 @endsection
 
@@ -152,18 +131,14 @@
                         <label class="form-label required">Kata Sandi</label>
                         <div class="password-wrapper">
                             <input type="password" name="password" id="password" class="form-control @error('password') border-red-500 @enderror" placeholder="******" required>
-                            <button type="button" class="btn-toggle-password" onclick="togglePassword('password', this)">
-                                <i class="fas fa-eye"></i>
-                            </button>
+                            <button type="button" class="btn-toggle-password" onclick="togglePassword('password', this)"><i class="fas fa-eye"></i></button>
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label required">Ulangi Sandi</label>
                         <div class="password-wrapper">
                             <input type="password" name="password_confirmation" id="password_confirm" class="form-control @error('password') border-red-500 @enderror" placeholder="******" required>
-                            <button type="button" class="btn-toggle-password" onclick="togglePassword('password_confirm', this)">
-                                <i class="fas fa-eye"></i>
-                            </button>
+                            <button type="button" class="btn-toggle-password" onclick="togglePassword('password_confirm', this)"><i class="fas fa-eye"></i></button>
                         </div>
                     </div>
                     <div style="grid-column: span 2; margin-top: -15px;">
@@ -189,9 +164,7 @@
 
         <div class="form-actions">
             <a href="{{ route('admin.users.index') }}" class="btn-cancel">Batal</a>
-            <button type="submit" class="btn-add">
-                <i class="fas fa-save"></i> Simpan Data
-            </button>
+            <button type="submit" class="btn-add"><i class="fas fa-save"></i> Simpan Data</button>
         </div>
     </form>
 </div>
@@ -203,13 +176,9 @@
         const input = document.getElementById(inputId);
         const icon = btn.querySelector('i');
         if (input.type === "password") {
-            input.type = "text";
-            icon.classList.remove('fa-eye');
-            icon.classList.add('fa-eye-slash');
+            input.type = "text"; icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash');
         } else {
-            input.type = "password";
-            icon.classList.remove('fa-eye-slash');
-            icon.classList.add('fa-eye');
+            input.type = "password"; icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye');
         }
     }
 </script>

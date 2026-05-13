@@ -8,7 +8,6 @@
 
 @section('content')
     <div class="test-registration-container">
-        <!-- Hero Section with Background -->
         <div class="test-hero">
             <div class="container">
                 <div class="hero-content">
@@ -20,11 +19,11 @@
                 </div>
             </div>
         </div>
+
         {{-- Progress global (Register) --}}
         @php($progress = 0)
         @include('public.test.partials.progress-stepper', ['progress' => $progress])
 
-        <!-- Form Section -->
         <div class="form-section">
             <div class="container">
                 <div class="form-container">
@@ -37,8 +36,9 @@
                             <div class="form-column">
                                 <div class="form-group">
                                     <label for="full_name">Nama Lengkap</label>
+                                    {{-- name="full_name" Sesuai dengan Controller --}}
                                     <input type="text" id="full_name" name="full_name"
-                                        value="{{ old('full_name', auth()->user()->name ?? '') }}" required
+                                        value="{{ old('full_name', auth()->user()->nama ?? '') }}" required
                                         placeholder="Wajib di isi" class="form-input">
                                     @error('full_name')
                                         <span class="error-text">{{ $message }}</span>
@@ -57,6 +57,7 @@
 
                                 <div class="form-group">
                                     <label for="workplace">Latar Belakang</label>
+                                    {{-- name="workplace" Sesuai dengan Controller --}}
                                     <input type="text" id="workplace" name="workplace" value="{{ old('workplace') }}"
                                         required placeholder="Sekolah/Unit Kerja/Universitas" class="form-input">
                                     @error('workplace')
@@ -68,7 +69,7 @@
                                     <label for="position">Position (Jabatan)</label>
                                     <input id="position" type="text" name="position"
                                         class="form-input @error('position') is-invalid @enderror"
-                                        placeholder="Your position" value="{{ old('position') }}" required>
+                                        placeholder="Your position" value="{{ old('position') }}">
                                     @error('position')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
@@ -76,12 +77,13 @@
 
                                 <div class="form-group">
                                     <label for="event_id">Event/Program/Dll</label>
-                                    <select id="event_id" name="event_id" required class="form-select">
+                                    {{-- name="event_id" Sesuai dengan Controller --}}
+                                    <select id="event_id" name="event_id" class="form-select">
                                         <option value="">Tidak ada</option>
-                                        @foreach ($activeEvents as $event)
-                                            <option value="{{ $event->id }}"
-                                                {{ old('event_id') == $event->id ? 'selected' : '' }}>
-                                                {{ $event->name }}
+                                        @foreach ($activePrograms as $program)
+                                            <option value="{{ $program->id }}"
+                                                {{ old('event_id') == $program->id ? 'selected' : '' }}>
+                                                {{ $program->nama }}
                                             </option>
                                         @endforeach
                                     </select>
@@ -93,7 +95,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Event Code Field - Show only if event selected -->
                                 <div class="form-group" id="eventCodeGroup" style="display: none;">
                                     <label for="event_code">Access Code</label>
                                     <input type="text" id="event_code" name="event_code" value="{{ old('event_code') }}"
@@ -112,7 +113,6 @@
 
                             <div class="illustration-column">
                                 <div class="illustration">
-                                    <!-- Decorative elements matching the design -->
                                     <div class="floating-elements">
                                         <div class="dot dot-1"></div>
                                         <div class="dot dot-2"></div>
@@ -145,21 +145,19 @@
 
             // Store event codes for validation
             const eventCodes = {
-                @foreach ($activeEvents as $event)
-                    '{{ $event->id }}': '{{ $event->event_code }}',
+                @foreach ($activePrograms as $program)
+                    '{{ $program->id }}': '{{ $program->kode_program }}',
                 @endforeach
             };
 
             // Handle event selection
             eventSelect.addEventListener('change', function() {
                 if (this.value) {
-                    // Show event code field
                     eventCodeGroup.style.display = 'block';
                     eventCodeInput.required = true;
                     submitBtn.disabled = true;
                     codeValidation.innerHTML = '';
                 } else {
-                    // Hide event code field
                     eventCodeGroup.style.display = 'none';
                     eventCodeInput.required = false;
                     eventCodeInput.value = '';
@@ -207,29 +205,23 @@
                     }
                 });
 
-                // If event is selected, check code validation
-                if (eventSelect.value && (!eventCodeInput.value || !codeValidation.querySelector(
-                        '.validation-success'))) {
+                if (eventSelect.value && (!eventCodeInput.value || !codeValidation.querySelector('.validation-success'))) {
                     allValid = false;
                 }
 
                 submitBtn.disabled = !allValid;
             }
 
-            // Validate form on input change
             const allInputs = document.querySelectorAll('input[required], select[required]');
             allInputs.forEach(input => {
                 input.addEventListener('input', validateForm);
                 input.addEventListener('change', validateForm);
             });
 
-            // Initial validation
             validateForm();
 
-            // Form submission handler
             const form = document.querySelector('.test-form');
             form.addEventListener('submit', function(e) {
-                // Final validation before submit
                 if (eventSelect.value) {
                     const selectedEventId = eventSelect.value;
                     const inputCode = eventCodeInput.value.trim();
@@ -242,13 +234,11 @@
                     }
                 }
 
-                // Show loading state
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Memproses...';
                 submitBtn.classList.add('loading');
             });
 
-            // Floating animation for decorative elements
             const dots = document.querySelectorAll('.dot');
             dots.forEach((dot, index) => {
                 dot.style.animationDelay = `${index * 0.5}s`;

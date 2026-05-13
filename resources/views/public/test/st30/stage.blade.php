@@ -6,7 +6,6 @@
     @endpush
 
     <div class="st30-test-container">
-        <!-- Hero Section -->
         <div class="st30-hero">
             <div class="st30-hero-content">
                 <h1 class="st30-title">
@@ -40,6 +39,7 @@
         </div>
 
         {{-- PROGRESS: stepper pendek & seragam --}}
+        @php($progress = 10 + ($stage * 10))
         @include('public.test.partials.progress-stepper', ['progress' => $progress])
 
         <div class="st30-selection-note st30-selection-note--inline">
@@ -57,30 +57,38 @@
             </span>
         </div>
 
-        <!-- Questions Form -->
         <div class="st30-questions-section">
             <form id="st30Form" action="{{ route('test.st30.stage.store', $stage) }}" method="POST"
                 class="js-loading-form">
                 @csrf
                 <div class="st30-questions-list">
                     @foreach ($availableQuestions as $question)
-                        <div class="st30-question-item">
+                        {{-- MENGECEK APAKAH SOAL SUDAH TERPILIH (DISESUAIKAN DENGAN FORMAT LAMA) --}}
+                        @php
+                            $isChecked = false;
+                            if(isset($answeredIds) && in_array($question->id, $answeredIds)){
+                                $isChecked = true;
+                            }
+                        @endphp
+
+                        <div class="st30-question-item {{ $isChecked ? 'selected' : '' }}">
                             <label class="st30-question-label">
                                 <div class="st30-question-content">
                                     <input type="checkbox" name="selected_questions[]" value="{{ $question->id }}"
-                                        class="st30-checkbox">
-                                    <span class="st30-number">{{ $question->number }}.</span>
-                                    <span class="st30-text">{{ $question->statement }}</span>
+                                        class="st30-checkbox" {{ $isChecked ? 'checked' : '' }}>
+                                    <span class="st30-number">{{ $question->nomor }}.</span>
+                                    <span class="st30-text">{{ $question->pernyataan }}</span>
                                 </div>
                             </label>
                         </div>
                     @endforeach
                 </div>
+
+                {{-- Counter dipindah ke JS persis seperti file lama --}}
                 <div class="st30-counter" role="status" aria-live="polite" data-total="7">
                     <span class="st30-count">0</span>/<span class="st30-total">7</span>
                 </div>
 
-                <!-- Action Buttons -->
                 <div class="st30-actions">
                     @if ($stage > 1)
                         <a href="{{ route('test.st30.stage', $stage - 1) }}" class="st30-btn st30-btn-back js-loading-link">
@@ -90,13 +98,8 @@
                         <div></div>
                     @endif
 
-
                     <button type="submit" id="submitBtn" class="st30-btn st30-btn-primary" disabled>
-                        @if ($stage < 4)
-                            Kirim & Lanjutkan
-                        @else
-                            Kirim & Lanjutkan
-                        @endif
+                        Kirim & Lanjutkan
                     </button>
                 </div>
             </form>
@@ -111,7 +114,7 @@
                 const checkboxes = document.querySelectorAll('.st30-checkbox');
                 const submitBtn = document.getElementById('submitBtn');
                 const form = document.getElementById('st30Form');
-                const counter = document.querySelector('.st30-counter');
+                const counter = document.querySelector('.st30-count');
 
                 console.log('Found checkboxes:', checkboxes.length);
                 console.log('Found submit button:', !!submitBtn);
@@ -128,8 +131,9 @@
                     }
 
                     if (counter) {
-                        counter.textContent = `${checkedCount}/7 dipilih`;
-                        counter.className = `st30-counter ${isValid ? 'valid' : 'invalid'}`;
+                        // Menggunakan style sesuai counter asli
+                        counter.parentElement.textContent = `${checkedCount}/7 dipilih`;
+                        counter.parentElement.className = `st30-counter ${isValid ? 'valid' : 'invalid'}`;
                     }
                 }
 
@@ -169,9 +173,10 @@
                             submitBtn.disabled = true;
                             submitBtn.textContent = 'Menyimpan...';
                         }
+
+                        // TIDAK ADA FETCH JS, MURNI MENGGUNAKAN FORM SUBMIT STANDAR
                     });
                 }
-
 
                 updateSubmitButton();
 
@@ -182,7 +187,6 @@
                         setTimeout(updateSubmitButton, 10);
                     }
                 });
-
 
             });
         </script>

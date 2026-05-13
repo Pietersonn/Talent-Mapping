@@ -48,6 +48,7 @@ class ScoringHelper
         $bottom3 = $ranked->sortBy('score')->take(3)->values()->all();
 
         // -------- ST-30 processing --------
+        // PERHATIAN: Asumsi ST30 punya tahap/fase. Sesuaikan jika tabel jawaban_st30 tidak punya kolom ini.
         $st1Raw = (string) DB::table('jawaban_st30')
             ->where('id_sesi', $sessionId)
             ->where('nomor_tahap', 1)

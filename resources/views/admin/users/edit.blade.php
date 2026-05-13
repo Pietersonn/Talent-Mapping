@@ -7,44 +7,23 @@
     .border-red-500 { border-color: #ef4444 !important; }
     .text-red-500 { color: #ef4444 !important; }
 
-    /* --- STYLE TOMBOL --- */
-    .btn-add {
-        background: #22c55e;
-        color: white;
-        padding: 10px 24px;
-        border-radius: 12px;
-        font-weight: 600;
-        font-size: 0.9rem;
-        border: none;
-        cursor: pointer;
-        transition: all 0.2s;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.3);
-    }
+    .btn-add { background: #22c55e; color: white; padding: 10px 24px; border-radius: 12px; font-weight: 600; font-size: 0.9rem; border: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.3); }
     .btn-add:hover { background: #16a34a; transform: translateY(-1px); }
-
-    .btn-cancel {
-        background: white; color: #64748b; border: 1px solid #e2e8f0;
-        padding: 10px 24px; border-radius: 12px; font-weight: 600; font-size: 0.9rem;
-        text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s;
-    }
+    .btn-cancel { background: white; color: #64748b; border: 1px solid #e2e8f0; padding: 10px 24px; border-radius: 12px; font-weight: 600; font-size: 0.9rem; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; }
     .btn-cancel:hover { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
 
-    /* --- FORM CARD & INPUTS --- */
     .form-card { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
     .form-group { margin-bottom: 1.5rem; }
     .form-label { display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 0.5rem; }
+    .form-label.required::after { content: "*"; color: #ef4444; margin-left: 4px; }
+
     .form-control { width: 100%; padding: 0.75rem 1rem; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 0.9rem; color: #0f172a; background-color: #f8fafc; transition: all 0.2s; }
     .form-control:focus { background-color: white; border-color: #22c55e; outline: none; box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1); }
 
-    /* Password Eye */
     .password-wrapper { position: relative; }
     .btn-toggle-password { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; transition: color 0.2s; }
     .btn-toggle-password:hover { color: #22c55e; }
 
-    /* Switch */
     .toggle-wrapper { display: flex; align-items: center; gap: 12px; padding: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; }
     .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
     .switch input { opacity: 0; width: 0; height: 0; }
@@ -53,7 +32,6 @@
     input:checked + .slider { background-color: #22c55e; }
     input:checked + .slider:before { transform: translateX(20px); }
 
-    /* Divider */
     .form-section-title { font-size: 0.85rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px dashed #e2e8f0; padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
     .form-actions { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 10px; }
 </style>
@@ -64,9 +42,7 @@
         <div>
             <h1 class="page-title" style="font-size: 1.5rem; font-weight: 800; color: #0f172a;"><i class="fas fa-user-edit text-green-500 mr-2"></i> Edit Pengguna</h1>
         </div>
-        <a href="{{ route('admin.users.index') }}" class="btn-cancel">
-            <i class="fas fa-arrow-left"></i> Kembali
-        </a>
+        <a href="{{ route('admin.users.index') }}" class="btn-cancel"><i class="fas fa-arrow-left"></i> Kembali</a>
     </div>
 @endsection
 
@@ -118,18 +94,14 @@
                         <label class="form-label">Kata Sandi Baru <span style="color:#94a3b8; font-weight:normal; font-size:0.75rem;">(Opsional)</span></label>
                         <div class="password-wrapper">
                             <input type="password" name="password" id="password" class="form-control @error('password') border-red-500 @enderror">
-                            <button type="button" class="btn-toggle-password" onclick="togglePassword('password', this)">
-                                <i class="fas fa-eye"></i>
-                            </button>
+                            <button type="button" class="btn-toggle-password" onclick="togglePassword('password', this)"><i class="fas fa-eye"></i></button>
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Ulangi Sandi</label>
                         <div class="password-wrapper">
                             <input type="password" name="password_confirmation" id="password_confirm" class="form-control @error('password') border-red-500 @enderror">
-                            <button type="button" class="btn-toggle-password" onclick="togglePassword('password_confirm', this)">
-                                <i class="fas fa-eye"></i>
-                            </button>
+                            <button type="button" class="btn-toggle-password" onclick="togglePassword('password_confirm', this)"><i class="fas fa-eye"></i></button>
                         </div>
                     </div>
                     <div style="grid-column: span 2; margin-top: -15px;">
@@ -155,9 +127,7 @@
 
         <div class="form-actions">
             <a href="{{ route('admin.users.index') }}" class="btn-cancel">Batal</a>
-            <button type="submit" class="btn-add">
-                <i class="fas fa-save"></i> Perbarui Data
-            </button>
+            <button type="submit" class="btn-add"><i class="fas fa-save"></i> Perbarui Data</button>
         </div>
     </form>
 </div>
@@ -169,13 +139,9 @@
         const input = document.getElementById(inputId);
         const icon = btn.querySelector('i');
         if (input.type === "password") {
-            input.type = "text";
-            icon.classList.remove('fa-eye');
-            icon.classList.add('fa-eye-slash');
+            input.type = "text"; icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash');
         } else {
-            input.type = "password";
-            icon.classList.remove('fa-eye-slash');
-            icon.classList.add('fa-eye');
+            input.type = "password"; icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye');
         }
     }
 </script>

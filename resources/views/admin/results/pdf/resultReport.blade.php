@@ -29,7 +29,7 @@
 <meta charset="utf-8">
 <title>{{ $reportTitle }}</title>
 <style>
-  @page { size: A4 portrait; margin: 20mm 15mm 15mm 15mm; }
+  @page { size: A4 landscape; margin: 20mm 15mm 15mm 15mm; }
   body { font-family: "Times New Roman", Times, serif; font-size: 11px; color: #000; line-height: 1.3; }
 
   .clearfix:after { content:""; display: table; clear: both; }
@@ -60,7 +60,11 @@
 
   <div class="header clearfix">
     <div class="h-left">
-      @if(!empty($logoBase64)) <img class="h-logo" src="{{ $logoBase64 }}" alt="BCTI"> @else <strong>BCTI</strong> @endif
+      @if(!empty($logoBase64))
+        <img class="h-logo" src="{{ $logoBase64 }}" alt="BCTI">
+      @else
+        <strong>BCTI</strong>
+      @endif
     </div>
     <div class="h-right">
       <div class="company-name">{{ $companyName }}</div>
@@ -76,10 +80,10 @@
   <table>
     <thead>
       <tr>
-        <th style="width:30px;">No.</th>
+        <th style="width:5%;">No.</th>
         <th style="width:25%;">Nama Peserta</th>
-        <th style="width:15%;">No. Kontak</th>
-        <th style="width:20%;">Event</th>
+        <th style="width:15%;">No. Telepon</th>
+        <th style="width:20%;">Program</th>
         <th style="width:15%;">Instansi</th>
         <th style="width:15%;">Jabatan</th>
       </tr>
@@ -90,14 +94,17 @@
         @php
             $session = $result->session;
             $user = $session->user ?? null;
+            $program = $session->program ?? $session->event ?? null;
         @endphp
         <tr>
           <td class="text-center">{{ $no++ }}</td>
-          <td>{{ $session->participant_name ?? '-' }}</td>
-          <td class="text-center">{{ $user->phone_number ?? '-' }}</td>
-          <td>{{ $session->event->name ?? '-' }}</td>
-          <td>{{ $session->participant_background ?? '-' }}</td>
-          <td>{{ $session->position ?? '-' }}</td>
+          <td>{{ $session->nama_peserta ?? $session->participant_name ?? '-' }}</td>
+          {{-- PERBAIKAN: Gunakan $user->nomor_telepon --}}
+          <td class="text-center">{{ $user->nomor_telepon ?? $user->phone_number ?? '-' }}</td>
+          {{-- PERBAIKAN: Gunakan $program->nama --}}
+          <td>{{ $program->nama ?? $program->nama_program ?? $program->name ?? '-' }}</td>
+          <td>{{ $session->instansi ?? $session->participant_background ?? '-' }}</td>
+          <td>{{ $session->jabatan ?? $session->position ?? '-' }}</td>
         </tr>
       @empty
         <tr><td colspan="6" class="text-center" style="padding:15px;">Tidak ada data hasil Peserta.</td></tr>

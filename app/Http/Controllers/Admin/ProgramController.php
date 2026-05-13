@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -29,37 +30,38 @@ class ProgramController extends Controller
             });
         }
 
-        $Programs = $query->latest()->paginate(10)->appends($request->query());
+        $programs = $query->latest()->paginate(10)->appends($request->query());
 
         if ($request->ajax()) {
-            $Programs->getCollection()->transform(function ($Program) {
+            $programs->getCollection()->transform(function ($program) {
                 return [
-                    'id'                 => $Program->id,
-                    'name'               => $Program->nama,
-                    'company'            => $Program->perusahaan ?? '-',
-                    'Program_code'         => $Program->kode_program,
-                    'mitra_name'         => $Program->mitra->nama ?? 'Belum ada Mitra',
-                    'participants_count' => $Program->participants_count,
-                    'max_participants'   => $Program->maks_peserta,
-                    'is_active'          => $Program->aktif,
-                    'date_range'         => $Program->tanggal_mulai->format('d M').' - '.$Program->tanggal_selesai->format('d M Y'),
-                    'show_url'           => route('admin.Programs.show', $Program->id),
-                    'edit_url'           => route('admin.Programs.edit', $Program->id),
-                    'delete_url'         => route('admin.Programs.destroy', $Program->id),
-                    'toggle_url'         => route('admin.Programs.toggle-status', $Program->id),
+                    'id'                 => $program->id,
+                    'nama'               => $program->nama,
+                    'perusahaan'         => $program->perusahaan ?? '-',
+                    'kode_program'       => $program->kode_program,
+                    'mitra_name'         => $program->mitra->nama ?? 'Belum ada Mitra',
+                    'mitra_email'        => $program->mitra->email ?? '',
+                    'participants_count' => $program->participants_count,
+                    'maks_peserta'       => $program->maks_peserta,
+                    'aktif'              => $program->aktif,
+                    'tanggal_mulai_formatted'   => \Carbon\Carbon::parse($program->tanggal_mulai)->format('d M'),
+                    'tanggal_selesai_formatted' => \Carbon\Carbon::parse($program->tanggal_selesai)->format('d M Y'),
+                    'show_url'           => route('admin.programs.show', $program->id),
+                    'edit_url'           => route('admin.programs.edit', $program->id),
+                    'delete_url'         => route('admin.programs.destroy', $program->id),
                 ];
             });
 
-            return response()->json(['Programs' => $Programs, 'is_admin' => Auth::user()->peran === 'admin']);
+            return response()->json(['programs' => $programs, 'is_admin' => Auth::user()->peran === 'admin']);
         }
 
-        return view('admin.Programs.index', compact('Programs'));
+        return view('admin.programs.index', compact('programs'));
     }
 
     public function create()
     {
         $mitras = User::where('peran', 'mitra')->where('aktif', true)->orderBy('nama')->get();
-        return view('admin.Programs.create', compact('mitras'));
+        return view('admin.programs.create', compact('mitras'));
     }
 
     public function store(Request $request)
@@ -68,12 +70,11 @@ class ProgramController extends Controller
             'nama'            => ['required', 'string', 'max:100'],
             'kode_program'    => ['required', 'string', 'max:15', 'unique:program,kode_program'],
             'perusahaan'      => ['nullable', 'string', 'max:100'],
-            'tanggal_mulai'   => ['required', 'date', 'after_or_equal:today'],
+            'tanggal_mulai'   => ['required', 'date'],
             'tanggal_selesai' => ['required', 'date', 'after_or_equal:tanggal_mulai'],
             'id_mitra'        => ['nullable', 'exists:pengguna,id'],
             'maks_peserta'    => ['nullable', 'integer', 'min:1'],
             'deskripsi'       => ['nullable', 'string', 'max:1000'],
-            'aktif'           => ['nullable', 'boolean'],
         ]);
 
         DB::transaction(function () use ($request) {
@@ -82,51 +83,59 @@ class ProgramController extends Controller
                 ->orderByDesc('num')->first();
 
             Program::create([
-                'id'              => 'EVT' . (($last ? $last->num : 0) + 1),
+                'id'              => 'PRG' . (($last ? $last->num : 0) + 1),
                 'nama'            => $request->nama,
-                'kode_program'    => strtoupper($request->kode_program),
+                'kode_program'    => strtoupper(str_replace(' ', '', $request->kode_program)),
                 'perusahaan'      => $request->perusahaan,
                 'tanggal_mulai'   => $request->tanggal_mulai,
                 'tanggal_selesai' => $request->tanggal_selesai,
                 'id_mitra'        => $request->id_mitra,
                 'maks_peserta'    => $request->maks_peserta,
                 'deskripsi'       => $request->deskripsi,
-                'aktif'           => $request->has('aktif'),
+                'aktif'           => $request->has('aktif') ? true : false,
             ]);
         });
 
-        return redirect()->route('admin.Programs.index')->with('success', 'Program berhasil dibuat.');
+        return redirect()->route('admin.programs.index')->with('success', 'Program berhasil dibuat.');
     }
 
-    public function show(Program $Program)
+    public function show(string $id)
     {
-        $Program->load(['mitra', 'participants.testSessions' => fn($q) => $q->where('id_program', $Program->id)]);
+        $program = Program::with(['mitra', 'participants.testSessions'])->findOrFail($id);
 
-        $completedTests = TestSession::where('id_program', $Program->id)->where('selesai', true)->count();
-        $resultsSent    = TestResult::whereHas('testSession', fn($q) => $q->where('id_program', $Program->id))
-            ->whereNotNull('email_terkirim_pada')->count();
+        // --- PERBAIKAN: is_completed diubah menjadi selesai ---
+        $completedTests = TestSession::where('id_program', $program->id)->where('selesai', true)->count();
+
+        $resultsSent = 0;
+        if (class_exists(TestResult::class)) {
+            $resultsSent = TestResult::whereHas('testSession', fn($q) => $q->where('id_program', $program->id))
+                ->whereNotNull('email_terkirim_pada')->count();
+        }
 
         $stats = [
-            'total_participants' => $Program->participants->count(),
+            'total_participants' => $program->participants->count(),
             'completed_tests'    => $completedTests,
-            'pending_tests'      => $Program->participants->count() - $completedTests,
+            'pending_tests'      => $program->participants->count() - $completedTests,
             'results_sent'       => $resultsSent,
         ];
 
-        return view('admin.Programs.show', compact('Program', 'stats'));
+        return view('admin.programs.show', compact('program', 'stats'));
     }
 
-    public function edit(Program $Program)
+    public function edit(string $id)
     {
+        $program = Program::findOrFail($id);
         $mitras = User::where('peran', 'mitra')->where('aktif', true)->orderBy('nama')->get();
-        return view('admin.Programs.edit', compact('Program', 'mitras'));
+        return view('admin.programs.edit', compact('program', 'mitras'));
     }
 
-    public function update(Request $request, Program $Program)
+    public function update(Request $request, string $id)
     {
+        $program = Program::findOrFail($id);
+
         $request->validate([
             'nama'            => ['required', 'string', 'max:100'],
-            'kode_program'    => ['required', 'string', 'max:15', Rule::unique('program', 'kode_program')->ignore($Program->id)],
+            'kode_program'    => ['required', 'string', 'max:15', Rule::unique('program', 'kode_program')->ignore($program->id)],
             'perusahaan'      => ['nullable', 'string', 'max:100'],
             'tanggal_mulai'   => ['required', 'date'],
             'tanggal_selesai' => ['required', 'date', 'after_or_equal:tanggal_mulai'],
@@ -135,34 +144,36 @@ class ProgramController extends Controller
             'deskripsi'       => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $Program->update([
+        $program->update([
             'nama'            => $request->nama,
-            'kode_program'    => strtoupper($request->kode_program),
+            'kode_program'    => strtoupper(str_replace(' ', '', $request->kode_program)),
             'perusahaan'      => $request->perusahaan,
             'tanggal_mulai'   => $request->tanggal_mulai,
             'tanggal_selesai' => $request->tanggal_selesai,
             'id_mitra'        => $request->id_mitra,
             'maks_peserta'    => $request->maks_peserta,
             'deskripsi'       => $request->deskripsi,
-            'aktif'           => $request->has('aktif'),
+            'aktif'           => $request->has('aktif') ? true : false,
         ]);
 
-        return redirect()->route('admin.Programs.index')->with('success', 'Program berhasil diperbarui.');
+        return redirect()->route('admin.programs.index')->with('success', 'Program berhasil diperbarui.');
     }
 
-    public function destroy(Program $Program)
+    public function destroy(string $id)
     {
-        if ($Program->participants()->count() > 0) {
+        $program = Program::findOrFail($id);
+        if ($program->participants()->count() > 0) {
             return back()->with('error', 'Gagal menghapus: Program memiliki peserta terdaftar.');
         }
-        $Program->delete();
-        return redirect()->route('admin.Programs.index')->with('success', 'Program berhasil dihapus.');
+        $program->delete();
+        return redirect()->route('admin.programs.index')->with('success', 'Program berhasil dihapus.');
     }
 
-    public function toggleStatus(Program $Program)
+    public function toggleStatus(string $id)
     {
-        $Program->update(['aktif' => !$Program->aktif]);
-        return back()->with('success', 'Program berhasil '.($Program->aktif ? 'diaktifkan' : 'dinonaktifkan').'.');
+        $program = Program::findOrFail($id);
+        $program->update(['aktif' => !$program->aktif]);
+        return back()->with('success', 'Status program berhasil diubah.');
     }
 
     public function exportPdf(Request $request)
@@ -173,9 +184,9 @@ class ProgramController extends Controller
             $query->where(fn($q) => $q->where('nama', 'like', "%{$term}%")->orWhere('kode_program', 'like', "%{$term}%"));
         }
 
-        $pdf = Pdf::loadView('admin.Programs.pdf.ProgramReport', [
+        $pdf = Pdf::loadView('admin.programs.pdf.programReport', [
             'reportTitle' => 'Laporan Daftar Program',
-            'generatedBy' => Auth::user()->nama,
+            'generatedBy' => Auth::user()->nama ?? 'Admin',
             'generatedAt' => now()->format('d/m/Y H:i'),
             'rows'        => $query->latest()->get(),
         ])->setPaper('a4', 'landscape');

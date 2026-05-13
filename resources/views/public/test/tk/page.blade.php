@@ -3,21 +3,18 @@
 @section('content')
     {{-- PASTIKAN CSS STYLES DILOAD DI SINI ATAU DI LAYOUT --}}
     @push('styles')
-        {{-- Jika Anda memuat CSS terpisah --}}
-        {{-- <link rel="stylesheet" href="{{ asset('assets/public/css/pages/sjt-test.css') }}"> --}}
+        <link rel="stylesheet" href="{{ asset('assets/public/css/pages/sjt-test.css') }}">
     @endpush
 
     <div class="sjt-test-container">
         <div class="sjt-hero">
             <div class="sjt-hero-content">
-                <h1 class="sjt-title">Talent Competency </h1>
+                <h1 class="sjt-title">Talenta Kompetensi </h1>
                 <p class="sjt-instruction">
                     Mohon mengisi dengan jujur dan sesuai keadaan Anda saat ini. Tidak ada jawaban yang benar atau
                     salah, karena seluruh isian mencerminkan diri Anda secara pribadi.
                 </p>
-                {{-- Tambahkan class 'sjt-reminder-text' pada paragraf ini --}}
                 <p class="sjt-reminder-text">
-                    {{-- Bungkus 'Harap diingat:' dengan span dan class 'highlight-red' --}}
                     <strong class="highlight-red">Harap diingat:</strong>
                     Jawaban yang Anda berikan akan mempengaruhi hasil akhir, sehingga penting untuk menjawab dengan
                     reflektif dan apa adanya, agar hasil yang diperoleh benar-benar sesuai dengan karakter, kekuatan,
@@ -25,40 +22,43 @@
                 </p>
             </div>
         </div>
-        {{-- PROGRESS: stepper pendek & seragam --}}
+
+        {{-- PROGRESS: stepper --}}
+        @php($progress = 50 + (($page / $totalPages) * 50))
         @include('public.test.partials.progress-stepper', ['progress' => $progress])
 
         <div class="sjt-questions-section">
-            <form id="sjtForm" action="{{ route('test.sjt.page.store', $page) }}" method="POST" class="js-loading-form">
+            <form id="sjtForm" action="{{ route('test.tk.page.store', $page) }}" method="POST" class="js-loading-form">
                 @csrf
                 <input type="hidden" name="session_id" value="{{ $session->id ?? '' }}">
+                <input type="hidden" name="version_id" value="{{ $tkVersion->id }}">
+
                 <div class="sjt-questions-list">
                     @foreach ($questions as $question)
                         <div class="sjt-question-block">
                             <div class="sjt-question-header">
-                                {{ $question->number }}. {{ $question->question_text }}
+                                {{ $question->nomor }}. {{ $question->teks_pertanyaan }}
                             </div>
                             <div class="sjt-question-content">
                                 <div class="sjt-options-list">
-                                    @foreach ($question->options as $option)
-                                        @php
-                                            $isSelected =
-                                                isset($existingResponses[$question->id]) &&
-                                                $existingResponses[$question->id]->selected_option ===
-                                                    $option->option_letter;
-                                        @endphp
+                                    {{-- Menggunakan kolom pilihan_a, pilihan_b, dll --}}
+                                    @foreach(['a', 'b', 'c', 'd', 'e'] as $opt)
+                                        @if(isset($question->{'pilihan_'.$opt}))
+                                            @php
+                                                $isSelected = in_array($opt, $answered) && array_search($opt, $answered) == $question->id;
+                                            @endphp
 
-                                        <label class="sjt-option-item {{ $isSelected ? 'selected' : '' }}"
-                                            data-question="{{ $question->id }}">
-                                            <input type="radio" name="responses[{{ $question->id }}]"
-                                                value="{{ $option->option_letter }}" class="sjt-radio"
-                                                data-question="{{ $question->id }}" {{ $isSelected ? 'checked' : '' }}>
-                                            <span
-                                                class="sjt-option-letter">{{ strtoupper($option->option_letter) }}.</span>
-                                            <span class="sjt-option-text">{{ $option->option_text }}</span>
-                                        </label>
+                                            <label class="sjt-option-item {{ $isSelected ? 'selected' : '' }}"
+                                                data-question="{{ $question->id }}">
+                                                <input type="radio" name="answers[{{ $question->id }}][option_id]"
+                                                    value="{{ $opt }}" class="sjt-radio"
+                                                    data-question="{{ $question->id }}" {{ $isSelected ? 'checked' : '' }}>
+                                                <input type="hidden" name="answers[{{ $question->id }}][question_id]" value="{{ $question->id }}">
+                                                <span class="sjt-option-letter">{{ strtoupper($opt) }}.</span>
+                                                <span class="sjt-option-text">{{ $question->{'pilihan_'.$opt} }}</span>
+                                            </label>
+                                        @endif
                                     @endforeach
-
                                 </div>
                             </div>
                         </div>
@@ -70,8 +70,7 @@
 
                 <div class="sjt-actions">
                     @if ($page > 1)
-                        {{-- Tombol Kembali diset ke page - 1 --}}
-                        <a href="{{ route('test.sjt.page', $page - 1) }}" class="sjt-btn sjt-btn-back js-loading-link">
+                        <a href="{{ route('test.tk.page', $page - 1) }}" class="sjt-btn sjt-btn-back js-loading-link">
                             Kembali
                         </a>
                     @else
@@ -79,7 +78,7 @@
                     @endif
 
                     <button type="submit" id="submitBtn" class="sjt-btn sjt-btn-primary" disabled>
-                        @if ($page < 5)
+                        @if ($page < $totalPages)
                             Kirim & Lanjutkan
                         @else
                             Selesaikan Test
@@ -93,7 +92,6 @@
     @push('scripts')
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                // ❌ Matikan auto scroll restoration browser
                 if ('scrollRestoration' in history) {
                     history.scrollRestoration = 'manual';
                 }
@@ -107,8 +105,8 @@
                     const answerStatus = container.querySelector('#answerStatus');
                     const radios = Array.from(container.querySelectorAll('.sjt-radio'));
                     const totalQuestions = Number({{ $questions->count() }});
-                    const currentPage = Number({{ $page }}); // Ambil nomor halaman saat ini
-                    const isLastPage = currentPage === 5; // ASUMSI: Halaman terakhir adalah Page 5
+                    const currentPage = Number({{ $page }});
+                    const isLastPage = currentPage === Number({{ $totalPages }});
 
                     const updateAnswerStatus = () => {
                         const answered = new Set();
@@ -139,31 +137,42 @@
 
                     updateAnswerStatus();
 
-                    // 🚀 Submit logic dengan SweetAlert
                     form.addEventListener('submit', async e => {
                         e.preventDefault();
-
-                        // Menonaktifkan tombol saat submit dimulai
                         submitBtn.disabled = true;
                         submitBtn.textContent = 'Menyimpan...';
 
-                        const fd = new FormData(form);
+                        // Format array of objects untuk sesuai dengan request validate
+                        const answers = [];
+                        const formData = new FormData(form);
+                        for(let [key, value] of formData.entries()) {
+                            if(key.includes('[option_id]')) {
+                                let questionId = key.match(/\[(.*?)\]/)[1];
+                                answers.push({
+                                    question_id: questionId,
+                                    option_id: value
+                                });
+                            }
+                        }
+
                         try {
                             const res = await fetch(form.action, {
                                 method: 'POST',
                                 headers: {
-                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
                                     'Accept': 'application/json'
                                 },
-                                body: fd,
-                                credentials: 'same-origin'
+                                body: JSON.stringify({
+                                    answers: answers,
+                                    version_id: form.querySelector('input[name="version_id"]').value
+                                })
                             });
 
-                            const data = await res.json().catch(() => null);
-                            const next = data?.next || res.url;
+                            const data = await res.json();
+                            const next = data.redirect || res.url;
 
                             if (isLastPage) {
-                                // ✅ Tampilkan SweetAlert, lalu langsung redirect tanpa tunggu
                                 Swal.fire({
                                     title: 'Tes Selesai!',
                                     text: 'Terima kasih telah menyelesaikan test.',
@@ -176,9 +185,7 @@
                                         window.location.replace(next);
                                     }
                                 });
-
                             } else {
-                                // Halaman biasa, langsung pindah
                                 window.location.replace(next);
                             }
 
@@ -186,8 +193,7 @@
                             console.error('Submit gagal:', err);
                             alert('Terjadi kesalahan. Silakan coba lagi.');
                             submitBtn.disabled = false;
-                            submitBtn.textContent = isLastPage ? 'Selesaikan Test' :
-                                'Kirim & Lanjutkan';
+                            submitBtn.textContent = isLastPage ? 'Selesaikan Test' : 'Kirim & Lanjutkan';
                         }
                     });
                 };

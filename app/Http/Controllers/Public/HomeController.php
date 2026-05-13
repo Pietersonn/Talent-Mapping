@@ -16,7 +16,7 @@ class HomeController extends Controller
         // Get some basic statistics for homepage (optional)
         $stats = [
             'total_participants' => 300, // This can be dynamic from database later
-            'active_events' => 5,
+            'active_programs' => 5, // active_events -> active_programs
             'completion_rate' => 95
         ];
 

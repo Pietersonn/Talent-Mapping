@@ -4,7 +4,6 @@
 
 @push('styles')
 <style>
-    /* --- SEARCH & BUTTONS STYLE --- */
     .search-group { position: relative; width: 320px; }
     .search-input { width: 100%; height: 46px; padding: 10px 45px 10px 16px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 0.9rem; background: #ffffff; transition: all 0.3s; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); color: #334155; }
     .search-input:focus { outline: none; border-color: #22c55e; box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15); }
@@ -17,7 +16,6 @@
     .btn-add { height: 46px; padding: 0 24px; background: #22c55e; color: white; border-radius: 12px; font-weight: 600; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; border: none; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.3); transition: all 0.2s; }
     .btn-add:hover { background: #16a34a; transform: translateY(-1px); }
 
-    /* --- TABLE STYLE --- */
     .table-card { background: white; border: 1px solid #f1f5f9; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
     .custom-table { width: 100%; border-collapse: separate; border-spacing: 0; }
     .custom-table th { text-align: left; padding: 1.25rem; background: #f8fafc; font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
@@ -26,23 +24,19 @@
 
     .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
     .dot-active { background-color: #22c55e; }
-    .dot-inactive { background-color: #cbd5e1; } /* Diganti dari merah ke slate/abu-abu netral */
+    .dot-inactive { background-color: #cbd5e1; }
 
-    /* Warna Badge Role menjadi gradasi hijau semua */
     .badge-role { padding: 6px 12px; border-radius: 99px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; border: 1px solid transparent; }
     .role-admin { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
-    .role-pic { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
-    .role-staff { background: #ecfdf5; color: #059669; border-color: #a7f3d0; }
-    .role-user { background: #f8fafc; color: #475569; border-color: #e2e8f0; }
+    .role-mitra { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+    .role-peserta { background: #ecfdf5; color: #059669; border-color: #a7f3d0; }
 
     .action-buttons { display: flex; gap: 8px; justify-content: flex-end; }
     .btn-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; text-decoration: none; transition: all 0.2s; border: 1px solid transparent; }
     .btn-view { background: #ecfdf5; color: #059669; border-color: #d1fae5; }
     .btn-edit { background: #f0fdf4; color: #15803d; border-color: #dcfce7; }
-    .btn-delete { background: #f8fafc; color: #64748b; border-color: #e2e8f0; } /* Diganti dari merah ke abu-abu netral */
+    .btn-delete { background: #f8fafc; color: #64748b; border-color: #e2e8f0; }
     .btn-icon:hover { opacity: 0.8; transform: scale(1.05); }
-
-    @media print { body { display: none; } }
 </style>
 @endpush
 
@@ -62,18 +56,12 @@
                 <i class="fas fa-circle-notch fa-spin loading-spinner"></i>
             </div>
 
-            <a href="{{ route('admin.users.export.pdf', request()->query()) }}"
-               class="btn-print"
-               id="btnExportPdf"
-               target="_blank"
-               title="Cetak PDF Laporan">
+            <a href="{{ route('admin.users.export.pdf', request()->query()) }}" id="btnExportPdf" target="_blank" class="btn-print" title="Cetak PDF">
                 <i class="fas fa-print"></i>
             </a>
 
-            @if(Auth::user()->role === 'admin')
-                <a href="{{ route('admin.users.create') }}" class="btn-add">
-                    <i class="fas fa-plus"></i>
-                </a>
+            @if(Auth::user()->peran === 'admin')
+                <a href="{{ route('admin.users.create') }}" class="btn-add"><i class="fas fa-plus"></i></a>
             @endif
         </div>
     </div>
@@ -97,25 +85,25 @@
                         <tr>
                             <td>
                                 <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #0f172a;">
-                                    @if($user->is_active)
+                                    @if($user->aktif)
                                         <span class="status-dot dot-active" title="Aktif"></span>
                                     @else
                                         <span class="status-dot dot-inactive" title="Tidak Aktif"></span>
                                     @endif
-                                    {{ $user->name }}
+                                    {{ $user->nama }}
                                 </div>
                             </td>
                             <td style="color: #64748b;">{{ $user->email }}</td>
-                            <td><span class="badge-role role-{{ strtolower($user->role) }}">{{ $user->role === 'user' ? 'Pengguna' : ucfirst($user->role) }}</span></td>
-                            <td style="font-family: monospace; font-weight: 600; color: #334155;">{{ $user->phone_number ?? '-' }}</td>
+                            <td><span class="badge-role role-{{ strtolower($user->peran) }}">{{ ucfirst($user->peran) }}</span></td>
+                            <td style="font-family: monospace; font-weight: 600; color: #334155;">{{ $user->nomor_telepon ?? '-' }}</td>
                             <td>
                                 <div class="action-buttons">
                                     <a href="{{ route('admin.users.show', $user->id) }}" class="btn-icon btn-view"><i class="fas fa-eye text-xs"></i></a>
-                                    @if(Auth::user()->role === 'admin' || Auth::id() === $user->id)
+                                    @if(Auth::user()->peran === 'admin' || Auth::id() === $user->id)
                                         <a href="{{ route('admin.users.edit', $user->id) }}" class="btn-icon btn-edit"><i class="fas fa-pen text-xs"></i></a>
                                     @endif
-                                    @if(Auth::user()->role === 'admin' && Auth::id() !== $user->id)
-                                        <button onclick="deleteUser('{{ $user->name }}', '{{ route('admin.users.destroy', $user->id) }}')" class="btn-icon btn-delete"><i class="fas fa-trash text-xs"></i></button>
+                                    @if(Auth::user()->peran === 'admin' && Auth::id() !== $user->id)
+                                        <button onclick="deleteUser('{{ $user->nama }}', '{{ route('admin.users.destroy', $user->id) }}')" class="btn-icon btn-delete"><i class="fas fa-trash text-xs"></i></button>
                                     @endif
                                 </div>
                             </td>
@@ -135,18 +123,12 @@
 
 @push('scripts')
 <script>
-    // --- SEARCH REALTIME ---
     let debounceTimer;
     const searchInput = $('#realtimeSearch');
-    const searchGroup = $('.search-group');
-    const exportBtn = $('#btnExportPdf');
-    // Base URL tanpa query params
     const baseExportUrl = "{{ route('admin.users.export.pdf') }}";
 
     searchInput.on('input', function() {
         const query = $(this).val();
-
-        // Show Spinner, Hide Search Icon
         $('.loading-spinner').show();
         $('.search-icon').hide();
 
@@ -158,16 +140,12 @@
                 data: { search: query },
                 success: function(response) {
                     renderTable(response);
-
-                    // Hide Spinner, Show Search Icon
                     $('.loading-spinner').hide();
                     $('.search-icon').show();
-
-                    // Update Link PDF
                     if (query.trim() !== "") {
-                        exportBtn.attr('href', baseExportUrl + "?search=" + encodeURIComponent(query));
+                        $('#btnExportPdf').attr('href', baseExportUrl + "?search=" + encodeURIComponent(query));
                     } else {
-                        exportBtn.attr('href', baseExportUrl);
+                        $('#btnExportPdf').attr('href', baseExportUrl);
                     }
                 },
                 error: function() {
@@ -197,20 +175,18 @@
             const canDelete = isAdmin && currentUserId !== user.id;
 
             let editBtn = canEdit ? `<a href="${user.edit_url}" class="btn-icon btn-edit"><i class="fas fa-pen text-xs"></i></a>` : '';
-            let deleteBtn = canDelete ? `<button onclick="deleteUser('${user.name}', '${user.delete_url}')" class="btn-icon btn-delete"><i class="fas fa-trash text-xs"></i></button>` : '';
-            let phone = user.phone_number ? user.phone_number : '-';
-            let dotClass = user.is_active ? 'dot-active' : 'dot-inactive';
+            let deleteBtn = canDelete ? `<button onclick="deleteUser('${user.nama}', '${user.delete_url}')" class="btn-icon btn-delete"><i class="fas fa-trash text-xs"></i></button>` : '';
+            let dotClass = user.aktif ? 'dot-active' : 'dot-inactive';
 
             html += `<tr>
                 <td>
                     <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #0f172a;">
-                        <span class="status-dot ${dotClass}"></span>
-                        ${user.name}
+                        <span class="status-dot ${dotClass}"></span>${user.nama}
                     </div>
                 </td>
                 <td style="color: #64748b;">${user.email}</td>
-                <td><span class="badge-role role-${user.role.toLowerCase()}">${user.role === 'user' ? 'Pengguna' : user.role}</span></td>
-                <td style="font-family: monospace; font-weight: 600; color: #334155;">${phone}</td>
+                <td><span class="badge-role role-${user.peran}">${user.peran_display}</span></td>
+                <td style="font-family: monospace; font-weight: 600; color: #334155;">${user.nomor_telepon}</td>
                 <td><div class="action-buttons">
                     <a href="${user.show_url}" class="btn-icon btn-view"><i class="fas fa-eye text-xs"></i></a>
                     ${editBtn}${deleteBtn}
@@ -222,7 +198,7 @@
 
     function deleteUser(name, url) {
         Swal.fire({
-            title: 'Hapus User?', html: `Yakin ingin menghapus <b>${name}</b>?`, icon: 'warning',
+            title: 'Hapus Pengguna?', html: `Yakin ingin menghapus <b>${name}</b>?`, icon: 'warning',
             showCancelButton: true, confirmButtonColor: '#22c55e', cancelButtonColor: '#f8fafc',
             confirmButtonText: '<span style="color:white">Ya, Hapus</span>', cancelButtonText: '<span style="color:black">Batal</span>',
             customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl px-4 py-2', cancelButton: 'rounded-xl px-4 py-2' }

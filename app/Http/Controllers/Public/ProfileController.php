@@ -18,7 +18,7 @@ class ProfileController extends Controller
         $user = Auth::user();
 
         $testSessions = TestSession::where('id_pengguna', $user->id)
-            ->with(['event', 'testResult'])
+            ->with(['program', 'testResult']) // <-- event diubah menjadi program
             ->latest()
             ->get();
 
@@ -34,5 +34,4 @@ class ProfileController extends Controller
     {
         return view('public.profile.edit', ['user' => Auth::user()]);
     }
-
 }

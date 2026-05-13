@@ -16,7 +16,7 @@ class ResendRequestController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'test_result_id' => ['required', 'string', 'exists:test_results,id'],
+            'test_result_id' => ['required', 'string', 'exists:hasil_tes,id'], // test_results -> hasil_tes
             'note'           => ['nullable', 'string', 'max:500'],
         ]);
 
@@ -25,18 +25,18 @@ class ResendRequestController extends Controller
             return back()->with('error', 'Kamu harus login.');
         }
 
-        // Pastikan result memang milik user ini (via TestSession.user_id)
-        $result = TestResult::with('testSession:user_id,id')
+        // Pastikan result memang milik user ini (via TestSession.id_pengguna)
+        $result = TestResult::with('testSession:id_pengguna,id')
             ->where('id', $request->input('test_result_id'))
             ->firstOrFail();
 
-        if (!$result->testSession || $result->testSession->user_id !== $user->id) {
+        if (!$result->testSession || $result->testSession->id_pengguna !== $user->id) { // user_id -> id_pengguna
             return back()->with('error', 'Kamu tidak berhak meminta resend untuk hasil ini.');
         }
 
         // Cegah duplikat pending untuk result yang sama
-        $alreadyPending = ResendRequest::where('test_result_id', $result->id)
-            ->where('user_id', $user->id)
+        $alreadyPending = ResendRequest::where('id_hasil_tes', $result->id) // test_result_id -> id_hasil_tes
+            ->where('id_pengguna', $user->id) // user_id -> id_pengguna
             ->where('status', 'pending')
             ->exists();
 
@@ -46,15 +46,15 @@ class ResendRequestController extends Controller
 
         // Buat request
         $rr = new ResendRequest();
-        $rr->id             = $rr->generateCustomId();     // TRait HasCustomId
-        $rr->user_id        = $user->id;
-        $rr->test_result_id = $result->id;
-        $rr->request_date   = now();
-        $rr->status         = 'pending';
-        $rr->admin_notes    = $request->input('note');     // catatan opsional dari user
+        $rr->id                 = $rr->generateCustomId();     // TRait HasCustomId
+        $rr->id_pengguna        = $user->id; // user_id -> id_pengguna
+        $rr->id_hasil_tes       = $result->id; // test_result_id -> id_hasil_tes
+        $rr->tanggal_permintaan = now(); // request_date -> tanggal_permintaan
+        $rr->status             = 'pending';
+        $rr->catatan            = $request->input('note'); // admin_notes -> catatan
         $rr->save();
 
         // UX: kembali ke halaman sebelumnya (modal tetap muncul saat reload karena dipanggil dari popup)
-        return back()->with('success', 'Request resend berhasil dikirim. Mohon tunggu persetujuan.');
+        return back()->with('success', 'Request resend berhasil dikirim.');
     }
 }
