@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RoleMiddleware
 {
-    public function handle(Request $request, Closure $next, ...$roles): Response
+    public function handle(Request $request, Closure $next, string $role): Response
     {
         if (!Auth::check()) {
             return redirect()->route('login');
@@ -17,19 +17,17 @@ class RoleMiddleware
 
         $user = Auth::user();
 
-        if (!$user->aktif) {
-            Auth::logout();
-            return redirect()->route('login')
-                ->with('error', 'Akun Anda telah dinonaktifkan. Hubungi administrator.');
-        }
+        // PERBAIKAN: Gunakan field 'peran', BUKAN 'role'
+        if ($user->peran !== $role) {
 
-        if (!in_array($user->peran, $roles)) {
-            return match ($user->peran) {
-                'admin'   => redirect()->route('admin.dashboard'),
-                'mitra'   => redirect()->route('mitra.dashboard'),
-                'peserta' => redirect()->route('home'),
-                default   => redirect()->route('home'),
-            };
+            // Jika peran tidak sesuai, kembalikan ke dashboard masing-masing
+            if ($user->peran === 'admin') {
+                return redirect('/admin/dashboard');
+            } elseif ($user->peran === 'mitra') {
+                return redirect('/mitra/dashboard');
+            }
+
+            return redirect('/');
         }
 
         return $next($request);

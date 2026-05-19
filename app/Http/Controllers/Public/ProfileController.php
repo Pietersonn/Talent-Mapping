@@ -4,11 +4,9 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use App\Models\TestSession;
 use App\Models\TestResult;
+use App\Models\ResendRequest;
 use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
@@ -17,17 +15,21 @@ class ProfileController extends Controller
     {
         $user = Auth::user();
 
-        $testSessions = TestSession::where('id_pengguna', $user->id)
-            ->with(['program', 'testResult']) // <-- event diubah menjadi program
-            ->latest()
+        $results = TestResult::with('testSession.program')
+            ->whereHas('testSession', function ($query) use ($user) {
+                $query->where('id_pengguna', $user->id)
+                      ->where('selesai', true);
+            })
+            ->latest('created_at')
             ->get();
 
-        $completedSessions = $testSessions->where('selesai', true);
+        // Ambil riwayat permintaan kirim ulang sesuai struktur database baru
+        $resendRequests = ResendRequest::where('id_pengguna', $user->id)
+            ->latest('tanggal_permintaan')
+            ->get();
 
-        $hasResults = \Illuminate\Support\Facades\Schema::hasTable('hasil_tes') &&
-            TestResult::whereIn('id_sesi', $completedSessions->pluck('id'))->exists();
-
-        return view('public.profile.index', compact('user', 'testSessions', 'completedSessions', 'hasResults'));
+        // Kirim $results dan $resendRequests ke view
+        return view('public.profile.index', compact('user', 'results', 'resendRequests'));
     }
 
     public function edit(): View

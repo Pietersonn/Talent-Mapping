@@ -1,13 +1,11 @@
 <nav class="navbar">
   <div class="container">
-    <!-- Brand -->
     <div class="navbar-brand">
       <a href="{{ route('home') }}" aria-label="Go to Home">
         <img src="{{ asset('assets/public/images/logo-bcti1.png') }}" alt="BCTI Logo" class="logo">
       </a>
     </div>
 
-    <!-- Mobile menu toggle -->
     <button class="mobile-menu-toggle" id="tmMobileToggle"
             aria-controls="tmNavbarMenu"
             aria-expanded="false"
@@ -16,7 +14,6 @@
       <span></span><span></span><span></span>
     </button>
 
-    <!-- Main menu -->
     <div class="navbar-menu" id="tmNavbarMenu">
       <ul class="navbar-nav">
         <li class="nav-item">
@@ -35,7 +32,6 @@
           <a href="#" class="nav-link">Kontak</a>
         </li>
 
-        <!-- Tombol login hanya muncul di mobile -->
         @guest
         <li class="nav-item mobile-only">
           <a href="{{ route('login') }}" class="nav-link">Daftar / Masuk</a>
@@ -44,7 +40,6 @@
       </ul>
     </div>
 
-    <!-- Right actions (desktop only) -->
     <div class="navbar-actions">
       @auth
         <div class="user-menu" id="tmUserMenu">
@@ -58,22 +53,22 @@
           </button>
 
           <div class="user-dropdown" id="userDropdown" role="menu" aria-hidden="true">
-            @if (in_array(Auth::user()->role, ['admin','staff']))
+
+            @if (in_array(Auth::user()->peran, ['admin','staff']))
               <a href="{{ route('admin.dashboard') }}" class="dropdown-item">
                 <i class="icon-dashboard"></i> Admin Dashboard
               </a>
-            @elseif (Auth::user()->role === 'pic')
-              <a href="{{ route('pic.dashboard') }}" class="dropdown-item">
-                <i class="icon-dashboard"></i> PIC Dashboard
+            @elseif (Auth::user()->peran === 'mitra')
+              <a href="{{ route('mitra.dashboard') }}" class="dropdown-item">
+                <i class="icon-dashboard"></i> Mitra Dashboard
               </a>
             @endif
 
-            <a href="{{ route('profile.index') }}" class="dropdown-item">
-              <i class="icon-user"></i> Profil
-            </a>
-
-            @if (Auth::user()->role === 'user')
-              <a href="{{ route('profile.index') }}" class="dropdown-item">
+            @if (Auth::user()->peran === 'peserta')
+              <a href="{{ route('profile') }}" class="dropdown-item">
+                <i class="icon-user"></i> Profil Saya
+              </a>
+              <a href="{{ route('profile') }}" class="dropdown-item">
                 <i class="icon-test"></i> Tes Saya
               </a>
             @endif
@@ -95,9 +90,7 @@
   </div>
 </nav>
 
-<!-- JS inline -->
 <script>
-  // Toggle mobile menu
   function toggleMobileMenu() {
     const menu = document.getElementById('tmNavbarMenu');
     const toggle = document.getElementById('tmMobileToggle');
@@ -105,7 +98,6 @@
     toggle.classList.toggle('active', isOpen);
   }
 
-  // Toggle user dropdown
   function toggleUserDropdown() {
     const dropdown = document.getElementById('userDropdown');
     const menuWrap = document.getElementById('tmUserMenu');
@@ -117,7 +109,6 @@
     dropdown.setAttribute('aria-hidden', shown ? 'false' : 'true');
   }
 
-  // Close dropdown on outside click
   document.addEventListener('click', function (e) {
     const dropdown = document.getElementById('userDropdown');
     const menuWrap = document.getElementById('tmUserMenu');

@@ -65,7 +65,7 @@
     .custom-table td { padding: 1rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; font-size: 0.85rem; color: #334155; background: white; }
     .custom-table tr:hover td { background-color: #f8fafc; }
 
-    .status-badge { padding: 3px 8px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+    .status-badge { padding: 3px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
     .status-approved { background: #dcfce7; color: #15803d; }
     .status-rejected { background: #fee2e2; color: #b91c1c; }
     .loading-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.85); z-index: 10; display: none; align-items: center; justify-content: center; border-radius: 12px; }
@@ -147,9 +147,10 @@
 
                     <div>
                         <div class="user-meta">
-                            <div class="user-avatar-text">{{ substr($req->user->name, 0, 1) }}</div>
+                            @php $username = $req->user->nama ?? $req->user->name; @endphp
+                            <div class="user-avatar-text">{{ substr($username, 0, 1) }}</div>
                             <div class="user-details">
-                                <div class="user-name" title="{{ $req->user->name }}">{{ $req->user->name }}</div>
+                                <div class="user-name" title="{{ $username }}">{{ $username }}</div>
                                 <div class="user-email" title="{{ $req->user->email }}">{{ $req->user->email }}</div>
                             </div>
                         </div>
@@ -157,15 +158,14 @@
                         <div class="req-info">
                             <div class="req-info-row">
                                 <span class="text-muted"><i class="far fa-clock me-1"></i> Waktu:</span>
-                                <span class="fw-bold text-dark">{{ $req->request_date->diffForHumans(null, true) }}</span>
+                                <span class="fw-bold text-dark">{{ $req->tanggal_permintaan->diffForHumans(null, true) }}</span>
                             </div>
 
-                            {{-- KOLOM EVENT DI CARD --}}
                             <div class="req-info-row">
-                                <span class="text-muted"><i class="far fa-calendar-check me-1"></i> Acara:</span>
-                                <span class="fw-bold text-dark text-truncate-custom"
-                                      title="{{ $req->testResult->event_title }}">
-                                    {{ $req->testResult->event_title }}
+                                <span class="text-muted"><i class="far fa-calendar-check me-1"></i> Program:</span>
+                                @php $progName = $req->testResult?->testSession?->program?->nama ?? 'Hasil Mandiri'; @endphp
+                                <span class="fw-bold text-dark text-truncate-custom" title="{{ $progName }}">
+                                    {{ $progName }}
                                 </span>
                             </div>
 
@@ -177,9 +177,9 @@
                             </div>
                         </div>
 
-                        @if($req->user_notes)
+                        @if($req->catatan)
                             <div style="font-size: 0.75rem; color: #64748b; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 10px;">
-                                "{{ $req->user_notes }}"
+                                "{{ $req->catatan }}"
                             </div>
                         @endif
                     </div>
@@ -215,7 +215,7 @@
             <div style="display: flex; gap: 12px; align-items: center;">
                 <div class="search-group">
                     <input type="text" id="realtimeSearch" class="search-input"
-                           placeholder="Cari user, email, atau acara..." autocomplete="off"
+                           placeholder="Cari user, email, atau program..." autocomplete="off"
                            value="{{ request('search') }}">
                     <i class="fas fa-search search-icon"></i>
                     <i class="fas fa-circle-notch fa-spin loading-spinner"></i>
@@ -235,30 +235,30 @@
                     <tr>
                         <th style="width: 20%;">Nama</th>
                         <th style="width: 20%;">Email</th>
-                        <th style="width: 20%;">Acara</th> {{-- KOLOM BARU --}}
-                        <th style="width: 15%;">Tanggal</th>
+                        <th style="width: 25%;">Program</th>
+                        <th style="width: 12%;">Tanggal</th>
                         <th style="width: 10%;">Status</th>
-                        <th style="width: 15%;">Diproses Oleh</th>
+                        <th style="width: 13%;">Diproses Oleh</th>
                     </tr>
                 </thead>
                 <tbody id="resendTableBody">
                     @forelse($historyRequests as $req)
                     <tr>
                         <td>
-                            <div class="fw-bold text-dark">{{ $req->user->name }}</div>
+                            <div class="fw-bold text-dark">{{ $req->user->nama ?? $req->user->name }}</div>
                         </td>
                         <td>
                             <div class="text-muted">{{ $req->user->email }}</div>
                         </td>
-                        {{-- DATA ACARA (BLADE) --}}
                         <td>
-                            <span class="text-truncate-custom text-dark" style="max-width: 150px;" title="{{ $req->testResult->event_title }}">
-                                {{ $req->testResult->event_title }}
+                            @php $historyProg = $req->testResult?->testSession?->program?->nama ?? 'Hasil Mandiri'; @endphp
+                            <span class="text-truncate-custom text-dark" style="max-width: 180px;" title="{{ $historyProg }}">
+                                {{ $historyProg }}
                             </span>
                         </td>
                         <td>
-                            <div class="text-dark" style="font-size: 0.8rem;">{{ $req->request_date->format('d M Y') }}</div>
-                            <div class="text-muted" style="font-size: 0.7rem;">{{ $req->request_date->format('H:i') }}</div>
+                            <div class="text-dark" style="font-size: 0.8rem;">{{ $req->tanggal_permintaan->format('d M Y') }}</div>
+                            <div class="text-muted" style="font-size: 0.7rem;">{{ $req->tanggal_permintaan->format('H:i') }}</div>
                         </td>
                         <td>
                             @if($req->status == 'approved')
@@ -268,10 +268,12 @@
                             @endif
                         </td>
                         <td>
-                            <div class="text-dark" style="font-size: 0.8rem;">{{ $req->approvedBy->name ?? '-' }}</div>
+                            {{-- PERBAIKAN UTAMA DI BLADE LOOP: Fallback nama/name --}}
+                            <div class="text-dark" style="font-size: 0.8rem;">
+                                {{ $req->approvedBy->nama ?? $req->approvedBy->name ?? '-' }}
+                            </div>
                             <div class="text-muted" style="font-size: 0.7rem;">
-                                {{-- Tambahkan ->locale('id') di sini --}}
-                                {{ $req->approved_at ? $req->approved_at->locale('id')->diffForHumans() : '' }}
+                                {{ $req->updated_at ? $req->updated_at->locale('id')->diffForHumans() : '' }}
                             </div>
                         </td>
                     </tr>
@@ -305,7 +307,6 @@
     searchInput.on('input', function() {
         const query = $(this).val();
 
-        // UI: Show Spinner
         $('.loading-spinner').show();
         $('.search-icon').hide();
 
@@ -318,11 +319,9 @@
                 success: function(response) {
                     renderTable(response);
 
-                    // UI: Hide Spinner
                     $('.loading-spinner').hide();
                     $('.search-icon').show();
 
-                    // Update PDF Link
                     if (query.trim() !== "") {
                         exportBtn.attr('href', baseExportUrl + "?search=" + encodeURIComponent(query));
                     } else {
@@ -359,7 +358,7 @@
                 <td><div class="fw-bold text-dark">${item.user_name}</div></td>
                 <td><div class="text-muted">${item.user_email}</div></td>
                 <td>
-                    <span class="text-truncate-custom text-dark" style="max-width: 150px;" title="${item.event_name}">
+                    <span class="text-truncate-custom text-dark" style="max-width: 180px;" title="${item.event_name}">
                         ${item.event_name}
                     </span>
                 </td>
@@ -425,7 +424,8 @@
                 $(`#loading-${id}`).fadeIn();
                 $.post("{{ url('admin/resend') }}/" + id + "/reject", {
                     _token: "{{ csrf_token() }}",
-                    rejection_reason: result.value
+                    // PERBAIKAN DI SINI: Sesuaikan key dengan validasi di Controller
+                    alasan_penolakan: result.value
                 })
                 .done(() => {
                     Swal.fire({ title: 'Ditolak', text: 'Permintaan berhasil ditolak.', icon: 'success', timer: 1500, showConfirmButton: false, padding: '1.5rem' }).then(() => location.reload());

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -16,12 +17,12 @@ class ResendRequestController extends Controller
 {
     public function index(Request $request)
     {
-        $pendingRequests = ResendRequest::with(['user', 'testResult.testSession.event'])
+        $pendingRequests = ResendRequest::with(['user', 'testResult.testSession.program'])
             ->where('status', 'pending')
             ->orderBy('tanggal_permintaan', 'asc')
             ->get();
 
-        $historyQuery = ResendRequest::with(['user', 'approvedBy', 'testResult.testSession.event'])
+        $historyQuery = ResendRequest::with(['user', 'approvedBy', 'testResult.testSession.program'])
             ->whereIn('status', ['approved', 'rejected'])
             ->orderBy('updated_at', 'desc');
 
@@ -29,7 +30,7 @@ class ResendRequestController extends Controller
             $search = $request->search;
             $historyQuery->where(function ($q) use ($search) {
                 $q->whereHas('user', fn($u) => $u->where('nama', 'LIKE', "%{$search}%")->orWhere('email', 'LIKE', "%{$search}%"))
-                  ->orWhereHas('testResult.testSession.event', fn($e) => $e->where('nama', 'LIKE', "%{$search}%"));
+                  ->orWhereHas('testResult.testSession.program', fn($p) => $p->where('nama', 'LIKE', "%{$search}%"));
             });
         }
 
@@ -42,14 +43,15 @@ class ResendRequestController extends Controller
             $formattedData = $historyRequests->map(function ($item) {
                 return [
                     'id'           => $item->id,
-                    'user_name'    => $item->user->nama ?? '-',
+                    'user_name'    => $item->user->nama ?? $item->user->name ?? '-',
                     'user_email'   => $item->user->email ?? '-',
-                    'event_name'   => $item->testResult?->testSession?->event?->nama ?? '-',
+                    'event_name'   => $item->testResult?->testSession?->program?->nama ?? '-',
                     'date_dmy'     => $item->tanggal_permintaan->format('d M Y'),
                     'date_hi'      => $item->tanggal_permintaan->format('H:i'),
                     'status'       => $item->status,
-                    'processor'    => $item->approvedBy?->nama ?? '-',
-                    'processed_at' => $item->disetujui_pada ? $item->disetujui_pada->diffForHumans() : '',
+                    // PERBAIKAN UTAMA: Fallback pengecekan nama / name agar AJAX tidak mengirim string kosong
+                    'processor'    => $item->approvedBy?->nama ?? $item->approvedBy?->name ?? '-',
+                    'processed_at' => $item->updated_at ? $item->updated_at->locale('id')->diffForHumans() : '',
                 ];
             });
 
@@ -68,7 +70,7 @@ class ResendRequestController extends Controller
 
     public function exportPdf(Request $request)
     {
-        $query = ResendRequest::with(['user', 'approvedBy', 'testResult.testSession.event'])
+        $query = ResendRequest::with(['user', 'approvedBy', 'testResult.testSession.program'])
             ->whereIn('status', ['approved', 'rejected'])
             ->orderBy('updated_at', 'desc');
 
@@ -76,7 +78,7 @@ class ResendRequestController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->whereHas('user', fn($u) => $u->where('nama', 'LIKE', "%{$search}%")->orWhere('email', 'LIKE', "%{$search}%"))
-                  ->orWhereHas('testResult.testSession.event', fn($e) => $e->where('nama', 'LIKE', "%{$search}%"));
+                  ->orWhereHas('testResult.testSession.program', fn($p) => $p->where('nama', 'LIKE', "%{$search}%"));
             });
         }
 
@@ -86,7 +88,7 @@ class ResendRequestController extends Controller
         $pdf = Pdf::loadView('admin.resend.pdf.resendReport', [
             'rows'        => $query->get(),
             'reportTitle' => 'Laporan Riwayat Permintaan Kirim Ulang',
-            'generatedBy' => Auth::user()->nama,
+            'generatedBy' => Auth::user()->nama ?? Auth::user()->name,
             'generatedAt' => now('Asia/Makassar')->format('d M Y H:i').' WITA',
             'dateFrom'    => $request->date_from,
             'dateTo'      => $request->date_to,
@@ -97,7 +99,7 @@ class ResendRequestController extends Controller
 
     public function show(ResendRequest $resendRequest): View
     {
-        $resendRequest->load(['user', 'testResult.testSession.event', 'testResult.dominantTypologyDescription', 'approvedBy']);
+        $resendRequest->load(['user', 'testResult.testSession.program', 'testResult.dominantTypologyDescription', 'approvedBy']);
         return view('admin.resend.show', compact('resendRequest'));
     }
 
@@ -118,19 +120,22 @@ class ResendRequestController extends Controller
             $testResult = $resendRequest->testResult;
             $user = $resendRequest->user;
 
-            if (empty($testResult->path_pdf) || !Storage::disk('local')->exists($testResult->path_pdf)) {
+            if (empty($testResult->pdf_path) || !Storage::disk('local')->exists($testResult->pdf_path)) {
                 if ($testResult->id_sesi) {
                     \App\Jobs\GenerateAssessmentReport::dispatchSync($testResult->id_sesi);
                     $testResult->refresh();
                 }
             }
 
-            if (!empty($testResult->path_pdf) && Storage::disk('local')->exists($testResult->path_pdf)) {
-                $pdfPath = Storage::disk('local')->path($testResult->path_pdf);
-                Mail::raw("Halo {$user->nama},\n\nSesuai permintaan Anda, berikut kami lampirkan kembali hasil Talent Assessment Anda.\n\nTerima kasih.", function ($m) use ($user, $pdfPath) {
-                    $m->to($user->email, $user->nama)->subject('Hasil Talent Assessment - Kirim Ulang')->attach($pdfPath);
+            if (!empty($testResult->pdf_path) && Storage::disk('local')->exists($testResult->pdf_path)) {
+                $pdfPath = Storage::disk('local')->path($testResult->pdf_path);
+
+                $recipientName = $user->nama ?? $user->name;
+                Mail::raw("Halo {$recipientName},\n\nSesuai permintaan Anda, berikut kami lampirkan kembali hasil Talent Assessment Anda.\n\nTerima kasih.", function ($m) use ($user, $pdfPath, $recipientName) {
+                    $m->to($user->email, $recipientName)->subject('Hasil Talent Assessment - Kirim Ulang')->attach($pdfPath);
                 });
-                $testResult->update(['email_terkirim_pada' => now()]);
+
+                $testResult->update(['email_sent_at' => now()]);
             }
             DB::commit();
             return back()->with('success', "Permintaan disetujui, email berhasil dikirim ke {$user->email}");
@@ -155,7 +160,9 @@ class ResendRequestController extends Controller
             ]);
 
             $user = $resendRequest->user;
-            Mail::raw("Halo {$user->nama},\n\nMohon maaf, permintaan kirim ulang hasil assessment Anda ditolak.\nAlasan: {$request->alasan_penolakan}", function ($m) use ($user) {
+            $recipientName = $user->nama ?? $user->name;
+
+            Mail::raw("Halo {$recipientName},\n\nMohon maaf, permintaan kirim ulang hasil assessment Anda ditolak.\nAlasan: {$request->alasan_penolakan}", function ($m) use ($user) {
                 $m->to($user->email)->subject('Permintaan Kirim Ulang Ditolak');
             });
 

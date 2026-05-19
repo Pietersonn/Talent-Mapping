@@ -1,37 +1,68 @@
 <?php
+
 namespace App\Models;
 
+use App\Traits\HasCustomId;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ResendRequest extends Model
 {
-    use HasFactory;
+    use HasFactory, HasCustomId;
 
+    // Menunjuk nama tabel bahasa Indonesia yang baru
     protected $table = 'permintaan_kirim_ulang';
-    protected $primaryKey = 'id';
-    public $incrementing = false;
+
+    // Mengunci pengaturan primary key berbasis teks/string agar id tidak diubah menjadi angka 0
     protected $keyType = 'string';
+    public $incrementing = false;
+    public $timestamps = true;
+
+    // Menentukan aturan struktur ID kustom untuk permintaan kirim ulang hasil
+    protected string $customIdPrefix = 'RR';
+    protected int $customIdLength = 3;
 
     protected $fillable = [
-        'id', 'id_pengguna', 'id_hasil_tes', 'status', 'disetujui_oleh',
-        'disetujui_pada', 'alasan_penolakan', 'catatan_admin', 'tanggal_permintaan',
+        'id',
+        'id_pengguna',
+        'id_hasil_tes',
+        'tanggal_permintaan',
+        'status',
+        'admin_notes',      // Menyimpan catatan dari peserta
+        'catatan_admin',    // Menyimpan catatan internal dari admin pembawa persetujuan
+        'alasan_penolakan',
+        'disetujui_oleh',
+        'disetujui_pada',
     ];
-    protected $casts = ['disetujui_pada' => 'datetime', 'tanggal_permintaan' => 'datetime'];
 
-    public function user()           { return $this->belongsTo(User::class, 'id_pengguna'); }
-    public function testResult()     { return $this->belongsTo(TestResult::class, 'id_hasil_tes', 'id'); }
-    public function approvedBy()     { return $this->belongsTo(User::class, 'disetujui_oleh'); }
+    protected $casts = [
+        'tanggal_permintaan' => 'datetime',
+        'disetujui_pada'     => 'datetime',
+    ];
 
-    protected static function booted()
+    /**
+     * Relasi ke data Peserta yang meminta kirim ulang hasil
+     */
+    public function user(): BelongsTo
     {
-        static::creating(function (self $model) {
-            if (empty($model->id)) {
-                for ($i = 1; $i <= 999; $i++) {
-                    $id = 'RR'.str_pad((string)$i, 3, '0', STR_PAD_LEFT);
-                    if (!self::whereKey($id)->exists()) { $model->id = $id; break; }
-                }
-            }
-        });
+        return $this->belongsTo(User::class, 'id_pengguna', 'id');
+    }
+
+    /**
+     * Relasi ke data Hasil Tes target yang diminta kirim ulang
+     */
+    public function testResult(): BelongsTo
+    {
+        return $this->belongsTo(TestResult::class, 'id_hasil_tes', 'id');
+    }
+
+    /**
+     * PERBAIKAN UTAMA: Relasi untuk Admin yang memproses data persetujuan/penolakan
+     * Menghubungkan kolom 'disetujui_oleh' ke primary key id milik model User (tabel pengguna)
+     */
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'disetujui_oleh', 'id');
     }
 }
