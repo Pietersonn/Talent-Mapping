@@ -1,4 +1,4 @@
-@extends('pic.layouts.app')
+@extends('mitra.layouts.app')
 
 @section('title', 'Peserta')
 
@@ -52,25 +52,38 @@
 
         <div class="filter-wrapper">
             <select id="eventFilter" class="event-select">
-                <option value="">Semua Event Saya</option>
-                @foreach($events as $event)
-                    <option value="{{ $event->id }}" {{ request('event_id') == $event->id ? 'selected' : '' }}>
-                        {{ Str::limit($event->name, 25) }} ({{ $event->event_code }})
+                <option value="">Semua Program Saya</option>
+
+                @foreach($programs as $program)
+                    <option value="{{ $program->id }}"
+                        {{ request('program_id') == $program->id ? 'selected' : '' }}>
+
+                        {{ Str::limit($program->nama, 25) }}
+                        ({{ $program->kode_program }})
                     </option>
                 @endforeach
             </select>
 
             <div class="search-group">
-                <input type="text" id="realtimeSearch" class="search-input" placeholder="Cari Nama, Email..." autocomplete="off" value="{{ request('search') }}">
+                <input
+                    type="text"
+                    id="realtimeSearch"
+                    class="search-input"
+                    placeholder="Cari Nama, Email..."
+                    autocomplete="off"
+                    value="{{ request('search') }}"
+                >
+
                 <i class="fas fa-search search-icon"></i>
                 <i class="fas fa-circle-notch fa-spin loading-spinner"></i>
             </div>
 
-            <a href="{{ route('pic.participants.export-pdf', request()->query()) }}"
+            <a href="{{ route('mitra.participants.export-pdf', request()->query()) }}"
                class="btn-print"
                id="btnExportPdf"
                target="_blank"
                title="Export PDF">
+
                 <i class="fas fa-print"></i>
             </a>
         </div>
@@ -79,66 +92,119 @@
 
 @section('content')
     <div class="table-card fade-in-up">
+
         <div style="overflow-x: auto;">
             <table class="custom-table">
+
                 <thead>
                     <tr>
                         <th width="5%" class="text-center">#</th>
                         <th width="20%">Nama Peserta</th>
-                        <th width="20%">Email</th> <th width="20%">Event</th>
+                        <th width="20%">Email</th>
+                        <th width="20%">Program</th>
                         <th width="15%">Instansi</th>
                         <th width="10%" class="text-center">Skor</th>
                         <th width="15%" style="text-align: center;">Aksi</th>
                     </tr>
                 </thead>
+
                 <tbody id="tableBody">
+
                     @php
-                        $baseNo = isset($rows) ? ($rows->currentPage() - 1) * $rows->perPage() : 0;
+                        $baseNo = isset($rows)
+                            ? ($rows->currentPage() - 1) * $rows->perPage()
+                            : 0;
                     @endphp
 
                     @forelse($rows as $i => $row)
                         <tr>
-                            <td class="text-center" style="color: #94a3b8;">{{ $baseNo + $i + 1 }}</td>
-                            <td><div style="font-weight: 700; color: #0f172a;">{{ $row->name }}</div></td>
-                            <td style="color: #64748b;">{{ $row->email ?? '-' }}</td>
+
+                            <td class="text-center" style="color: #94a3b8;">
+                                {{ $baseNo + $i + 1 }}
+                            </td>
+
                             <td>
-                                @if($row->event_name)
-                                    <span class="badge-event" title="{{ $row->event_name }}">{{ Str::limit($row->event_name, 20) }}</span>
-                                    <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 2px; font-family: monospace;">{{ $row->event_code }}</div>
+                                <div style="font-weight: 700; color: #0f172a;">
+                                    {{ $row->name }}
+                                </div>
+                            </td>
+
+                            <td style="color: #64748b;">
+                                {{ $row->email ?? '-' }}
+                            </td>
+
+                            <td>
+                                @if($row->program_name)
+
+                                    <span class="badge-event"
+                                          title="{{ $row->program_name }}">
+
+                                        {{ Str::limit($row->program_name, 20) }}
+                                    </span>
+
+                                    <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 2px; font-family: monospace;">
+                                        {{ $row->program_code }}
+                                    </div>
+
                                 @else
                                     <span style="color: #94a3b8;">-</span>
                                 @endif
                             </td>
-                            <td style="color: #334155;">{{ $row->instansi ?? '-' }}</td>
+
+                            <td style="color: #334155;">
+                                {{ $row->instansi ?? '-' }}
+                            </td>
+
                             <td class="text-left">
                                 @if(isset($row->total_score))
-                                    <span class="score-value">{{ $row->total_score }}</span>
+                                    <span class="score-value">
+                                        {{ $row->total_score }}
+                                    </span>
                                 @else
                                     <span style="color: #cbd5e1;">-</span>
                                 @endif
                             </td>
+
                             <td>
                                 <div class="action-buttons">
-                                    @if(!empty($row->pdf_path))
-                                        <a href="{{ route('pic.participants.result-pdf', $row->session_id) }}"
+
+                                    @if(!empty($row->download_url))
+
+                                        <a href="{{ $row->download_url }}"
                                            class="btn-pdf-result"
                                            target="_blank">
-                                            <i class="fas fa-file-pdf"></i> Result
+
+                                            <i class="fas fa-file-pdf"></i>
+                                            Result
                                         </a>
+
                                     @else
-                                        <span style="font-size: 0.75rem; color: #cbd5e1;">Belum Selesai</span>
+                                        <span style="font-size: 0.75rem; color: #cbd5e1;">
+                                            Belum Selesai
+                                        </span>
                                     @endif
+
                                 </div>
                             </td>
+
                         </tr>
                     @empty
+
                         <tr>
-                            <td colspan="7" style="text-align:center; padding: 3rem; color: #94a3b8;">
-                                <i class="fas fa-inbox fa-2x mb-3" style="color: #e2e8f0;"></i><br>
+                            <td colspan="7"
+                                style="text-align:center; padding: 3rem; color: #94a3b8;">
+
+                                <i class="fas fa-inbox fa-2x mb-3"
+                                   style="color: #e2e8f0;"></i>
+
+                                <br>
+
                                 Tidak ada data peserta ditemukan.
                             </td>
                         </tr>
+
                     @endforelse
+
                 </tbody>
             </table>
         </div>
@@ -146,135 +212,231 @@
         <div class="p-4 border-t border-gray-50" id="paginationWrapper">
             {{ $rows->appends(request()->query())->links() }}
         </div>
+
     </div>
 @endsection
 
 @push('scripts')
 <script>
     let debounceTimer;
+
     const searchInput = $('#realtimeSearch');
     const eventSelect = $('#eventFilter');
     const exportBtn = $('#btnExportPdf');
+
     const tableBody = $('#tableBody');
     const paginationWrapper = $('#paginationWrapper');
 
     // Base URL Export
-    const baseExportUrl = "{{ route('pic.participants.export-pdf') }}";
+    const baseExportUrl = "{{ route('mitra.participants.export-pdf') }}";
 
-    // --- FUNGSI UTAMA: FETCH DATA ---
+    // --- FETCH DATA ---
     function fetchResults() {
-        const searchQuery = searchInput.val();
-        const eventId = eventSelect.val();
 
-        // Tampilkan Spinner
+        const searchQuery = searchInput.val();
+        const programId = eventSelect.val();
+
+        // Spinner
         $('.loading-spinner').show();
         $('.search-icon').hide();
 
         $.ajax({
-            url: "{{ route('pic.participants.index') }}",
+
+            url: "{{ route('mitra.participants.index') }}",
             type: "GET",
+
             data: {
                 search: searchQuery,
-                event_id: eventId
+                program_id: programId
             },
+
             success: function(response) {
-                // 1. Render Tabel dari Data JSON
+
+                // Render Table
                 renderTable(response.data, response.from);
 
-                // 2. Update Pagination dari HTML yang dikirim server
+                // Pagination
                 if(response.links) {
                     paginationWrapper.html(response.links);
                 } else {
                     paginationWrapper.empty();
                 }
 
-                // 3. Sembunyikan Spinner
+                // Hide Spinner
                 $('.loading-spinner').hide();
                 $('.search-icon').show();
 
-                // 4. Update Link Export PDF
-                updateExportLink(searchQuery, eventId);
+                // Update Export URL
+                updateExportLink(searchQuery, programId);
             },
+
             error: function() {
+
                 $('.loading-spinner').hide();
                 $('.search-icon').show();
+
                 console.error("Gagal mengambil data.");
             }
         });
     }
 
-    // --- RENDER TABLE HTML (Client Side) ---
+    // --- RENDER TABLE ---
     function renderTable(data, from) {
+
         tableBody.empty();
 
         if (data.length === 0) {
-            tableBody.html('<tr><td colspan="7" style="text-align:center; padding: 3rem; color: #94a3b8;"><i class="fas fa-inbox fa-2x mb-3" style="color: #e2e8f0;"></i><br>Tidak ada data peserta ditemukan.</td></tr>');
+
+            tableBody.html(`
+                <tr>
+                    <td colspan="7"
+                        style="text-align:center; padding: 3rem; color: #94a3b8;">
+
+                        <i class="fas fa-inbox fa-2x mb-3"
+                           style="color: #e2e8f0;"></i>
+
+                        <br>
+
+                        Tidak ada data peserta ditemukan.
+                    </td>
+                </tr>
+            `);
+
             return;
         }
 
         let html = '';
-        // 'from' adalah nomor urut awal dari pagination
+
         let currentNo = from ? from : 1;
 
         data.forEach(row => {
-            // Persiapkan Data
-            let email = row.email ? row.email : '-';
-            let eventName = row.event_name_short ? `<span class="badge-event" title="${row.event_name}">${row.event_name_short}</span>` : '<span style="color:#94a3b8">-</span>';
-            let eventCode = row.event_code ? `<div style="font-size: 0.7rem; color: #94a3b8; margin-top: 2px; font-family: monospace;">${row.event_code}</div>` : '';
-            let instansi = row.instansi ? row.instansi : '-';
-            let score = row.total_score !== null ? `<span class="score-value">${row.total_score}</span>` : '<span style="color:#cbd5e1">-</span>';
 
-            // Persiapkan Tombol Aksi
+            // Data
+            let email = row.email ? row.email : '-';
+
+            let eventName = row.program_name_short
+                ? `<span class="badge-event" title="${row.program_name}">${row.program_name_short}</span>`
+                : '<span style="color:#94a3b8">-</span>';
+
+            let eventCode = row.program_code
+                ? `<div style="font-size: 0.7rem; color: #94a3b8; margin-top: 2px; font-family: monospace;">${row.program_code}</div>`
+                : '';
+
+            let instansi = row.instansi
+                ? row.instansi
+                : '-';
+
+            let score = row.total_score !== null
+                ? `<span class="score-value">${row.total_score}</span>`
+                : '<span style="color:#cbd5e1">-</span>';
+
+            // Action
             let action = '';
+
             if (row.download_url) {
-                action = `<a href="${row.download_url}" class="btn-pdf-result" target="_blank"><i class="fas fa-file-pdf"></i> Result</a>`;
+
+                action = `
+                    <a href="${row.download_url}"
+                       class="btn-pdf-result"
+                       target="_blank">
+
+                        <i class="fas fa-file-pdf"></i>
+                        Result
+                    </a>
+                `;
+
             } else {
-                action = `<span style="font-size: 0.75rem; color: #cbd5e1;">Belum Selesai</span>`;
+
+                action = `
+                    <span style="font-size: 0.75rem; color: #cbd5e1;">
+                        Belum Selesai
+                    </span>
+                `;
             }
 
-            // Susun HTML
+            // HTML
             html += `
                 <tr>
-                    <td class="text-center" style="color: #94a3b8;">${currentNo}</td>
-                    <td><div style="font-weight: 700; color: #0f172a;">${row.name}</div></td>
-                    <td style="color: #64748b;">${email}</td>
+
+                    <td class="text-center" style="color: #94a3b8;">
+                        ${currentNo}
+                    </td>
+
+                    <td>
+                        <div style="font-weight: 700; color: #0f172a;">
+                            ${row.name}
+                        </div>
+                    </td>
+
+                    <td style="color: #64748b;">
+                        ${email}
+                    </td>
+
                     <td>
                         ${eventName}
                         ${eventCode}
                     </td>
-                    <td style="color: #334155;">${instansi}</td>
-                    <td class="text-center">${score}</td>
-                    <td><div class="action-buttons">${action}</div></td>
+
+                    <td style="color: #334155;">
+                        ${instansi}
+                    </td>
+
+                    <td class="text-center">
+                        ${score}
+                    </td>
+
+                    <td>
+                        <div class="action-buttons">
+                            ${action}
+                        </div>
+                    </td>
+
                 </tr>
             `;
+
             currentNo++;
         });
+
         tableBody.html(html);
     }
 
-    // Update URL Tombol Export agar filter ikut ter-download
-    function updateExportLink(search, eventId) {
+    // --- UPDATE EXPORT URL ---
+    function updateExportLink(search, programId) {
+
         let params = new URLSearchParams();
-        if (search) params.append('search', search);
-        if (eventId) params.append('event_id', eventId);
+
+        if (search) {
+            params.append('search', search);
+        }
+
+        if (programId) {
+            params.append('program_id', programId);
+        }
 
         let finalUrl = baseExportUrl;
-        if (params.toString()) finalUrl += '?' + params.toString();
+
+        if (params.toString()) {
+            finalUrl += '?' + params.toString();
+        }
 
         exportBtn.attr('href', finalUrl);
     }
 
     // --- EVENT LISTENERS ---
 
-    // 1. Search Typing (Debounce 300ms)
+    // Search Typing
     searchInput.on('input', function() {
+
         clearTimeout(debounceTimer);
+
         debounceTimer = setTimeout(fetchResults, 300);
     });
 
-    // 2. Event Filter Change
+    // Filter Change
     eventSelect.on('change', function() {
+
         fetchResults();
     });
+
 </script>
 @endpush

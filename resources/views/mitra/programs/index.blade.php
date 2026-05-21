@@ -1,6 +1,6 @@
-@extends('pic.layouts.app')
+@extends('mitra.layouts.app')
 
-@section('title', 'Event Saya')
+@section('title', 'Program Mitra')
 
 @push('styles')
 <style>
@@ -48,18 +48,18 @@
         <div>
             <h1 style="font-size: 1.5rem; font-weight: 800; color: #0f172a; margin-bottom: 4px; display: flex; align-items: center; gap: 10px;">
                 <i class="fas fa-calendar-alt" style="color: #22c55e; background: #dcfce7; padding: 10px; border-radius: 12px; font-size: 1.1rem;"></i>
-                Event Saya
+                Program Saya
             </h1>
         </div>
 
         <div style="display: flex; gap: 12px; align-items: center;">
             <div class="search-group">
                 <i class="fas fa-search search-icon"></i>
-                <input type="text" id="realtimeSearch" class="search-input" placeholder="Cari Nama Event, Kode..." autocomplete="off">
+                <input type="text" id="realtimeSearch" class="search-input" placeholder="Cari Nama Program, Kode..." autocomplete="off">
                 <i class="fas fa-circle-notch fa-spin loading-spinner"></i>
             </div>
 
-            <a href="{{ route('pic.events.export.pdf', request()->query()) }}" class="btn-print" id="btnExportPdf" title="Cetak PDF" target="_blank">
+            <a href="{{ route('mitra.programs.export.pdf', request()->query()) }}" class="btn-print" id="btnExportPdf" title="Cetak PDF" target="_blank">
                 <i class="fas fa-print"></i>
             </a>
         </div>
@@ -72,41 +72,42 @@
             <table class="custom-table">
                 <thead>
                     <tr>
-                        <th width="35%">Nama Event</th>
+                        <th width="35%">Nama Program</th>
                         <th width="30%">Instansi</th>
                         <th width="20%">Peserta</th>
                         <th width="15%">Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="eventTableBody">
-                    @forelse($events as $event)
+                    @forelse($programs as $program)
                         <tr>
                             <td>
                                 <div class="event-info">
                                     <div class="event-name">
-                                        @if($event->is_active)
+                                        @if($program->aktif)
                                             <span class="status-dot dot-active" title="Aktif"></span>
                                         @else
                                             <span class="status-dot dot-inactive" title="Tidak Aktif"></span>
                                         @endif
-                                        {{ $event->name }}
+                                        {{ $program->nama }}
                                     </div>
+                                    <div class="event-code">{{ $program->kode_program }}</div>
                                 </div>
                             </td>
-                            <td style="color: #64748b; font-weight: 500;">{{ $event->company ?? '-' }}</td>
+                            <td style="color: #64748b; font-weight: 500;">{{ $program->perusahaan ?? '-' }}</td>
                             <td>
-                                <span style="font-weight: 700; color: #22c55e;">{{ $event->participants_count }}</span>
+                                <span style="font-weight: 700; color: #22c55e;">{{ $program->participants_count }}</span>
                                 <span style="color: #cbd5e1;">/</span>
-                                <span style="color: #94a3b8;">{{ $event->max_participants ?? '∞' }}</span>
+                                <span style="color: #94a3b8;">{{ $program->maks_peserta ?? '∞' }}</span>
                             </td>
                             <td>
                                 <div class="action-buttons">
-                                    <a href="{{ route('pic.events.show', $event->id) }}" class="btn-icon btn-view" title="Detail"><i class="fas fa-eye text-xs"></i></a>
+                                    <a href="{{ route('mitra.programs.show', $program->id) }}" class="btn-icon btn-view" title="Detail"><i class="fas fa-eye text-xs"></i></a>
                                 </div>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="4" style="text-align:center; padding: 3rem; color: #94a3b8;">Anda belum memiliki event.</td></tr>
+                        <tr><td colspan="4" style="text-align:center; padding: 3rem; color: #94a3b8;">Anda belum memiliki program.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -114,7 +115,7 @@
     </div>
 
     <div class="mt-6 flex justify-end">
-        {{ $events->appends(request()->query())->links() }}
+        {{ $programs->appends(request()->query())->links() }}
     </div>
 @endsection
 
@@ -131,7 +132,7 @@
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
             $.ajax({
-                url: "{{ route('pic.events.index') }}",
+                url: "{{ route('mitra.programs.index') }}",
                 type: "GET",
                 data: { search: query },
                 success: function(response) {
@@ -149,7 +150,7 @@
     });
 
     function updateExportUrl(searchQuery) {
-        let baseUrl = "{{ route('pic.events.export.pdf') }}";
+        let baseUrl = "{{ route('mitra.programs.export.pdf') }}";
         let params = new URLSearchParams(window.location.search);
         if (searchQuery) { params.set('search', searchQuery); } else { params.delete('search'); }
         $('#btnExportPdf').attr('href', baseUrl + "?" + params.toString());
@@ -157,39 +158,39 @@
 
     function renderTable(response) {
         const tbody = $('#eventTableBody');
-        const events = response.events.data;
+        const programs = response.programs.data;
         tbody.empty();
 
-        if (events.length === 0) {
-            tbody.html('<tr><td colspan="4" style="text-align:center; padding: 3rem; color: #94a3b8;">Tidak ada data event ditemukan.</td></tr>');
+        if (programs.length === 0) {
+            tbody.html('<tr><td colspan="4" style="text-align:center; padding: 3rem; color: #94a3b8;">Tidak ada data program ditemukan.</td></tr>');
             return;
         }
 
         let html = '';
-        events.forEach(event => {
-            let dotClass = event.is_active ? 'dot-active' : 'dot-inactive';
-            let maxPart = event.max_participants ? event.max_participants : '∞';
-            let company = event.company ? event.company : '-';
+        programs.forEach(program => {
+            let dotClass = program.aktif ? 'dot-active' : 'dot-inactive';
+            let maxPart = program.maks_peserta ? program.maks_peserta : '∞';
+            let company = program.perusahaan ? program.perusahaan : '-';
 
             html += `<tr>
                 <td>
                     <div class="event-info">
                         <div class="event-name">
                             <span class="status-dot ${dotClass}"></span>
-                            ${event.name}
+                            ${program.nama}
                         </div>
-                        <div class="event-code">${event.event_code}</div>
+                        <div class="event-code">${program.kode_program}</div>
                     </div>
                 </td>
                 <td style="color: #64748b; font-weight: 500;">${company}</td>
                 <td>
-                    <span style="font-weight: 700; color: #22c55e;">${event.participants_count}</span>
+                    <span style="font-weight: 700; color: #22c55e;">${program.participants_count}</span>
                     <span style="color: #cbd5e1;">/</span>
                     <span style="color: #94a3b8;">${maxPart}</span>
                 </td>
                 <td>
                     <div class="action-buttons">
-                        <a href="${event.show_url}" class="btn-icon btn-view" title="Detail"><i class="fas fa-eye text-xs"></i></a>
+                        <a href="${program.show_url}" class="btn-icon btn-view" title="Detail"><i class="fas fa-eye text-xs"></i></a>
                     </div>
                 </td>
             </tr>`;

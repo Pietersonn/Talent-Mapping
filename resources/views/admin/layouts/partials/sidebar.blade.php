@@ -140,23 +140,23 @@
     </nav>
 
     {{-- FOOTER: PROFILE & LOGOUT --}}
+
     <div class="p-4 bg-white border-t border-gray-50">
         <div class="flex items-center gap-3 p-3 rounded-2xl bg-gray-50/80 hover:bg-green-50 transition-colors border border-gray-100 group">
-            <a href="{{ route('admin.profile.edit') }}" class="relative shrink-0">
+            <a href="{{ route('admin.profile.edit') }}"
+            class="relative shrink-0">
                 <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-green-200">
-                    {{ isset($user) ? substr($user->name, 0, 1) : 'U' }}
+                    {{ isset($user) ? substr($user->nama, 0, 1) : 'U' }}
                 </div>
                 <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-white rounded-full flex items-center justify-center">
                     <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 </div>
             </a>
             <div class="flex-1 min-w-0">
-                <p class="text-sm font-bold text-gray-800 truncate">{{ isset($user) ? $user->name : 'Guest' }}</p>
-                <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wide truncate">{{ isset($user) ? ucfirst($user->role) : 'Guest' }}</p>
+                <p class="text-sm font-bold text-gray-800 truncate">{{ isset($user) ? $user->nama : 'Guest' }}</p>
+                <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wide truncate">{{ isset($user) ? ucfirst($user->peran) : 'Guest' }}  </p>
             </div>
-            <button onclick="confirmLogout()" class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Logout">
-                <i class="fas fa-power-off"></i>
-            </button>
+            <button onclick="confirmLogout()" class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"title="Logout"><i class="fas fa-power-off"></i></button>
         </div>
     </div>
 </aside>

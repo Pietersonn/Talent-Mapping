@@ -273,10 +273,16 @@
 
 
     {{-- TABLE 1: Sesi Terbaru --}}
+    {{-- TABLE 1: Sesi Terbaru --}}
     <div class="bento-card col-span-2" style="justify-content: flex-start; gap: 1rem;">
         <div class="section-header">
-            <div class="section-title">Sesi Terbaru</div>
-            <a href="{{ route('admin.results.index') }}" style="font-size: 0.75rem; font-weight: 600; color: var(--primary);">Lihat Semua</a>
+            <div class="section-title">
+                Sesi Terbaru
+            </div>
+            <a href="{{ route('admin.results.index') }}"
+            style="font-size: 0.75rem; font-weight: 600; color: var(--primary);">
+                Lihat Semua
+            </a>
         </div>
         <div style="overflow-x: auto;">
             <table class="compact-table">
@@ -288,30 +294,39 @@
                     </tr>
                 </thead>
                 <tbody>
+
                     @forelse($recentTestSessions->take(5) as $session)
-                    <tr>
-                        <td>
-                            <div class="user-cell">
-                                <div class="avatar-xs">{{ substr($session->participant_name ?? $session->user->name, 0, 1) }}</div>
-                                <div style="display:flex; flex-direction:column; line-height:1.2;">
-                                    <span style="font-weight:600; font-size:0.85rem;">{{ Str::limit($session->participant_name ?? $session->user->name, 15) }}</span>
-                                    <span style="font-size:0.7rem; color:#94a3b8;">{{ Str::limit($session->program->name ?? '-', 20) }}</span>
+                        <tr>
+                            <td>
+                                <div class="user-cell">
+                                    <div class="avatar-xs">
+                                        {{ substr($session->nama_peserta ?? $session->user->nama, 0, 1) }}
+                                    </div>
+                                    <div style="display:flex; flex-direction:column; line-height:1.2;">
+                                        <span style="font-weight:600; font-size:0.85rem;">
+                                            {{ Str::limit($session->nama_peserta ?? $session->user->nama, 15) }}
+                                        </span>
+                                        <span style="font-size:0.7rem; color:#94a3b8;">
+                                            {{ Str::limit($session->program->nama ?? '-', 20) }}
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
-                        <td>
-                            @if($session->is_completed)
-                                <span style="font-size:0.65rem; font-weight:700; color:#166534; background:#dcfce7; padding:2px 8px; border-radius:4px;">SELESAI</span>
-                            @else
-                                <span style="font-size:0.65rem; font-weight:700; color:#854d0e; background:#fef9c3; padding:2px 8px; border-radius:4px;">PROSES</span>
-                            @endif
-                        </td>
-                        <td style="text-align: right; color: #94a3b8; font-size: 0.75rem;">
-                            {{ $session->created_at->locale('id')->diffForHumans(null, true) }}
-                        </td>
-                    </tr>
+                            </td>
+                            <td>
+                                @if($session->selesai)
+                                    <span style="font-size:0.65rem;font-weight:700;color:#166534;background:#dcfce7;padding:2px 8px;border-radius:4px;">SELESAI </span>
+                                @else
+                                    <span style="font-size:0.65rem;font-weight:700;color:#854d0e;background:#fef9c3; padding:2px 8px;border-radius:4px;">PROSES</span>
+                                @endif
+                            </td>
+                            <td style="text-align: right; color: #94a3b8;font-size: 0.75rem;">
+                                {{ $session->created_at->locale('id')->diffForHumans(null, true) }}
+                            </td>
+                        </tr>
                     @empty
-                    <tr><td colspan="3" style="text-align:center; padding: 1rem; color:#94a3b8;">Tidak ada data</td></tr>
+                        <tr>
+                            <td colspan="3" style="text-align:center;padding: 1rem;color:#94a3b8;">  Tidak ada data </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>

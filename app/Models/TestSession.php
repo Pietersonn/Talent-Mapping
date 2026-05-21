@@ -32,6 +32,11 @@ class TestSession extends Model
         'diselesaikan_pada' => 'datetime',
     ];
 
+
+    public function pengguna()
+    {
+        return $this->belongsTo(User::class, 'id_pengguna', 'id');
+    }
     public function user()
     {
         return $this->belongsTo(User::class, 'id_pengguna');
@@ -39,18 +44,17 @@ class TestSession extends Model
 
     public function program()
     {
-        // PERBAIKAN: Definisikan foreign key 'id_program' dan target key 'id'
         return $this->belongsTo(Program::class, 'id_program', 'id');
     }
 
     public function st30Responses()
     {
-        return $this->hasMany(ST30Response::class, 'id_sesi');
+        return $this->hasMany(ST30Response::class, 'id_sesi', 'id');
     }
 
     public function tkResponses()
     {
-        return $this->hasMany(TalentCompetencyResponse::class, 'id_sesi');
+        return $this->hasMany(TalentCompetencyResponse::class, 'id_sesi', 'id');
     }
 
     public function testResult()

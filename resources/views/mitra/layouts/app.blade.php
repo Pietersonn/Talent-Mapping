@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title', 'PIC Dashboard') | TalentMapping</title>
+    <title>@yield('title', 'mitra Dashboard') | TalentMapping</title>
     <link rel="icon" href="{{ asset('assets/public/images/tm-logo.png') }}" type="image/png">
 
     {{-- Fonts --}}
@@ -58,12 +58,12 @@
 <body class="antialiased h-screen overflow-hidden" x-data="{ sidebarOpen: false }">
 
     <div class="flex h-full w-full">
-        {{-- Include Sidebar khusus PIC --}}
-        @include('pic.layouts.partials.sidebar')
+        {{-- Include Sidebar khusus mitra --}}
+        @include('mitra.layouts.partials.sidebar')
 
         <div class="flex-1 flex flex-col h-full relative overflow-hidden transition-all duration-300">
-            {{-- Include Navbar khusus PIC --}}
-            @include('pic.layouts.partials.navbar')
+            {{-- Include Navbar khusus mitra --}}
+            @include('mitra.layouts.partials.navbar')
 
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-8 pb-24 scroll-smooth">
                 <div class="max-w-7xl mx-auto fade-in-up">
@@ -88,8 +88,8 @@
                     @yield('content')
                 </div>
 
-                {{-- Include Footer khusus PIC --}}
-                @include('pic.layouts.partials.footer')
+                {{-- Include Footer khusus mitra --}}
+                @include('mitra.layouts.partials.footer')
             </main>
         </div>
     </div>

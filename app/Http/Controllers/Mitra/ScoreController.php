@@ -27,13 +27,13 @@ class ScoreController extends Controller
             ->select(
                 'ts.id as session_id', 'u.nama as name', 'u.email',
                 'u.nomor_telepon as phone_number', 'ts.latar_belakang as instansi',
-                'ts.jabatan as position', 'e.nama as Program_name',
-                'e.kode_program as Program_code', 'tr.hasil_tk'
+                'ts.jabatan as position', 'e.nama as program_name',
+                'e.kode_program as program_code', 'tr.hasil_tk'
             )
             ->whereIn('ts.id_program', $allowedIds);
 
-        if (!empty($filters['Program_id']) && in_array($filters['Program_id'], $allowedIds)) {
-            $q->where('ts.id_program', $filters['Program_id']);
+        if (!empty($filters['program_id']) && in_array($filters['program_id'], $allowedIds)) {
+            $q->where('ts.id_program', $filters['program_id']);
         }
 
         if (!empty($filters['q'])) {
@@ -72,7 +72,8 @@ class ScoreController extends Controller
     public function index(Request $req)
     {
         $mode = $req->query('mode', 'all'); $n = (int)$req->query('n', 10);
-        $filters = ['Program_id' => $req->query('Program_id'), 'q' => trim((string)$req->query('q', ''))];
+        // PERBAIKAN: ubah kunci filter menjadi lowercase program_id
+        $filters = ['program_id' => $req->query('program_id'), 'q' => trim((string)$req->query('q', ''))];
 
         $processedRows = $this->processScores(
             $this->baseParticipantsQuery($filters, true)->orderBy('u.nama')->orderBy('ts.id')->get()
@@ -94,15 +95,16 @@ class ScoreController extends Controller
             $rows = $sortedRows->values();
         }
 
-        $Programs = Program::whereIn('id', $this->myProgramIds())->orderBy('tanggal_mulai', 'desc')->get(['id', 'nama', 'kode_program']);
+        $programs = Program::whereIn('id', $this->myProgramIds())->orderBy('tanggal_mulai', 'desc')->get(['id', 'nama', 'kode_program']);
 
-        return view('mitra.score.index', compact('Programs', 'rows', 'pagination', 'mode', 'n', 'filters') + ['q' => $filters['q']]);
+        return view('mitra.score.index', compact('programs', 'rows', 'pagination', 'mode', 'n', 'filters') + ['q' => $filters['q']]);
     }
 
     public function exportPdf(Request $req)
     {
         $mode = $req->query('mode', 'all'); $n = (int)$req->query('n', 10);
-        $filters = ['Program_id' => $req->query('Program_id'), 'q' => trim((string)$req->query('q', ''))];
+        // PERBAIKAN: ubah kunci filter menjadi lowercase program_id
+        $filters = ['program_id' => $req->query('program_id'), 'q' => trim((string)$req->query('q', ''))];
 
         $processedRows = $this->processScores(
             $this->baseParticipantsQuery($filters, true)->orderBy('u.nama')->orderBy('ts.id')->get()
@@ -121,7 +123,7 @@ class ScoreController extends Controller
         };
 
         $filterParts = [];
-        if (!empty($filters['Program_id'])) $filterParts[] = "Program: ".(Program::find($filters['Program_id'])?->nama ?? '-');
+        if (!empty($filters['program_id'])) $filterParts[] = "Program: ".(Program::find($filters['program_id'])?->nama ?? '-');
         if (!empty($filters['q']))         $filterParts[] = "Pencarian: '{$filters['q']}'";
 
         $pdf = Pdf::loadView('mitra.score.pdf.scoreReport', [

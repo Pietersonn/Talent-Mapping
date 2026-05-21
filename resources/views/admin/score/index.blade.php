@@ -61,37 +61,29 @@
 @php
     $mode = request('mode', 'all');
     $n = (int) request('n', 10);
-    $eventId = request('event_id', '');
+    $programId = request('program_id', '');
     $q = request('q', '');
 @endphp
 
-{{-- HEADER ROW --}}
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        <h1 style="font-size: 1.5rem; font-weight: 800; color: #0f172a; margin: 0;">
-            <i class="fas fa-chart-line" style="color: #22c55e; background: #dcfce7; padding: 8px; border-radius: 8px; margin-right: 8px;"></i>
-            Kompetensi Peserta
-        </h1>
-    </div>
-
-
+    <h1 style="font-size: 1.5rem; font-weight: 800; color: #0f172a; margin: 0;">
+        <i class="fas fa-chart-line" style="color: #22c55e; background: #dcfce7; padding: 8px; border-radius: 8px; margin-right: 8px;"></i>
+        Kompetensi Peserta
+    </h1>
 </div>
 
 <section class="content">
     <div class="container-fluid p-0">
-
-        {{-- FILTER ROW (CARD) --}}
         <div class="filter-card">
             <form method="GET" action="{{ route('admin.score.index') }}" id="filterForm">
                 <div class="filter-wrapper">
-
-                    {{-- 1. Filter Event --}}
+                    {{-- 1. Filter Program --}}
                     <div style="flex-grow: 1; min-width: 200px;">
-                        <select name="event_id" class="custom-input select-input w-100" onchange="document.getElementById('filterForm').submit()">
-                            <option value="">— Semua Event —</option>
-                            @foreach ($events ?? [] as $ev)
-                                <option value="{{ $ev->id }}" {{ $eventId == $ev->id ? 'selected' : '' }}>
-                                    {{ \Illuminate\Support\Str::limit($ev->name, 40) }}
+                        <select name="program_id" class="custom-input select-input w-100" onchange="document.getElementById('filterForm').submit()">
+                            <option value="">— Semua Program —</option>
+                            @foreach ($programs ?? [] as $prg)
+                                <option value="{{ $prg->id }}" {{ $programId == $prg->id ? 'selected' : '' }}>
+                                    {{ \Illuminate\Support\Str::limit($prg->nama, 40) }}
                                 </option>
                             @endforeach
                         </select>
@@ -106,40 +98,26 @@
                         </select>
                     </div>
 
-                    {{-- 3. Count Input (Conditional) --}}
+                    {{-- 3. Count Input --}}
                     <div class="count-group">
-                        <input type="number" name="n" id="countInput"
-                               class="custom-input count-input"
-                               value="{{ $n }}" min="1" max="1000"
-                               {{ $mode === 'all' ? 'disabled' : '' }}>
+                        <input type="number" name="n" id="countInput" class="custom-input count-input" value="{{ $n }}" min="1" max="1000" {{ $mode === 'all' ? 'disabled' : '' }}>
                         <span class="count-label">Baris</span>
                     </div>
 
                     {{-- 4. Search Input --}}
                     <div class="search-group">
-                        <input type="text" name="q" class="custom-input search-input"
-                               placeholder="Cari Peserta / Instansi..."
-                               value="{{ $q }}" autocomplete="off">
+                        <input type="text" name="q" class="custom-input search-input" placeholder="Cari Peserta / Instansi..." value="{{ $q }}" autocomplete="off">
                         <i class="fas fa-search search-icon"></i>
                     </div>
 
-                    {{-- Submit Button Hidden (Enter Key Works) --}}
-                    <button type="submit" style="display: none;"></button>
-
                     {{-- 5. Export Button --}}
-                    <a href="{{ route('admin.score.export.pdf', request()->query()) }}"
-                       class="btn-print"
-                       id="btnExportPdf"
-                       target="_blank"
-                       title="Export PDF (Sesuai Filter)">
+                    <a href="{{ route('admin.score.export.pdf', request()->query()) }}" id="btnExportPdf" target="_blank" class="btn-print" title="Export PDF">
                         <i class="fas fa-print"></i>
                     </a>
-
                 </div>
             </form>
         </div>
 
-        {{-- TABLE CARD --}}
         <div class="table-card">
             <div class="table-responsive">
                 <table class="custom-table">
@@ -148,115 +126,26 @@
                             <th class="th-center" style="width:50px;">No.</th>
                             <th style="min-width: 200px;">Nama Peserta</th>
                             <th class="th-center" style="min-width: 120px;">Kontak</th>
-                            <th class="th-center" title="Self Management">SM</th>
-                            <th class="th-center" title="Creativity & Innovation">CIA</th>
-                            <th class="th-center" title="Technical Skill">TS</th>
-                            <th class="th-center" title="Working With Others">WWO</th>
-                            <th class="th-center" title="Customer Awareness">CA</th>
-                            <th class="th-center" title="Leadership">L</th>
-                            <th class="th-center" title="Social Engagement">SE</th>
-                            <th class="th-center" title="Problem Solving">PS</th>
-                            <th class="th-center" title="Planning & Execution">PE</th>
-                            <th class="th-center" title="Grit & Hardwork">GH</th>
+                            <th class="th-center">SM</th><th>CIA</th><th>TS</th><th>WWO</th><th>CA</th><th>L</th><th>SE</th><th>PS</th><th>PE</th><th>GH</th>
                             <th class="th-center font-weight-bold" style="background:#f1f5f9; color:#0f172a;">Total</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @php
-                            $baseNo = isset($pagination)
-                                ? (request()->integer('page', 1) - 1) * $pagination->perPage()
-                                : 0;
-                        @endphp
                         @forelse(($rows ?? []) as $i => $r)
                             <tr>
-                                <td class="td-center text-muted font-weight-bold">{{ $baseNo + $i + 1 }}</td>
-                                <td>
-                                    <div class="d-flex flex-column">
-                                        <span style="font-weight: 700; color: #0f172a; font-size: 0.95rem;">{{ $r->name }}</span>
-                                    </div>
-                                </td>
-                                <td class="td-center" style="font-family: monospace; color: #475569;">
-                                    {{ $r->phone_number ?? '-' }}
-                                </td>
-                                <td class="td-center">{{ $r->SM ?? 0 }}</td>
-                                <td class="td-center">{{ $r->CIA ?? 0 }}</td>
-                                <td class="td-center">{{ $r->TS ?? 0 }}</td>
-                                <td class="td-center">{{ $r->WWO ?? 0 }}</td>
-                                <td class="td-center">{{ $r->CA ?? 0 }}</td>
-                                <td class="td-center">{{ $r->L ?? 0 }}</td>
-                                <td class="td-center">{{ $r->SE ?? 0 }}</td>
-                                <td class="td-center">{{ $r->PS ?? 0 }}</td>
-                                <td class="td-center">{{ $r->PE ?? 0 }}</td>
-                                <td class="td-center">{{ $r->GH ?? 0 }}</td>
-                                <td class="td-center font-weight-bold" style="color: #2563eb; background: #f8fafc;">
-                                    {{ $r->total_score ?? 0 }}
-                                </td>
+                                <td class="td-center text-muted font-weight-bold">{{ $i + 1 }}</td>
+                                <td><div style="font-weight: 700; color: #0f172a; font-size: 0.95rem;">{{ $r->name }}</div></td>
+                                <td class="td-center" style="font-family: monospace; color: #475569;">{{ $r->phone_number ?? '-' }}</td>
+                                <td>{{ $r->SM }}</td><td>{{ $r->CIA }}</td><td>{{ $r->TS }}</td><td>{{ $r->WWO }}</td><td>{{ $r->CA }}</td><td>{{ $r->L }}</td><td>{{ $r->SE }}</td><td>{{ $r->PS }}</td><td>{{ $r->PE }}</td><td>{{ $r->GH }}</td>
+                                <td class="td-center font-weight-bold" style="color: #2563eb; background: #f8fafc;">{{ $r->total_score }}</td>
                             </tr>
                         @empty
-                            <tr>
-                                <td colspan="14" style="text-align:center; padding: 4rem; color: #94a3b8;">
-                                    <i class="fas fa-folder-open mb-3" style="font-size: 2rem; opacity: 0.5;"></i><br>
-                                    Tidak ada data peserta ditemukan.
-                                </td>
-                            </tr>
+                            <tr><td colspan="14" class="text-center">Tidak ada data.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
-
-        @isset($pagination)
-            <div class="mt-4 d-flex justify-content-end">
-                {{ $pagination->links() }}
-            </div>
-        @endisset
-
     </div>
 </section>
-
-@push('scripts')
-<script>
-    // Base URL untuk Export PDF
-    const baseExportUrl = "{{ route('admin.score.export.pdf') }}";
-
-    function handleModeChange() {
-        const modeSelect = document.getElementById('modeSelect');
-        const countInput = document.getElementById('countInput');
-        const form = document.getElementById('filterForm');
-
-        // Logic Disable/Enable Input Count
-        if (modeSelect.value === 'all') {
-            countInput.disabled = true;
-        } else {
-            countInput.disabled = false;
-        }
-
-        // Submit form otomatis saat mode berubah
-        form.submit();
-    }
-
-    // Update Link PDF secara dinamis saat input berubah
-    function updateExportLink() {
-        const form = document.getElementById('filterForm');
-        const formData = new FormData(form);
-        const params = new URLSearchParams(formData);
-
-        // Hapus parameter 'n' jika mode == 'all' agar URL bersih
-        if (formData.get('mode') === 'all') {
-            params.delete('n');
-        }
-
-        document.getElementById('btnExportPdf').href = baseExportUrl + "?" + params.toString();
-    }
-
-    // Listeners
-    document.getElementById('filterForm').addEventListener('change', updateExportLink);
-    document.querySelector('input[name="q"]').addEventListener('input', updateExportLink);
-
-    // Initial run
-    document.addEventListener('DOMContentLoaded', function() {
-        updateExportLink();
-    });
-</script>
-@endpush
 @endsection

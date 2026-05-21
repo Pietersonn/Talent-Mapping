@@ -1,6 +1,6 @@
-@extends('pic.layouts.app')
+@extends('mitra.layouts.app')
 
-@section('title', 'Detail Event')
+@section('title', 'Detail Program')
 
 @push('styles')
 <style>
@@ -42,10 +42,10 @@
         <div>
             <h1 class="page-title" style="font-size: 1.5rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px;">
                 <i class="fas fa-calendar-week" style="color: #22c55e; background: #dcfce7; padding: 10px; border-radius: 12px; font-size: 1.1rem;"></i>
-                Detail Event
+                Detail Program
             </h1>
         </div>
-        <a href="{{ route('pic.events.index') }}" class="btn-action" style="background: white; color: #64748b; border: 1px solid #e2e8f0;"><i class="fas fa-arrow-left"></i> Kembali</a>
+        <a href="{{ route('mitra.programs.index') }}" class="btn-action" style="background: white; color: #64748b; border: 1px solid #e2e8f0;"><i class="fas fa-arrow-left"></i> Kembali</a>
     </div>
 @endsection
 
@@ -53,13 +53,13 @@
 <div class="fade-in-up">
     <div class="detail-header">
         <div>
-            <h2 class="event-title">{{ $event->name }}</h2>
+            <h2 class="event-title">{{ $program->nama }}</h2>
             <div class="event-meta">
-                <div class="meta-item"><i class="fas fa-barcode text-gray-400"></i> <span style="font-family: monospace;">{{ $event->event_code }}</span></div>
-                <div class="meta-item"><i class="fas fa-building text-gray-400"></i> {{ $event->company ?? 'Instansi Tidak Diisi' }}</div>
-                <span class="status-badge {{ $event->is_active ? 'badge-active' : 'badge-inactive' }}">
+                <div class="meta-item"><i class="fas fa-barcode text-gray-400"></i> <span style="font-family: monospace;">{{ $program->kode_program }}</span></div>
+                <div class="meta-item"><i class="fas fa-building text-gray-400"></i> {{ $program->perusahaan ?? 'Instansi Tidak Diisi' }}</div>
+                <span class="status-badge {{ $program->aktif ? 'badge-active' : 'badge-inactive' }}">
                     <i class="fas fa-circle" style="font-size: 6px; margin-right: 4px; vertical-align: middle;"></i>
-                    {{ $event->is_active ? 'Aktif' : 'Tidak Aktif' }}
+                    {{ $program->aktif ? 'Aktif' : 'Tidak Aktif' }}
                 </span>
             </div>
         </div>
@@ -68,33 +68,33 @@
     <div class="dashboard-grid">
 
         <div class="bento-card">
-            <div class="card-title"><i class="fas fa-circle-info text-green-500"></i> Informasi Event</div>
+            <div class="card-title"><i class="fas fa-circle-info text-green-500"></i> Informasi Program</div>
 
             <div class="info-list">
                 <div class="info-item">
                     <span class="info-label"><i class="far fa-calendar text-gray-400 mr-2"></i>Tanggal Mulai</span>
-                    <span class="info-value">{{ $event->start_date->format('d F Y') }}</span>
+                    <span class="info-value">{{ \Carbon\Carbon::parse($program->tanggal_mulai)->format('d F Y') }}</span>
                 </div>
                 <div class="info-item">
                     <span class="info-label"><i class="far fa-calendar-check text-gray-400 mr-2"></i>Tanggal Selesai</span>
-                    <span class="info-value">{{ $event->end_date->format('d F Y') }}</span>
+                    <span class="info-value">{{ \Carbon\Carbon::parse($program->tanggal_selesai)->format('d F Y') }}</span>
                 </div>
                 <div class="info-item" style="border-top: 1px dashed #f1f5f9; padding-top: 1rem;">
                     <span class="info-label"><i class="fas fa-users text-gray-400 mr-2"></i>Kuota Peserta</span>
                     <span class="info-value">
-                        {{ $stats['total_participants'] }} / {{ $event->max_participants ?? '∞' }}
+                        {{ $stats['total_peserta'] }} / {{ $program->maks_peserta ?? '∞' }}
                     </span>
                 </div>
                 <div class="info-item">
                     <span class="info-label"><i class="fas fa-check-circle text-gray-400 mr-2"></i>Tes Selesai</span>
-                    <span class="info-value text-green-600">{{ $stats['completed_tests'] }}</span>
+                    <span class="info-value text-green-600">{{ $stats['tes_selesai'] }}</span>
                 </div>
             </div>
 
             <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 2px solid #f1f5f9;">
                 <div class="text-xs font-bold text-gray-500 uppercase mb-2">Deskripsi</div>
                 <p class="text-sm text-gray-600 leading-relaxed" style="white-space: pre-line;">
-                    {{ $event->description ?? 'Tidak ada deskripsi.' }}
+                    {{ $program->deskripsi ?? 'Tidak ada deskripsi.' }}
                 </p>
             </div>
         </div>
@@ -104,11 +104,11 @@
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-users-rectangle text-green-500"></i> Peserta Terbaru
                 </div>
-                {{-- Link untuk melihat semua peserta di event ini --}}
-                <a href="{{ route('pic.participants.index', ['event_id' => $event->id]) }}" style="font-size: 0.8rem; color: #2563eb; text-decoration: none;">Lihat Semua</a>
+                {{-- Link untuk melihat semua peserta --}}
+                <a href="{{ route('mitra.participants.index') }}" style="font-size: 0.8rem; color: #2563eb; text-decoration: none;">Lihat Semua</a>
             </div>
 
-            @if($event->participants->count() > 0)
+            @if($program->participants->count() > 0)
                 <div style="overflow-x: auto;">
                     <table class="simple-table">
                         <thead>
@@ -119,13 +119,14 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($event->participants->take(10) as $p)
+                            @foreach($program->participants->take(10) as $p)
                                 @php
+                                    // PERBAIKAN: Gunakan testSessions dan cek status menggunakan variabel $session->selesai
                                     $session = $p->testSessions->first();
-                                    $isFinished = $session && $session->is_completed;
+                                    $isFinished = $session && $session->selesai;
                                 @endphp
                                 <tr>
-                                    <td style="font-weight: 600; color: #0f172a;">{{ $p->name }}</td>
+                                    <td style="font-weight: 600; color: #0f172a;">{{ $p->nama }}</td>
                                     <td style="color: #64748b;">{{ $p->email }}</td>
                                     <td style="text-align: right;">
                                         @if($isFinished)

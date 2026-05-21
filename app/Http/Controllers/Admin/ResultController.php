@@ -14,7 +14,8 @@ class ResultController extends Controller
 {
     public function index(Request $request)
     {
-        $query = TestResult::with(['session.user', 'session.Program'])
+        // FIX: Relasi menggunakan huruf kecil 'session.program'
+        $query = TestResult::with(['session.user', 'session.program'])
             ->orderBy('laporan_dibuat_pada', 'desc');
 
         if ($request->filled('search')) {
@@ -26,12 +27,14 @@ class ResultController extends Controller
                   ->orWhereHas('user', fn($u) => $u->where('nama', 'LIKE', "%{$search}%")
                       ->orWhere('email', 'LIKE', "%{$search}%")
                       ->orWhere('nomor_telepon', 'LIKE', "%{$search}%"))
-                  ->orWhereHas('Program', fn($e) => $e->where('nama', 'LIKE', "%{$search}%"));
+                  // FIX: relasi ke program menggunakan huruf kecil 'program'
+                  ->orWhereHas('program', fn($e) => $e->where('nama', 'LIKE', "%{$search}%"));
             });
         }
 
-        if ($request->filled('Program_id')) {
-            $query->whereHas('session', fn($q) => $q->where('id_program', $request->Program_id));
+        // FIX: Parameter request diubah jadi huruf kecil program_id
+        if ($request->filled('program_id')) {
+            $query->whereHas('session', fn($q) => $q->where('id_program', $request->program_id));
         }
 
         if ($request->ajax()) {
@@ -44,14 +47,16 @@ class ResultController extends Controller
         }
 
         $results = $query->paginate(20)->withQueryString();
-        $Programs  = Program::where('aktif', true)->get(['id', 'nama']);
+        // FIX: Variabel diubah jadi lowercase $programs
+        $programs  = Program::where('aktif', true)->get(['id', 'nama']);
 
-        return view('admin.results.index', compact('results', 'Programs'));
+        return view('admin.results.index', compact('results', 'programs'));
     }
 
     public function exportPdf(Request $request)
     {
-        $query = TestResult::with(['session.user', 'session.Program'])
+        // FIX: Relasi menggunakan huruf kecil 'session.program'
+        $query = TestResult::with(['session.user', 'session.program'])
             ->orderBy('laporan_dibuat_pada', 'desc');
 
         if ($request->filled('search')) {
@@ -63,12 +68,13 @@ class ResultController extends Controller
                   ->orWhereHas('user', fn($u) => $u->where('nama', 'LIKE', "%{$search}%")
                       ->orWhere('email', 'LIKE', "%{$search}%")
                       ->orWhere('nomor_telepon', 'LIKE', "%{$search}%"))
-                  ->orWhereHas('Program', fn($e) => $e->where('nama', 'LIKE', "%{$search}%"));
+                  ->orWhereHas('program', fn($e) => $e->where('nama', 'LIKE', "%{$search}%"));
             });
         }
 
-        if ($request->filled('Program_id')) {
-            $query->whereHas('session', fn($q) => $q->where('id_program', $request->Program_id));
+        // FIX: Parameter request diubah jadi huruf kecil program_id
+        if ($request->filled('program_id')) {
+            $query->whereHas('session', fn($q) => $q->where('id_program', $request->program_id));
         }
 
         $pdf = Pdf::loadView('admin.results.pdf.resultReport', [
@@ -84,16 +90,27 @@ class ResultController extends Controller
     public function downloadPdf(TestResult $testResult)
     {
         if (empty($testResult->path_pdf)) {
-            return back()->with('error', 'File PDF belum digenerate atau path kosong.');
+            return back()->with(
+                'error',
+                'File PDF belum digenerate atau path kosong.'
+            );
         }
 
-        if (Storage::disk('local')->exists($testResult->path_pdf)) {
-            return Response::make(Storage::disk('local')->get($testResult->path_pdf), 200, [
-                'Content-Type'        => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="result-'.$testResult->id.'.pdf"',
-            ]);
+        if (Storage::disk('public')->exists($testResult->path_pdf)) {
+            return Response::make(
+                Storage::disk('public')->get($testResult->path_pdf),
+                200,
+                [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' =>
+                        'inline; filename="result-'.$testResult->id.'.pdf"',
+                ]
+            );
         }
 
-        return back()->with('error', 'File PDF tidak ditemukan di server.');
+        return back()->with(
+            'error',
+            'File PDF tidak ditemukan di server.'
+        );
     }
 }

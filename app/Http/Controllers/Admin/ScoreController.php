@@ -13,8 +13,9 @@ class ScoreController extends Controller
 {
     private function commonData(): array
     {
-        $Programs = Program::query()->orderBy('tanggal_mulai', 'desc')->get(['id', 'nama', 'kode_program']);
-        return compact('Programs');
+        // Ubah variabel ke $programs
+        $programs = Program::query()->orderBy('tanggal_mulai', 'desc')->get(['id', 'nama', 'kode_program']);
+        return compact('programs');
     }
 
     private function baseParticipantsQuery(array $filters, bool $onlyWithResults = true)
@@ -28,13 +29,14 @@ class ScoreController extends Controller
             ->select(
                 'ts.id as session_id', 'u.nama as name', 'u.email',
                 'u.nomor_telepon as phone_number', 'ts.latar_belakang as instansi',
-                'ts.jabatan as position', 'e.nama as Program_name',
-                'e.kode_program as Program_code', 'tr.hasil_tk',
+                'ts.jabatan as position', 'e.nama as program_name',
+                'e.kode_program as program_code', 'tr.hasil_tk',
                 DB::raw("{$topCompExpr} as top_competency")
             );
 
-        if (!empty($filters['Program_id'])) {
-            $q->where('ts.id_program', $filters['Program_id']);
+        // Gunakan 'program_id' sebagai filter
+        if (!empty($filters['program_id'])) {
+            $q->where('ts.id_program', $filters['program_id']);
         }
 
         if (($filters['q'] ?? '') !== '') {
@@ -78,16 +80,16 @@ class ScoreController extends Controller
     public function participants(Request $req)
     {
         $validated = $req->validate([
-            'mode'     => 'nullable|in:all,top,bottom',
-            'n'        => 'nullable|integer|min:1|max:5000',
-            'Program_id' => 'nullable|string|exists:program,id',
-            'q'        => 'nullable|string|max:255',
+            'mode'       => 'nullable|in:all,top,bottom',
+            'n'          => 'nullable|integer|min:1|max:5000',
+            'program_id' => 'nullable|string|exists:program,id',
+            'q'          => 'nullable|string|max:255',
         ]);
 
         $mode    = $validated['mode'] ?? 'all';
         $n       = (int)($validated['n'] ?? 10);
-        $filters = ['Program_id' => $validated['Program_id'] ?? null, 'q' => $validated['q'] ?? null];
-        $Programs  = $this->commonData()['Programs'];
+        $filters = ['program_id' => $validated['program_id'] ?? null, 'q' => $validated['q'] ?? null];
+        $programs = $this->commonData()['programs'];
 
         $processedRows = $this->processScores(
             $this->baseParticipantsQuery($filters, true)->orderBy('u.nama')->orderBy('ts.id')->get()
@@ -99,7 +101,7 @@ class ScoreController extends Controller
             default  => $processedRows->sortByDesc('total_score'),
         };
 
-        $rows = $pagination = null;
+        $rows = null; $pagination = null;
         if ($mode === 'all') {
             $perPage = 25; $currentPage = $req->integer('page', 1);
             $paginatedItems = $sortedRows->slice(($currentPage - 1) * $perPage, $perPage);
@@ -109,13 +111,14 @@ class ScoreController extends Controller
             $rows = $sortedRows->values();
         }
 
-        return view('admin.score.index', compact('Programs', 'mode', 'n', 'rows', 'pagination', 'filters'));
+        return view('admin.score.index', compact('programs', 'mode', 'n', 'rows', 'pagination', 'filters'))
+               ->with('q', $filters['q']);
     }
 
     public function exportParticipantsPdf(Request $req)
     {
         $mode = $req->query('mode', 'all'); $n = (int)$req->query('n', 10);
-        $filters = ['Program_id' => $req->query('Program_id'), 'q' => trim((string)$req->query('q', ''))];
+        $filters = ['program_id' => $req->query('program_id'), 'q' => trim((string)$req->query('q', ''))];
 
         $processedRows = $this->processScores(
             $this->baseParticipantsQuery($filters, true)->orderBy('u.nama')->orderBy('ts.id')->get()
@@ -127,20 +130,9 @@ class ScoreController extends Controller
             default  => $processedRows->sortByDesc('total_score'),
         };
 
-        $modeText = match ($mode) {
-            'top'    => "Top {$n} Peserta (Skor Tertinggi)",
-            'bottom' => "Bottom {$n} Peserta (Skor Terendah)",
-            default  => "Semua Peserta",
-        };
-
-        $filterParts = [];
-        if (!empty($filters['Program_id'])) $filterParts[] = "Program: ".(Program::find($filters['Program_id'])?->nama ?? '-');
-        if (!empty($filters['q']))         $filterParts[] = "Pencarian: '{$filters['q']}'";
-
         $pdf = Pdf::loadView('admin.score.pdf.scoreReport', [
             'rows'        => $rows,
             'reportTitle' => 'Laporan Skor Kompetensi Peserta',
-            'modeText'    => $modeText.(count($filterParts) ? ' — '.implode(', ', $filterParts) : ''),
             'generatedBy' => Auth::user()->nama,
             'generatedAt' => now()->format('d M Y H:i'),
         ])->setPaper('a4', 'landscape');

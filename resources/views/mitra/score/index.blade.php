@@ -1,4 +1,4 @@
-@extends('pic.layouts.app')
+@extends('mitra.layouts.app')
 @section('title', 'Kompetensi — Peserta')
 
 @push('styles')
@@ -73,16 +73,16 @@
 
         {{-- FILTER ROW (CARD) --}}
         <div class="filter-card">
-            <form method="GET" action="{{ route('pic.score.index') }}" id="filterForm">
+            <form method="GET" action="{{ route('mitra.score.index') }}" id="filterForm">
                 <div class="filter-wrapper">
 
-                    {{-- 1. Filter Event --}}
+                    {{-- 1. Filter Program (Sebelumnya Event) --}}
                     <div style="flex-grow: 1; min-width: 200px;">
-                        <select name="event_id" class="custom-input select-input w-100" onchange="document.getElementById('filterForm').submit()">
-                            <option value="">— Semua Event Saya —</option>
-                            @foreach ($events ?? [] as $ev)
-                                <option value="{{ $ev->id }}" {{ $filters['event_id'] == $ev->id ? 'selected' : '' }}>
-                                    {{ \Illuminate\Support\Str::limit($ev->name, 40) }}
+                        <select name="program_id" class="custom-input select-input w-100" onchange="document.getElementById('filterForm').submit()">
+                            <option value="">— Semua Program Saya —</option>
+                            @foreach ($programs ?? [] as $program)
+                                <option value="{{ $program->id }}" {{ $filters['program_id'] == $program->id ? 'selected' : '' }}>
+                                    {{ \Illuminate\Support\Str::limit($program->nama, 40) }}
                                 </option>
                             @endforeach
                         </select>
@@ -118,7 +118,7 @@
                     <button type="submit" style="display: none;"></button>
 
                     {{-- 5. Export Button --}}
-                    <a href="{{ route('pic.score.export.pdf', request()->query()) }}"
+                    <a href="{{ route('mitra.score.export.pdf', request()->query()) }}"
                        class="btn-print"
                        id="btnExportPdf"
                        target="_blank"
@@ -145,10 +145,10 @@
                             <th class="th-center" title="Working With Others">WWO</th>
                             <th class="th-center" title="Customer Awareness">CA</th>
                             <th class="th-center" title="Leadership">L</th>
-                            <th class="th-center" title="Social Engagement">SE</th>
+                            <th class="th-center" title="Social Effectiveness">SE</th>
                             <th class="th-center" title="Problem Solving">PS</th>
                             <th class="th-center" title="Planning & Execution">PE</th>
-                            <th class="th-center" title="Grit & Hardwork">GH</th>
+                            <th class="th-center" title="Growth Habit">GH</th>
                             <th class="th-center font-weight-bold" style="background:#f1f5f9; color:#0f172a;">Total</th>
                         </tr>
                     </thead>
@@ -208,8 +208,8 @@
 
 @push('scripts')
 <script>
-    // URL Base Export
-    const baseExportUrl = "{{ route('pic.score.export.pdf') }}";
+    // URL Base Export (Mengarah ke modul rute mitra)
+    const baseExportUrl = "{{ route('mitra.score.export.pdf') }}";
 
     function handleModeChange() {
         const modeSelect = document.getElementById('modeSelect');

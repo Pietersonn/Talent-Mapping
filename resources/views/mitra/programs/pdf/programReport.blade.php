@@ -12,8 +12,8 @@
 @endphp
 
 @php
-  $reportTitle    = $reportTitle ?? 'Laporan Event';
-  $generatedBy    = $generatedBy ?? (auth()->user()->name ?? 'PIC');
+  $reportTitle    = $reportTitle ?? 'Laporan Program';
+  $generatedBy    = $generatedBy ?? (auth()->user()->nama ?? 'Mitra');
   $generatedAt    = $generatedAt ?? now('Asia/Makassar')->format('d/m/Y H:i') . ' WITA';
 
   $companyName    = 'BUSINESS & COMMUNICATION TRAINING INSTITUTE';
@@ -103,10 +103,9 @@
     <thead>
       <tr>
         <th style="width:30px;">No.</th>
-        <th>Nama Event</th>
+        <th>Nama Program</th>
         <th style="width:20%;">Instansi</th>
-        {{-- Kolom PIC tetap ada agar layout sama persis, meski isinya nama PIC yang login --}}
-        <th style="width:15%;">PIC</th>
+        <th style="width:15%;">Mitra</th>
         <th style="width:18%;">Tanggal Pelaksanaan</th>
         <th style="width:10%;">Peserta</th>
         <th style="width:8%;">Status</th>
@@ -118,24 +117,24 @@
         <tr>
           <td class="text-center">{{ $no++ }}</td>
           <td class="name-col">
-              {{ $ev->name }}
+              {{ $ev->nama }}
           </td>
-          <td>{{ $ev->company ?? '-' }}</td>
+          <td>{{ $ev->perusahaan ?? '-' }}</td>
           <td>
-            {{ $ev->pic->name ?? '-' }}
+            {{ $ev->mitra->nama ?? '-' }}
           </td>
           <td class="text-center">
-              {{ \Carbon\Carbon::parse($ev->start_date)->format('d/m/Y') }} -
-              {{ \Carbon\Carbon::parse($ev->end_date)->format('d/m/Y') }}
+              {{ \Carbon\Carbon::parse($ev->tanggal_mulai)->format('d/m/Y') }} -
+              {{ \Carbon\Carbon::parse($ev->tanggal_selesai)->format('d/m/Y') }}
           </td>
           <td class="text-center">
              {{ $ev->participants_count ?? 0 }}
-             @if($ev->max_participants)
-                <span>/ {{ $ev->max_participants }}</span>
+             @if($ev->maks_peserta)
+                <span>/ {{ $ev->maks_peserta }}</span>
              @endif
           </td>
           <td class="text-center">
-            @if($ev->is_active)
+            @if($ev->aktif)
                 Aktif
             @else
                 Tidak Aktif
@@ -144,7 +143,7 @@
         </tr>
       @empty
         <tr>
-          <td colspan="7" class="text-center muted" style="padding:20px;">Tidak ada event yang ditemukan.</td>
+          <td colspan="7" class="text-center muted" style="padding:20px;">Tidak ada program yang ditemukan.</td>
         </tr>
       @endforelse
     </tbody>

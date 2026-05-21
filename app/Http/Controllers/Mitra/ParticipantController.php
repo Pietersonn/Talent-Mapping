@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Mitra;
 
 use App\Http\Controllers\Controller;
@@ -13,14 +14,15 @@ class ParticipantController extends Controller
 {
     private function myProgramIds(): array
     {
+        // Pastikan relasi id_mitra ke pengguna (tabel: program)
         return Program::where('id_mitra', Auth::id())->pluck('id')->toArray();
     }
 
     public function index(Request $request)
     {
         $mitraProgramIds = $this->myProgramIds();
-        $search  = $request->input('search') ?? $request->input('q');
-        $ProgramId = $request->input('Program_id');
+        $search   = $request->input('search') ?? $request->input('q');
+        $programId = $request->input('program_id'); // Konsisten lowercase
         $n       = $request->input('n', 10);
 
         $query = DB::table('sesi_tes as ts')
@@ -28,13 +30,18 @@ class ParticipantController extends Controller
             ->leftJoin('program as e', 'e.id', '=', 'ts.id_program')
             ->leftJoin('hasil_tes as tr', 'tr.id_sesi', '=', 'ts.id')
             ->select(
-                'ts.id as session_id', 'u.nama as name', 'u.email',
-                'ts.latar_belakang as instansi', 'e.nama as Program_name',
-                'e.kode_program as Program_code', 'tr.path_pdf', 'tr.hasil_tk'
+                'ts.id as session_id',
+                'u.nama as name',
+                'u.email',
+                'ts.latar_belakang as instansi',
+                'e.nama as program_name',
+                'e.kode_program as program_code',
+                'tr.path_pdf',
+                'tr.hasil_tk'
             )
             ->whereIn('ts.id_program', $mitraProgramIds);
 
-        if ($ProgramId) $query->where('ts.id_program', $ProgramId);
+        if ($programId) $query->where('ts.id_program', $programId);
         if ($search) {
             $query->where(fn($q) => $q->where('u.nama', 'like', "%{$search}%")
                 ->orWhere('u.email', 'like', "%{$search}%")
@@ -49,8 +56,8 @@ class ParticipantController extends Controller
                 $data = json_decode($row->hasil_tk, true);
                 if (isset($data['all'])) $row->total_score = round(collect($data['all'])->sum('score'));
             }
-            $row->download_url      = !empty($row->path_pdf) ? route('mitra.participants.result-pdf', $row->session_id) : null;
-            $row->Program_name_short  = Str::limit($row->Program_name, 25);
+            $row->download_url = !empty($row->path_pdf) ? route('mitra.participants.result-pdf', $row->session_id) : null;
+            $row->program_name_short = Str::limit($row->program_name, 25);
             return $row;
         });
 
@@ -58,32 +65,36 @@ class ParticipantController extends Controller
             return response()->json(['data' => $rows->items(), 'links' => (string)$rows->links(), 'from' => $rows->firstItem() ?? 0]);
         }
 
-        $Programs = Program::whereIn('id', $mitraProgramIds)->orderByDesc('tanggal_mulai')->get(['id', 'nama', 'kode_program']);
+        $programs = Program::whereIn('id', $mitraProgramIds)->orderByDesc('tanggal_mulai')->get(['id', 'nama', 'kode_program']);
 
         return view('mitra.participants.index', [
-            'rows'    => $rows,
-            'Programs'  => $Programs,
-            'filters' => ['search' => $search, 'Program_id' => $ProgramId],
+            'rows'     => $rows,
+            'programs' => $programs, // Konsisten lowercase
+            'filters'  => ['search' => $search, 'program_id' => $programId],
         ]);
     }
 
     public function exportPdf(Request $request)
     {
         $mitraProgramIds = $this->myProgramIds();
-        $search  = $request->input('search') ?? $request->input('q');
-        $ProgramId = $request->input('Program_id');
+        $search   = $request->input('search') ?? $request->input('q');
+        $programId = $request->input('program_id');
 
         $query = DB::table('sesi_tes as ts')
             ->join('pengguna as u', 'u.id', '=', 'ts.id_pengguna')
             ->leftJoin('program as e', 'e.id', '=', 'ts.id_program')
             ->select(
-                'ts.id as session_id', 'u.nama as name', 'u.email',
-                'u.nomor_telepon as phone_number', 'ts.latar_belakang as instansi',
-                'ts.jabatan', 'e.nama as Program_name'
+                'ts.id as session_id',
+                'u.nama as name',
+                'u.email',
+                'u.nomor_telepon as phone_number',
+                'ts.latar_belakang as instansi',
+                'ts.jabatan',
+                'e.nama as program_name'
             )
             ->whereIn('ts.id_program', $mitraProgramIds);
 
-        if ($ProgramId) $query->where('ts.id_program', $ProgramId);
+        if ($programId) $query->where('ts.id_program', $programId);
         if ($search) {
             $query->where(fn($q) => $q->where('u.nama', 'like', "%{$search}%")->orWhere('u.email', 'like', "%{$search}%"));
         }
@@ -104,14 +115,25 @@ class ParticipantController extends Controller
 
         $sessionData = DB::table('sesi_tes as ts')
             ->join('hasil_tes as tr', 'tr.id_sesi', '=', 'ts.id')
-            ->where('ts.id', $session)->whereIn('ts.id_program', $allowed)
-            ->select('tr.path_pdf')->first();
+            ->where('ts.id', $session)
+            ->whereIn('ts.id_program', $allowed)
+            ->select('tr.path_pdf')
+            ->first();
 
-        if (!$sessionData || empty($sessionData->path_pdf)) abort(404, 'PDF tidak ditemukan atau akses ditolak.');
+        if (!$sessionData || empty($sessionData->path_pdf)) {
+            abort(404, 'PDF tidak ditemukan atau akses ditolak.');
+        }
 
-        $path = storage_path('app/'.$sessionData->path_pdf);
-        if (!file_exists($path)) abort(404, 'File PDF tidak tersedia.');
+        // FIX PATH
+        $path = storage_path('app/public/' . $sessionData->path_pdf);
 
-        return response()->file($path, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'inline; filename="hasil-tes.pdf"']);
+        if (!file_exists($path)) {
+            abort(404, 'File PDF tidak tersedia.');
+        }
+
+        return response()->file($path, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="hasil-tes.pdf"'
+        ]);
     }
 }

@@ -53,8 +53,9 @@
         <div class="filter-wrapper">
             <select id="eventFilter" class="event-select">
                 <option value="">Semua Program</option>
-                @foreach($programs ?? $events ?? [] as $prog)
-                    <option value="{{ $prog->id }}">{{ $prog->nama ?? $prog->nama_program }}</option>
+                {{-- FIX: Tambahkan perulangan disini agar data program muncul di dropdown --}}
+                @foreach($programs as $program)
+                    <option value="{{ $program->id }}">{{ $program->nama }}</option>
                 @endforeach
             </select>
 
@@ -99,135 +100,284 @@
 @push('scripts')
 <script>
     let debounceTimer;
+
     const baseExportUrl = "{{ route('admin.results.export.pdf') }}";
     const baseDownloadUrl = "{{ url('admin/results') }}";
 
-    $(document).ready(function() {
+    $(document).ready(function () {
         fetchResults();
     });
 
-    $('#realtimeSearch, #eventFilter').on('input change', function() {
+    // SEARCH & FILTER
+    $('#realtimeSearch, #eventFilter').on('input change', function () {
+
         const query = $('#realtimeSearch').val();
-        const eventId = $('#eventFilter').val();
+        const programId = $('#eventFilter').val();
 
         $('.loading-spinner').show();
         $('.search-icon').hide();
 
         clearTimeout(debounceTimer);
+
         debounceTimer = setTimeout(() => {
-            fetchResults(1, query, eventId);
-            updateExportUrl(query, eventId);
+
+            fetchResults(1, query, programId);
+            updateExportUrl(query, programId);
+
         }, 500);
     });
 
-    $(document).on('click', '.btn-paginate:not(.disabled)', function(e) {
+    // PAGINATION
+    $(document).on('click', '.btn-paginate:not(.disabled)', function (e) {
+
         e.preventDefault();
+
         const url = new URL($(this).attr('href'));
+
         const page = url.searchParams.get('page');
+
         const query = $('#realtimeSearch').val();
-        const eventId = $('#eventFilter').val();
-        fetchResults(page, query, eventId);
+        const programId = $('#eventFilter').val();
+
+        fetchResults(page, query, programId);
     });
 
-    function updateExportUrl(search, eventId) {
-        let params = new URLSearchParams();
-        if(search) params.append('search', search);
-        if(eventId) params.append('event_id', eventId);
+    // EXPORT URL
+    function updateExportUrl(search, programId) {
 
-        const finalUrl = params.toString() ? baseExportUrl + "?" + params.toString() : baseExportUrl;
+        let params = new URLSearchParams();
+
+        if (search) {
+            params.append('search', search);
+        }
+
+        if (programId) {
+            params.append('program_id', programId);
+        }
+
+        const finalUrl = params.toString()
+            ? baseExportUrl + "?" + params.toString()
+            : baseExportUrl;
+
         $('#btnExportPdf').attr('href', finalUrl);
     }
 
-    function fetchResults(page = 1, search = '', eventId = '') {
+    // FETCH DATA
+    function fetchResults(page = 1, search = '', programId = '') {
+
         $.ajax({
+
             url: "{{ route('admin.results.index') }}",
             type: "GET",
-            data: { page: page, search: search, event_id: eventId },
-            success: function(response) {
+
+            data: {
+                page: page,
+                search: search,
+                program_id: programId
+            },
+
+            success: function (response) {
+
                 renderTable(response.results.data);
                 renderPagination(response.results);
+
                 $('.loading-spinner').hide();
                 $('.search-icon').show();
             },
-            error: function() {
+
+            error: function () {
+
                 $('.loading-spinner').hide();
                 $('.search-icon').show();
-                $('#resultTableBody').html('<tr><td colspan="6" style="text-align:center; padding: 3rem; color: #ef4444;">Gagal memuat data.</td></tr>');
+
+                $('#resultTableBody').html(`
+                    <tr>
+                        <td colspan="6"
+                            style="text-align:center;
+                                   padding: 3rem;
+                                   color: #ef4444;">
+
+                            Gagal memuat data.
+                        </td>
+                    </tr>
+                `);
             }
         });
     }
 
+    // RENDER TABLE
     function renderTable(results) {
+
         const tbody = $('#resultTableBody');
+
         tbody.empty();
 
         if (results.length === 0) {
-            tbody.html('<tr><td colspan="6" style="text-align:center; padding: 4rem; color: #94a3b8;">Belum ada data hasil tes peserta.</td></tr>');
+
+            tbody.html(`
+                <tr>
+                    <td colspan="6"
+                        style="text-align:center;
+                               padding: 4rem;
+                               color: #94a3b8;">
+
+                        Belum ada data hasil tes peserta.
+                    </td>
+                </tr>
+            `);
+
             return;
         }
 
         let html = '';
+
         results.forEach(result => {
+
             const session = result.session || {};
             const user = session.user || {};
-            // --- PERBAIKAN: Mengganti event menjadi program ---
-            const program = session.program || session.event || {};
+            const program = session.program || {};
 
-            // Mengakomodasi kemungkinan nama field DB lama vs baru
-            const name = session.nama_peserta || session.participant_name || '-';
+            // FIELD DB BARU
+            const name = user.nama || '-';
+
             const email = user.email || '-';
-            const phone = user.nomor_telepon || user.phone_number || '-';
-            const instansi = session.instansi || session.participant_background || '-';
-            const jabatan = session.jabatan || session.position || '-';
 
-            // --- PERBAIKAN: Mengganti program.name menjadi program.nama ---
-            const progName = program.nama || program.nama_program || program.name;
-            const programBadge = progName ? `<span class="badge-event">${progName}</span>` : '<span style="color: #94a3b8;">-</span>';
+            const phone = user.nomor_telepon || '-';
 
-            const downloadUrl = `${baseDownloadUrl}/${result.id}/download-pdf`;
+            const instansi = session.latar_belakang || '-';
 
-            html += `<tr>
-                <td>
-                    <div style="font-weight: 700; color: #0f172a;">${name}</div>
-                    <div style="font-size: 0.75rem; color: #64748b;">${email}</div>
-                </td>
-                <td style="font-family: monospace; color: #334155;">${phone}</td>
-                <td>${programBadge}</td>
-                <td>${instansi}</td>
-                <td>${jabatan}</td>
-                <td>
-                    <div class="action-buttons">
-                        <a href="${downloadUrl}" class="btn-pdf-result" target="_blank" title="Lihat PDF Hasil">
-                            <i class="fas fa-file-pdf"></i> Result
-                        </a>
-                    </div>
-                </td>
-            </tr>`;
+            const jabatan = session.jabatan || '-';
+
+            const progName = program.nama || '-';
+
+            // PROGRAM BADGE
+            const programBadge = progName !== '-'
+                ? `<span class="badge-event">${progName}</span>`
+                : '<span style="color: #94a3b8;">-</span>';
+
+            // DOWNLOAD URL
+            const downloadUrl =
+                `${baseDownloadUrl}/${result.id}/download-pdf`;
+
+            html += `
+                <tr>
+
+                    <td>
+                        <div style="font-weight: 700; color: #0f172a;">
+                            ${name}
+                        </div>
+
+                        <div style="font-size: 0.75rem; color: #64748b;">
+                            ${email}
+                        </div>
+                    </td>
+
+                    <td style="font-family: monospace; color: #334155;">
+                        ${phone}
+                    </td>
+
+                    <td>
+                        ${programBadge}
+                    </td>
+
+                    <td>
+                        ${instansi}
+                    </td>
+
+                    <td>
+                        ${jabatan}
+                    </td>
+
+                    <td>
+                        <div class="action-buttons">
+
+                            <a href="${downloadUrl}"
+                               class="btn-pdf-result"
+                               target="_blank"
+                               title="Lihat PDF Hasil">
+
+                                <i class="fas fa-file-pdf"></i>
+                                Result
+                            </a>
+
+                        </div>
+                    </td>
+
+                </tr>
+            `;
         });
+
         tbody.html(html);
     }
 
+    // PAGINATION
     function renderPagination(paginator) {
+
         const wrapper = $('#paginationWrapper');
+
         if (paginator.last_page <= 1) {
+
             wrapper.html('');
+
             return;
         }
 
-        let prevClass = paginator.current_page === 1 ? 'btn-paginate disabled' : 'btn-paginate';
-        let prevUrl = paginator.prev_page_url ? paginator.prev_page_url : '#';
+        let prevClass =
+            paginator.current_page === 1
+                ? 'btn-paginate disabled'
+                : 'btn-paginate';
 
-        let nextClass = paginator.current_page === paginator.last_page ? 'btn-paginate disabled' : 'btn-paginate';
-        let nextUrl = paginator.next_page_url ? paginator.next_page_url : '#';
+        let prevUrl =
+            paginator.prev_page_url
+                ? paginator.prev_page_url
+                : '#';
+
+        let nextClass =
+            paginator.current_page === paginator.last_page
+                ? 'btn-paginate disabled'
+                : 'btn-paginate';
+
+        let nextUrl =
+            paginator.next_page_url
+                ? paginator.next_page_url
+                : '#';
 
         let html = `
-            <div style="font-size: 0.85rem; color: #64748b;">Halaman <span style="font-weight: 700; color: #22c55e;">${paginator.current_page}</span> dari ${paginator.last_page}</div>
+            <div style="font-size: 0.85rem; color: #64748b;">
+
+                Halaman
+
+                <span style="font-weight: 700; color: #22c55e;">
+                    ${paginator.current_page}
+                </span>
+
+                dari ${paginator.last_page}
+
+            </div>
+
             <div style="display: flex; gap: 10px;">
-                <a href="${prevUrl}" class="${prevClass}"><i class="fas fa-chevron-left mr-1"></i> Sebelumnya</a>
-                <a href="${nextUrl}" class="${nextClass}">Selanjutnya <i class="fas fa-chevron-right ml-1"></i></a>
+
+                <a href="${prevUrl}"
+                   class="${prevClass}">
+
+                    <i class="fas fa-chevron-left mr-1"></i>
+                    Sebelumnya
+
+                </a>
+
+                <a href="${nextUrl}"
+                   class="${nextClass}">
+
+                    Selanjutnya
+                    <i class="fas fa-chevron-right ml-1"></i>
+
+                </a>
+
             </div>
         `;
+
         wrapper.html(html);
     }
+
 </script>
-@endpush    
+@endpush

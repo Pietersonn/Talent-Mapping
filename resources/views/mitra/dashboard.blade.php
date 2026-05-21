@@ -1,6 +1,6 @@
-@extends('pic.layouts.app')
+@extends('mitra.layouts.app')
 
-@section('title', 'PIC Dashboard')
+@section('title', 'Mitra Dashboard')
 
 @push('styles')
 <style>
@@ -36,7 +36,7 @@
         padding: 1.25rem;
         display: flex;
         flex-direction: column;
-        justify-content: space-between; /* Default: header di atas, link di bawah (untuk kartu stat kecil) */
+        justify-content: space-between;
         height: 100%;
         position: relative;
         overflow: hidden;
@@ -60,7 +60,7 @@
         font-size: 1rem;
     }
     .icon-users { background: #eff6ff; color: #3b82f6; }
-    .icon-events { background: #f0fdf4; color: #22c55e; }
+    .icon-programs { background: #f0fdf4; color: #22c55e; }
     .icon-tests { background: #fefce8; color: #eab308; }
     .icon-pending { background: #fef2f2; color: #ef4444; }
 
@@ -83,7 +83,6 @@
     .section-header {
         display: flex; justify-content: space-between; align-items: center;
         padding-bottom: 0.5rem; border-bottom: 1px solid #f1f5f9;
-        /* Margin-bottom diatur via gap di inline style */
     }
     .section-title { font-size: 0.95rem; font-weight: 700; color: #334155; display: flex; align-items: center; gap: 0.5rem; }
 
@@ -145,19 +144,19 @@
             </div>
             <div class="stat-icon icon-users"><i class="fas fa-users"></i></div>
         </div>
-        <a href="{{ route('pic.participants.index') }}" class="stat-link">Lihat semua <i class="fas fa-arrow-right text-[10px]"></i></a>
+        <a href="{{ route('mitra.participants.index') }}" class="stat-link">Lihat semua <i class="fas fa-arrow-right text-[10px]"></i></a>
     </div>
 
-    {{-- STATS 2: My Events --}}
+    {{-- STATS 2: My Programs --}}
     <div class="bento-card">
         <div class="stat-header">
             <div>
-                <div class="stat-value">{{ number_format($totalEvents) }}</div>
-                <div class="stat-label">Event Aktif</div>
+                <div class="stat-value">{{ number_format($totalPrograms) }}</div>
+                <div class="stat-label">Program Aktif</div>
             </div>
-            <div class="stat-icon icon-events"><i class="fas fa-calendar-check"></i></div>
+            <div class="stat-icon icon-programs"><i class="fas fa-calendar-check"></i></div>
         </div>
-        <a href="{{ route('pic.events.index') }}" class="stat-link">Kelola Event <i class="fas fa-arrow-right text-[10px]"></i></a>
+        <a href="{{ route('mitra.programs.index') }}" class="stat-link">Kelola Program <i class="fas fa-arrow-right text-[10px]"></i></a>
     </div>
 
     {{-- STATS 3: Completed Tests --}}
@@ -188,7 +187,7 @@
     {{-- CHART SECTION: Statistik Jumlah Peserta --}}
     <div class="bento-card col-span-3">
         <div class="section-header" style="margin-bottom: 1rem;">
-            <div class="section-title"><i class="fas fa-chart-bar text-green-500"></i> Statistik Peserta per Event</div>
+            <div class="section-title"><i class="fas fa-chart-bar text-green-500"></i> Statistik Peserta per Program</div>
         </div>
         <div class="chart-container">
             <canvas id="participantsChart"></canvas>
@@ -196,7 +195,6 @@
     </div>
 
     {{-- QUICK PULSE: Ringkasan --}}
-    {{-- FIX: style="justify-content: flex-start; gap: 1rem;" agar ringkasan tidak melayang di tengah --}}
     <div class="bento-card" style="justify-content: flex-start; gap: 1rem;">
         <div class="section-header">
             <div class="section-title"><i class="fas fa-bolt text-yellow-500"></i> Ringkasan</div>
@@ -204,8 +202,8 @@
 
         <div class="quick-list">
             <div class="quick-item">
-                <span class="quick-label"><span class="status-dot dot-blue"></span> Event</span>
-                <span class="quick-val">{{ $totalEvents }}</span>
+                <span class="quick-label"><span class="status-dot dot-blue"></span> Program</span>
+                <span class="quick-val">{{ $totalPrograms }}</span>
             </div>
             <div class="quick-item">
                 <span class="quick-label"><span class="status-dot dot-green"></span> Partisipan</span>
@@ -215,19 +213,17 @@
             <hr style="border-top: 1px dashed #e2e8f0; margin: 0.5rem 0;">
 
             <div class="quick-item">
-                <span class="quick-label">Rata-Rata Peserta/Event</span>
-                <span class="quick-val">{{ $totalEvents > 0 ? round($totalParticipants / $totalEvents) : 0 }}</span>
+                <span class="quick-label">Rata-Rata Peserta/Program</span>
+                <span class="quick-val">{{ $totalPrograms > 0 ? round($totalParticipants / $totalPrograms) : 0 }}</span>
             </div>
         </div>
     </div>
 
-
     {{-- TABLE 1: Recent Sessions (Aktivitas Terbaru) --}}
-    {{-- FIX: style="justify-content: flex-start; gap: 1rem;" --}}
     <div class="bento-card col-span-2" style="justify-content: flex-start; gap: 1rem;">
         <div class="section-header">
             <div class="section-title">Aktivitas Terbaru</div>
-            <a href="{{ route('pic.participants.index') }}" style="font-size: 0.75rem; font-weight: 600; color: var(--primary);">Liat Semua</a>
+            <a href="{{ route('mitra.participants.index') }}" style="font-size: 0.75rem; font-weight: 600; color: var(--primary);">Lihat Semua</a>
         </div>
         <div style="overflow-x: auto;">
             <table class="compact-table">
@@ -243,15 +239,17 @@
                     <tr>
                         <td>
                             <div class="user-cell">
-                                <div class="avatar-xs">{{ substr($session->user->name ?? '?', 0, 1) }}</div>
+                                {{-- Menyesuaikan dengan relasi 'pengguna' --}}
+                                <div class="avatar-xs">{{ substr($session->pengguna->nama ?? '?', 0, 1) }}</div>
                                 <div style="display:flex; flex-direction:column; line-height:1.2;">
-                                    <span style="font-weight:600; font-size:0.85rem;">{{ Str::limit($session->user->name ?? 'Guest', 15) }}</span>
-                                    <span style="font-size:0.7rem; color:#94a3b8;">{{ Str::limit($session->event->name ?? '-', 25) }}</span>
+                                    <span style="font-weight:600; font-size:0.85rem;">{{ Str::limit($session->pengguna->nama ?? 'Guest', 15) }}</span>
+                                    <span style="font-size:0.7rem; color:#94a3b8;">{{ Str::limit($session->program->nama ?? '-', 25) }}</span>
                                 </div>
                             </div>
                         </td>
                         <td>
-                            @if($session->is_completed)
+                            {{-- Menggunakan kolom bahasa indonesia: 'selesai' --}}
+                            @if($session->selesai)
                                 <span style="font-size:0.65rem; font-weight:700; color:#166534; background:#dcfce7; padding:2px 8px; border-radius:4px;">SELESAI</span>
                             @else
                                 <span style="font-size:0.65rem; font-weight:700; color:#854d0e; background:#fef9c3; padding:2px 8px; border-radius:4px;">PROGRES</span>
@@ -269,32 +267,31 @@
         </div>
     </div>
 
-    {{-- TABLE 2: Data Event --}}
-    {{-- FIX: style="justify-content: flex-start; gap: 1rem;" --}}
+    {{-- TABLE 2: Data Program --}}
     <div class="bento-card col-span-2" style="justify-content: flex-start; gap: 1rem;">
         <div class="section-header">
-            <div class="section-title">Data Event</div>
-            <a href="{{ route('pic.events.index') }}" style="font-size: 0.75rem; font-weight: 600; color: var(--primary);">Liat Semua</a>
+            <div class="section-title">Data Program</div>
+            <a href="{{ route('mitra.programs.index') }}" style="font-size: 0.75rem; font-weight: 600; color: var(--primary);">Lihat Semua</a>
         </div>
         <div style="overflow-x: auto;">
             <table class="compact-table" style="table-layout: fixed; width: 100%;">
                 <thead>
                     <tr>
-                        <th style="width: 45%;">Nama Event</th>
+                        <th style="width: 45%;">Nama Program</th>
                         <th style="width: 25%;">Kode</th>
                         <th style="text-align: right; width: 30%;">Peserta / Kuota</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($eventsData as $data)
+                    @forelse($programStats as $data)
                         @if($loop->iteration <= 5)
                         <tr>
                             <td>
-                                <span style="font-weight:600; font-size:0.85rem; color: #334155;">{{ Str::limit($data['event']->name, 25) }}</span>
+                                <span style="font-weight:600; font-size:0.85rem; color: #334155;">{{ Str::limit($data['nama'], 25) }}</span>
                             </td>
                             <td>
                                 <span class="code-badge">
-                                    {{ $data['event']->event_code }}
+                                    {{ $data['kode'] }}
                                 </span>
                             </td>
                             <td style="text-align: right;">
@@ -304,7 +301,7 @@
                         </tr>
                         @endif
                     @empty
-                    <tr><td colspan="3" style="text-align:center; padding: 1rem; color:#94a3b8;">Tidak ada event aktif</td></tr>
+                    <tr><td colspan="3" style="text-align:center; padding: 1rem; color:#94a3b8;">Tidak ada program aktif</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -321,10 +318,10 @@ $(document).ready(function() {
     Chart.defaults.font.family = "'Figtree', sans-serif";
     Chart.defaults.color = '#94a3b8';
 
-    const rawData = @json($eventsData);
+    const rawData = @json($programStats);
     const chartData = rawData.slice(0, 10);
 
-    const labels = chartData.map(item => item.event.name.substring(0, 15) + (item.event.name.length > 15 ? '...' : ''));
+    const labels = chartData.map(item => item.nama.substring(0, 15) + (item.nama.length > 15 ? '...' : ''));
     const registeredData = chartData.map(item => item.registered);
     const quotaData = chartData.map(item => item.quota);
 

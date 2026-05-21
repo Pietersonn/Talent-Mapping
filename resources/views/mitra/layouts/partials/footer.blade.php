@@ -6,7 +6,7 @@
         <a href="#" class="hover:text-green-600 transition-colors">Bantuan</a>
         <div class="flex items-center gap-2 px-2 py-1 bg-gray-100 rounded-md">
             <div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-            <span>PIC Panel</span>
+            <span>mitra Panel</span>
         </div>
     </div>
 </footer>
